@@ -1379,6 +1379,7 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
     </div>
     <button class="purple" onclick="showScreen('Settings')">Edit Goals</button>
   </div>
+  <div class="creator-footer today-footer">Created by Shashank Singh Deo</div>
 </section>
 
 <section id="screenAdd" class="screen">
@@ -1663,7 +1664,7 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
   </div>
 </div>
 
-<div class="creator-footer">Created by Shashank Singh Deo</div>
+<div class="creator-footer global-footer">Created by Shashank Singh Deo</div>
 </div>
 
 <script>
@@ -2201,7 +2202,7 @@ const prevRender=window.render;window.render=function(){if(typeof prevRender==='
   function setActiveClasses(name){document.querySelectorAll('.screen').forEach(s=>{const on=s.id==='screen'+name;s.classList.toggle('active',on);s.setAttribute('aria-hidden',on?'false':'true')});document.querySelectorAll('.tab-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.screen===name));}
   function runHooks(name){try{if(name==='Progress'){if(typeof renderProgress==='function')renderProgress();if(typeof calculateWeightGoal==='function')calculateWeightGoal(false)}if(name==='Log'){if(typeof render==='function')render();if(typeof loadDailyNotes==='function')loadDailyNotes()}if(typeof placeDailyProgress==='function')placeDailyProgress();if(typeof applyIcons==='function')applyIcons();if(typeof updateDailyProgressRing==='function')updateDailyProgressRing();}catch(e){}}
   function centerActiveTab(){const bar=document.querySelector('.tab-bar'),btn=document.querySelector('.tab-btn.active');if(!bar||!btn)return;const left=btn.offsetLeft-(bar.clientWidth-btn.clientWidth)/2;bar.scrollTo({left:Math.max(0,left),behavior:'smooth'});}
-  function measureHeight(){if(!stage)return;const s=activeScreen();if(!s)return;stage.style.height=Math.max(s.scrollHeight+24,window.innerHeight*.62)+'px';}
+  function measureHeight(){if(!stage)return;const s=activeScreen();if(!s)return;stage.style.height=(s.scrollHeight+8)+'px';}
   function refreshHeight(){measureHeight();requestAnimationFrame(measureHeight);setTimeout(measureHeight,160);setTimeout(measureHeight,520);}
   function goTo(name,animate){if(!ensureStage())return;currentIndex=Math.max(0,Math.min(tabs.length-1,idx(name)));name=activeName();if(!animate)track.style.transition='none';setActiveClasses(name);runHooks(name);refreshHeight();requestAnimationFrame(()=>{track.style.transform='translate3d('+(-currentIndex*100)+'%,0,0)';centerActiveTab();refreshHeight();if(!animate)requestAnimationFrame(()=>{track.style.transition=''})});}
   window.showScreen=function(name){const clean=tabs.includes(name)?name:'Today';if(idx(clean)===currentIndex){setActiveClasses(clean);runHooks(clean);refreshHeight();centerActiveTab();return}goTo(clean,true);};
@@ -2625,6 +2626,37 @@ window.renderWeightTrend=function(){const e=getW().sort((a,b)=>String(a.date).lo
 window.editWeightEntry=function(date){const e=getW().find(x=>x.date===date);if(!e)return;ensureWeight();$('weightEditOriginalDate').value=e.date;$('weightEditDate').value=e.date;$('weightEditValue').value=e.weight;$('weightEditUnit').value=e.unit||'lb';$('weightEditModal').classList.add('active')};window.saveWeightEditModal=function(){const old=$('weightEditOriginalDate').value,d=$('weightEditDate').value,w=N($('weightEditValue').value),u=$('weightEditUnit').value||'lb';if(!d||!w){alert('Enter date and weight');return}let e=getW().filter(x=>x.date!==old&&x.date!==d);e.push({date:d,weight:w,unit:u});e.sort((a,b)=>a.date.localeCompare(b.date));setW(e);close('weightEditModal');renderWeightTrend();toast('Weight updated')};window.deleteWeightEditModal=function(){const old=$('weightEditOriginalDate').value;setW(getW().filter(x=>x.date!==old));close('weightEditModal');renderWeightTrend();toast('Weight entry deleted')};
 window.applyCalculatedTargets=function(){const t=window.lastCalculatedTargets||(typeof calculateMacroTargets==='function'?calculateMacroTargets():null);if(!t)return;if($('goalCal'))$('goalCal').value=t.cal;if($('goalC'))$('goalC').value=t.c;if($('goalP'))$('goalP').value=t.p;if($('goalF'))$('goalF').value=t.f;localStorage.setItem('macro_targets_'+today(),JSON.stringify({cal:t.cal,c:t.c,p:t.p,f:t.f}));if(typeof render==='function')render();toast('Targets applied to today');const s=$('macroApplyStatus');if(s){s.textContent='Targets applied to today';s.style.display='block';setTimeout(()=>s.style.display='none',1800)}};const oldSaveTargets=window.saveTargets;window.saveTargets=function(){if(typeof oldSaveTargets==='function')oldSaveTargets();toast('Manual targets saved')};
 function init(){setupAdd();renderIngredientResults();if(typeof renderSavedRecipes==='function')renderSavedRecipes();if(typeof renderWeightTrend==='function')renderWeightTrend();setTimeout(refreshStage,100);setTimeout(refreshStage,700)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
+<style id="home-footer-fix-v4">
+  .global-footer{display:none!important;}
+  #screenToday .today-footer{
+    display:block!important;
+    text-align:center!important;
+    color:#60a5fa!important;
+    font-style:italic!important;
+    font-size:15px!important;
+    margin:18px 0 10px!important;
+    padding:0 0 8px!important;
+  }
+  .ml-stage-v26{min-height:0!important;margin-bottom:0!important;}
+  .ml-track-v26{align-items:flex-start!important;}
+  #screenToday{padding-bottom:0!important;}
+</style>
+<script id="home-footer-height-fix-v4">
+(function(){
+  function fixHomeHeight(){
+    var stage=document.querySelector('.ml-stage-v26');
+    var active=document.querySelector('.screen.active');
+    if(stage && active){
+      stage.style.minHeight='0px';
+      stage.style.height=(active.scrollHeight+8)+'px';
+    }
+  }
+  window.addEventListener('load',function(){setTimeout(fixHomeHeight,60);setTimeout(fixHomeHeight,500);});
+  window.addEventListener('resize',function(){setTimeout(fixHomeHeight,80);});
+  document.addEventListener('click',function(){setTimeout(fixHomeHeight,80);},true);
 })();
 </script>
 </body>
