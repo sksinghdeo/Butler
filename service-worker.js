@@ -1,4 +1,4 @@
-const CACHE_NAME = "macro-butler-v2-dataset-build";
+const CACHE_NAME = "macro-butler-v3-revision-build";
 const APP_FILES = [
   "./",
   "./index.html",
