@@ -5419,5 +5419,328 @@ if(typeof r==='function'){window.render=function(){const x=r.apply(this,argument
 })();
 </script>
 
+
+<style id="mb-themed-category-and-horizontal-popups">
+/* Themed new-category modal */
+#mbCategoryModal{
+  position:fixed;
+  inset:0;
+  z-index:100000;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  background:rgba(2,6,23,.68);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+
+#mbCategoryModal.active{
+  display:flex;
+}
+
+#mbCategoryModal .mb-cat-card{
+  width:min(430px,92vw);
+  border-radius:28px;
+  padding:22px;
+  background:
+    radial-gradient(circle at top right,rgba(37,99,235,.25),transparent 42%),
+    linear-gradient(145deg,rgba(6,13,28,.98),rgba(10,20,42,.96));
+  border:1.5px solid rgba(56,189,248,.35);
+  box-shadow:0 28px 80px rgba(0,0,0,.65),0 0 34px rgba(37,99,235,.24),inset 0 1px 0 rgba(255,255,255,.08);
+  color:#f8fafc;
+}
+
+#mbCategoryModal h3{
+  margin:0 0 8px;
+  font-size:28px;
+  font-weight:950;
+  letter-spacing:-.4px;
+}
+
+#mbCategoryModal p{
+  margin:0 0 16px;
+  color:#94a3b8;
+  font-size:15px;
+  line-height:1.4;
+}
+
+#mbCategoryModal input{
+  width:100%;
+  height:58px;
+  border-radius:18px;
+  border:1.5px solid rgba(59,130,246,.45);
+  background:rgba(2,6,23,.75);
+  color:#fff;
+  padding:0 18px;
+  font-size:18px;
+  font-weight:750;
+  outline:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 0 0 0 rgba(56,189,248,0);
+}
+
+#mbCategoryModal input:focus{
+  border-color:#38bdf8;
+  box-shadow:0 0 0 4px rgba(56,189,248,.16),inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+#mbCategoryModal .mb-cat-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:16px;
+}
+
+#mbCategoryModal .mb-cat-actions button{
+  margin:0 !important;
+}
+
+/* Food-use popup: Add Food + Cancel horizontal */
+#portionMealModal .mb-modal-actions{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:12px !important;
+}
+
+#portionMealModal .mb-modal-actions button{
+  margin:0 !important;
+  width:100% !important;
+}
+
+/* Ingredient popup: Add Ingredient + Cancel horizontal */
+#ingredientPortionModal .mb-modal-actions,
+#ingredientAddModal .mb-modal-actions,
+#recipeIngredientModal .mb-modal-actions{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:12px !important;
+}
+
+#ingredientPortionModal .mb-modal-actions button,
+#ingredientAddModal .mb-modal-actions button,
+#recipeIngredientModal .mb-modal-actions button{
+  margin:0 !important;
+  width:100% !important;
+}
+
+@media(max-width:430px){
+  #mbCategoryModal .mb-cat-card{
+    padding:20px;
+    border-radius:26px;
+  }
+
+  #mbCategoryModal h3{
+    font-size:25px;
+  }
+}
+</style>
+
+<script id="mb-themed-category-and-horizontal-popups-js">
+(function(){
+  let pendingCategorySelect = null;
+
+  function q(id){return document.getElementById(id)}
+
+  function ensureCategoryModal(){
+    let m = q('mbCategoryModal');
+    if(m) return m;
+
+    const div = document.createElement('div');
+    div.id = 'mbCategoryModal';
+    div.innerHTML = `
+      <div class="mb-cat-card">
+        <h3>New Category</h3>
+        <p>Add a category to use in the food search filters and custom food database.</p>
+        <input id="mbNewCategoryInput" placeholder="Example: Homemade">
+        <div class="mb-cat-actions">
+          <button type="button" class="light" id="mbCatCancel">Cancel</button>
+          <button type="button" class="good" id="mbCatSave">Add Category</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(div);
+
+    q('mbCatCancel').onclick = function(){
+      closeCategoryModal(false);
+    };
+
+    q('mbCatSave').onclick = function(){
+      closeCategoryModal(true);
+    };
+
+    div.addEventListener('click', function(e){
+      if(e.target === div) closeCategoryModal(false);
+    });
+
+    q('mbNewCategoryInput').addEventListener('keydown', function(e){
+      if(e.key === 'Enter') closeCategoryModal(true);
+      if(e.key === 'Escape') closeCategoryModal(false);
+    });
+
+    return div;
+  }
+
+  function openCategoryModal(selectEl){
+    pendingCategorySelect = selectEl || null;
+    const modal = ensureCategoryModal();
+    const input = q('mbNewCategoryInput');
+    if(input) input.value = '';
+    modal.classList.add('active');
+    setTimeout(()=>input?.focus(),80);
+  }
+
+  function closeCategoryModal(save){
+    const modal = q('mbCategoryModal');
+    const input = q('mbNewCategoryInput');
+    const clean = (input?.value || '').trim();
+
+    if(save && clean){
+      if(typeof window.mbAddCustomCategoryFinal === 'function'){
+        window.mbAddCustomCategoryFinal(clean, pendingCategorySelect);
+      }else if(pendingCategorySelect){
+        const opt = document.createElement('option');
+        opt.value = clean;
+        opt.textContent = clean;
+        pendingCategorySelect.insertBefore(opt, pendingCategorySelect.lastElementChild);
+        pendingCategorySelect.value = clean;
+      }
+    }else if(pendingCategorySelect && pendingCategorySelect.value === '__new__'){
+      pendingCategorySelect.value = 'Custom Food';
+    }
+
+    modal?.classList.remove('active');
+    pendingCategorySelect = null;
+  }
+
+  function addPill(cat){
+    const row = document.querySelector('#screenAdd .pill-row');
+    if(!row || !cat) return;
+    const exists = Array.from(row.querySelectorAll('.pill')).some(b => (b.textContent||'').trim().toLowerCase() === cat.toLowerCase());
+    if(exists) return;
+
+    const btn = document.createElement('button');
+    btn.className = 'pill';
+    btn.type = 'button';
+    btn.textContent = cat;
+    btn.onclick = function(){
+      if(typeof setCategory === 'function') setCategory(cat, btn);
+    };
+    row.appendChild(btn);
+  }
+
+  window.mbAddCustomCategoryFinal = function(cat, selectEl){
+    cat = String(cat || '').trim();
+    if(!cat) return;
+
+    try{
+      const KEY = 'macro_custom_categories_v1';
+      const arr = JSON.parse(localStorage.getItem(KEY) || '[]');
+      if(!arr.some(x => String(x).toLowerCase() === cat.toLowerCase())){
+        arr.push(cat);
+        localStorage.setItem(KEY, JSON.stringify(arr));
+      }
+    }catch(e){}
+
+    addPill(cat);
+
+    const select = selectEl || q('cfCat');
+    if(select){
+      const exists = Array.from(select.options).some(o => o.value.toLowerCase() === cat.toLowerCase());
+      if(!exists){
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        select.insertBefore(opt, select.lastElementChild);
+      }
+      select.value = cat;
+    }
+  };
+
+  function interceptCategoryDropdown(){
+    const select = q('cfCat');
+    if(!select || select.dataset.themeCategoryReady === '1') return;
+    select.dataset.themeCategoryReady = '1';
+
+    select.addEventListener('change', function(e){
+      if(select.value === '__new__'){
+        e.preventDefault();
+        openCategoryModal(select);
+      }
+    }, true);
+  }
+
+  /* Replace native prompt by overriding prompt only for this exact category prompt text. */
+  const nativePrompt = window.prompt;
+  window.prompt = function(message, defaultValue){
+    if(String(message || '').toLowerCase().includes('new category name')){
+      const select = q('cfCat');
+      openCategoryModal(select);
+      return null;
+    }
+    return nativePrompt.call(window, message, defaultValue);
+  };
+
+  function fixPopupActionRows(){
+    const portion = q('portionMealModal');
+    if(portion){
+      const actions = portion.querySelector('.mb-modal-actions');
+      if(actions){
+        actions.style.display = 'grid';
+        actions.style.gridTemplateColumns = '1fr 1fr';
+        actions.style.gap = '12px';
+      }
+    }
+
+    ['ingredientPortionModal','ingredientAddModal','recipeIngredientModal'].forEach(id=>{
+      const m = q(id);
+      if(!m) return;
+      const actions = m.querySelector('.mb-modal-actions');
+      if(actions){
+        actions.style.display = 'grid';
+        actions.style.gridTemplateColumns = '1fr 1fr';
+        actions.style.gap = '12px';
+      }
+    });
+  }
+
+  const oldOpenCustom = window.openCustomFoodModal;
+  if(typeof oldOpenCustom === 'function'){
+    window.openCustomFoodModal = function(){
+      oldOpenCustom.apply(this, arguments);
+      setTimeout(interceptCategoryDropdown, 50);
+    };
+  }
+
+  const oldRender = window.render;
+  if(typeof oldRender === 'function'){
+    window.render = function(){
+      const result = oldRender.apply(this, arguments);
+      setTimeout(function(){
+        interceptCategoryDropdown();
+        fixPopupActionRows();
+      }, 0);
+      return result;
+    };
+  }
+
+  const observer = new MutationObserver(function(){
+    interceptCategoryDropdown();
+    fixPopupActionRows();
+  });
+
+  observer.observe(document.body, {childList:true, subtree:true});
+
+  document.addEventListener('DOMContentLoaded', function(){
+    interceptCategoryDropdown();
+    fixPopupActionRows();
+  });
+
+  setTimeout(function(){
+    interceptCategoryDropdown();
+    fixPopupActionRows();
+  }, 300);
+})();
+</script>
+
 </body>
 </html>
