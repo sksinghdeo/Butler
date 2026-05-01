@@ -6973,5 +6973,281 @@ body.light-mode button[onclick*="toggleCustomIngredientFavoriteStar"]{
 })();
 </script>
 
+
+<style id="mb-final-percent-and-daily-portal-fix">
+/* Fix tap-to-percent flicker/recalculation and force Daily Progress overlay visible */
+
+.mb-daily-portal-svg{
+  position:fixed !important;
+  width:104px !important;
+  height:104px !important;
+  pointer-events:none !important;
+  z-index:99999 !important;
+  overflow:visible !important;
+}
+
+.mb-daily-portal-svg circle{
+  fill:none !important;
+  stroke-linecap:round !important;
+}
+
+.mb-daily-portal-svg .shadow{
+  stroke:rgba(0,0,0,.28) !important;
+  stroke-width:8 !important;
+  filter:blur(.2px) !important;
+}
+
+.mb-daily-portal-svg .arc{
+  stroke:#22d3ee !important;
+  stroke-width:7 !important;
+}
+
+@media(max-width:430px){
+  .mb-daily-portal-svg{
+    width:96px !important;
+    height:96px !important;
+  }
+  .mb-daily-portal-svg .shadow{stroke-width:7 !important;}
+  .mb-daily-portal-svg .arc{stroke-width:6.5 !important;}
+}
+</style>
+
+<script id="mb-final-percent-and-daily-portal-fix-js">
+(function(){
+  function $(id){return document.getElementById(id)}
+  function readNumFromText(id){
+    const el=$(id);
+    if(!el) return 0;
+    const n=parseFloat(String(el.textContent || '').replace(/[^0-9.\-]/g,''));
+    return Number.isFinite(n)?n:0;
+  }
+  function readNumFromValue(id){
+    const el=$(id);
+    if(!el) return 0;
+    const n=parseFloat(String(el.textContent || el.value || '').replace(/[^0-9.\-]/g,''));
+    return Number.isFinite(n)?n:0;
+  }
+
+  const MAP=[
+    ['ringCal','tCal','dashGoalCal','#2f80ff'],
+    ['ringC','tC','dashGoalC','#ff3b6b'],
+    ['ringP','tP','dashGoalP','#22e67a'],
+    ['ringF','tF','dashGoalF','#f5b942']
+  ];
+
+  function getStableValue(ringId,valueId){
+    const ring=$(ringId);
+    const el=$(valueId);
+    if(!ring || !el) return 0;
+
+    /* If user is temporarily viewing %, do not parse the temporary percent text */
+    if(ring.classList.contains('showing-percent') && ring.dataset.rawValue){
+      return parseFloat(ring.dataset.rawValue) || 0;
+    }
+
+    const value=readNumFromText(valueId);
+    ring.dataset.rawValue=String(value);
+    return value;
+  }
+
+  function makeRingSvg(ring){
+    let svg=ring.querySelector(':scope > .mb-one-over-svg');
+    if(svg) return svg;
+
+    svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('class','mb-one-over-svg');
+    svg.setAttribute('viewBox','0 0 100 100');
+
+    const shadow=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    shadow.setAttribute('class','shadow');
+    shadow.setAttribute('cx','50');
+    shadow.setAttribute('cy','50');
+    shadow.setAttribute('r','42');
+    shadow.setAttribute('pathLength','100');
+    shadow.setAttribute('transform','rotate(-90 50 50) translate(2.5 3)');
+
+    const arc=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    arc.setAttribute('class','arc');
+    arc.setAttribute('cx','50');
+    arc.setAttribute('cy','50');
+    arc.setAttribute('r','42');
+    arc.setAttribute('pathLength','100');
+    arc.setAttribute('transform','rotate(-90 50 50)');
+
+    svg.appendChild(shadow);
+    svg.appendChild(arc);
+    ring.appendChild(svg);
+    return svg;
+  }
+
+  function setArc(svg,pct,color){
+    const shadow=svg.querySelector('.shadow');
+    const arc=svg.querySelector('.arc');
+    if(!shadow || !arc) return;
+
+    if(pct>100){
+      const extra=Math.min(72,Math.max(7,pct-100));
+      shadow.style.strokeDasharray=extra+' 100';
+      arc.style.strokeDasharray=extra+' 100';
+      shadow.style.strokeDashoffset='0';
+      arc.style.strokeDashoffset='0';
+      arc.style.stroke=color;
+      svg.style.display='block';
+    }else{
+      shadow.style.strokeDasharray='0 100';
+      arc.style.strokeDasharray='0 100';
+      svg.style.display='none';
+    }
+  }
+
+  function applyMacroRing(ringId,valueId,targetId,color){
+    const ring=$(ringId);
+    if(!ring) return;
+
+    const value=getStableValue(ringId,valueId);
+    const target=readNumFromValue(targetId);
+    const pct=target>0 ? (value/target)*100 : 0;
+
+    ring.dataset.percent=Math.round(pct)+'%';
+    ring.style.setProperty('--ring',color);
+    ring.style.setProperty('--mb-ring-color',color);
+
+    /* Do not overwrite the inner text while it is showing percentage */
+    if(!ring.classList.contains('showing-percent')){
+      ring.style.setProperty('--p',Math.min(pct,100)+'%');
+    }
+
+    const svg=makeRingSvg(ring);
+    setArc(svg,pct,color);
+  }
+
+  function makeDailyPortal(){
+    let svg=document.querySelector('.mb-daily-portal-svg');
+    if(svg) return svg;
+
+    svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('class','mb-daily-portal-svg');
+    svg.setAttribute('viewBox','0 0 100 100');
+
+    const shadow=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    shadow.setAttribute('class','shadow');
+    shadow.setAttribute('cx','50');
+    shadow.setAttribute('cy','50');
+    shadow.setAttribute('r','42');
+    shadow.setAttribute('pathLength','100');
+    shadow.setAttribute('transform','rotate(-90 50 50) translate(2.5 3)');
+
+    const arc=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    arc.setAttribute('class','arc');
+    arc.setAttribute('cx','50');
+    arc.setAttribute('cy','50');
+    arc.setAttribute('r','42');
+    arc.setAttribute('pathLength','100');
+    arc.setAttribute('transform','rotate(-90 50 50)');
+
+    svg.appendChild(shadow);
+    svg.appendChild(arc);
+    document.body.appendChild(svg);
+    return svg;
+  }
+
+  function applyDailyPortal(){
+    const score=$('score');
+    const box=score?.closest('.small-stat');
+    if(!score || !box) return;
+
+    const pct=parseFloat(String(score.textContent||'').replace(/[^0-9.\-]/g,'')) || 0;
+    const svg=makeDailyPortal();
+    const shadow=svg.querySelector('.shadow');
+    const arc=svg.querySelector('.arc');
+
+    /* position over the visible daily progress circular ring: center on the score text */
+    const r=score.getBoundingClientRect();
+    const size=window.innerWidth<=430 ? 96 : 104;
+    const cx=r.left + r.width/2;
+    const cy=r.top + r.height/2 + 2;
+
+    svg.style.left=(cx-size/2)+'px';
+    svg.style.top=(cy-size/2)+'px';
+    svg.style.width=size+'px';
+    svg.style.height=size+'px';
+
+    if(pct>100){
+      const extra=Math.min(72,Math.max(7,pct-100));
+      shadow.style.strokeDasharray=extra+' 100';
+      arc.style.strokeDasharray=extra+' 100';
+      shadow.style.strokeDashoffset='0';
+      arc.style.strokeDashoffset='0';
+      svg.style.display='block';
+    }else{
+      shadow.style.strokeDasharray='0 100';
+      arc.style.strokeDasharray='0 100';
+      svg.style.display='none';
+    }
+  }
+
+  function fixTapHandlers(){
+    document.querySelectorAll('.ring').forEach(ring=>{
+      if(ring.dataset.fixedTapReady==='1') return;
+      ring.dataset.fixedTapReady='1';
+
+      ring.addEventListener('click',function(){
+        const b=ring.querySelector('.ring-inner b');
+        const s=ring.querySelector('.ring-inner span');
+        if(!b || !s || !ring.dataset.percent) return;
+
+        /* Store original ONCE before changing text */
+        const oldB=ring.dataset.rawDisplay || b.textContent;
+        const oldS=ring.dataset.rawLabel || s.textContent;
+        ring.dataset.rawDisplay=oldB;
+        ring.dataset.rawLabel=oldS;
+
+        b.textContent=ring.dataset.percent;
+        s.textContent='Target';
+        ring.classList.add('showing-percent');
+
+        clearTimeout(ring._fixedTapTimer);
+        ring._fixedTapTimer=setTimeout(()=>{
+          b.textContent=ring.dataset.rawDisplay || oldB;
+          s.textContent=ring.dataset.rawLabel || oldS;
+          ring.classList.remove('showing-percent');
+          delete ring.dataset.rawDisplay;
+          delete ring.dataset.rawLabel;
+        },1400);
+      }, true);
+    });
+  }
+
+  function apply(){
+    MAP.forEach(args=>applyMacroRing(...args));
+    applyDailyPortal();
+    fixTapHandlers();
+  }
+
+  const oldUpdateDashboard=window.updateDashboard;
+  if(typeof oldUpdateDashboard==='function'){
+    window.updateDashboard=function(){
+      const result=oldUpdateDashboard.apply(this,arguments);
+      setTimeout(apply,0);
+      return result;
+    };
+  }
+
+  const oldRenderToday=window.renderToday;
+  if(typeof oldRenderToday==='function'){
+    window.renderToday=function(){
+      const result=oldRenderToday.apply(this,arguments);
+      setTimeout(apply,0);
+      return result;
+    };
+  }
+
+  window.addEventListener('scroll',apply,{passive:true});
+  window.addEventListener('resize',()=>setTimeout(apply,50));
+  setInterval(apply,500);
+  setTimeout(apply,100);
+})();
+</script>
+
 </body>
 </html>
