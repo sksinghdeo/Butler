@@ -5342,5 +5342,228 @@ body.light-mode button[onclick*="toggleCustomIngredientFavoriteStar"]{
 })();
 </script>
 
+
+<style id="mb-svg-overlap-arc-final">
+/* SVG-based overlap arcs: clearer than CSS-only conic overlays */
+.ring{
+  position:relative !important;
+  overflow:visible !important;
+}
+
+.ring .mb-over-svg,
+.small-stat .mb-score-over-svg{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  pointer-events:none !important;
+  z-index:20 !important;
+  overflow:visible !important;
+}
+
+.ring .mb-over-svg circle,
+.small-stat .mb-score-over-svg circle{
+  fill:none !important;
+  stroke:#ff5b7a !important;
+  stroke-width:10 !important;
+  stroke-linecap:round !important;
+  filter:drop-shadow(0 0 8px rgba(255,91,122,.85)) !important;
+}
+
+.ring .ring-inner{
+  position:relative !important;
+  z-index:5 !important;
+}
+
+/* remove previous dot/badge overlays */
+.ring.mb-overlap::before,
+.ring.mb-overlap .ring-inner::before,
+.ring.mb-over::after,
+.ring.over-target::after,
+.ring.over-target::before{
+  content:none !important;
+  display:none !important;
+}
+
+/* daily progress svg placement */
+.small-stat{
+  position:relative !important;
+  overflow:visible !important;
+}
+
+.small-stat .mb-score-over-svg{
+  width:98px !important;
+  height:98px !important;
+  left:auto !important;
+  right:12px !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+}
+
+.small-stat .mb-score-over-svg circle{
+  stroke-width:10 !important;
+}
+
+/* remove old daily progress dot/badge */
+.small-stat.mb-score-overlap::before,
+.small-stat.mb-score-overlap::after,
+.small-stat.mb-over::after,
+.small-stat.over-target::after{
+  content:none !important;
+  display:none !important;
+}
+
+@media(max-width:430px){
+  .ring .mb-over-svg circle{
+    stroke-width:9 !important;
+  }
+
+  .small-stat .mb-score-over-svg{
+    width:88px !important;
+    height:88px !important;
+    right:9px !important;
+  }
+
+  .small-stat .mb-score-over-svg circle{
+    stroke-width:9 !important;
+  }
+}
+</style>
+
+<script id="mb-svg-overlap-arc-final-js">
+(function(){
+  function $(id){return document.getElementById(id)}
+  function numberFrom(id){
+    const el=$(id);
+    if(!el) return 0;
+    const raw=String(el.textContent || el.value || '').replace(/[^0-9.\-]/g,'');
+    const n=parseFloat(raw);
+    return Number.isFinite(n)?n:0;
+  }
+
+  function ensureRingSvg(ring){
+    let svg=ring.querySelector(':scope > .mb-over-svg');
+    if(svg) return svg;
+
+    svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('class','mb-over-svg');
+    svg.setAttribute('viewBox','0 0 100 100');
+
+    const circle=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx','50');
+    circle.setAttribute('cy','50');
+    circle.setAttribute('r','41');
+    circle.setAttribute('pathLength','100');
+    circle.setAttribute('transform','rotate(-90 50 50)');
+
+    svg.appendChild(circle);
+    ring.appendChild(svg);
+    return svg;
+  }
+
+  function setRingOverlap(ringId,valueId,targetId){
+    const ring=$(ringId);
+    if(!ring) return;
+
+    const value=numberFrom(valueId);
+    const target=numberFrom(targetId);
+    const svg=ensureRingSvg(ring);
+    const circle=svg.querySelector('circle');
+
+    if(target>0){
+      const pct=(value/target)*100;
+      ring.dataset.percent=Math.round(pct)+'%';
+
+      if(pct>100){
+        const extra=Math.min(100,Math.max(3,pct-100));
+        ring.classList.add('mb-overlap');
+        ring.style.setProperty('--p','100%');
+        circle.style.strokeDasharray=extra+' 100';
+        circle.style.strokeDashoffset='0';
+        svg.style.display='block';
+      }else{
+        ring.classList.remove('mb-overlap');
+        circle.style.strokeDasharray='0 100';
+        svg.style.display='none';
+      }
+    }else{
+      circle.style.strokeDasharray='0 100';
+      svg.style.display='none';
+    }
+  }
+
+  function ensureScoreSvg(box){
+    let svg=box.querySelector(':scope > .mb-score-over-svg');
+    if(svg) return svg;
+
+    svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('class','mb-score-over-svg');
+    svg.setAttribute('viewBox','0 0 100 100');
+
+    const circle=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx','50');
+    circle.setAttribute('cy','50');
+    circle.setAttribute('r','41');
+    circle.setAttribute('pathLength','100');
+    circle.setAttribute('transform','rotate(-90 50 50)');
+
+    svg.appendChild(circle);
+    box.appendChild(svg);
+    return svg;
+  }
+
+  function setDailyProgressOverlap(){
+    const score=$('score');
+    const box=score?.closest('.small-stat');
+    if(!score || !box) return;
+
+    const pct=parseFloat(String(score.textContent||'').replace(/[^0-9.\-]/g,'')) || 0;
+    const svg=ensureScoreSvg(box);
+    const circle=svg.querySelector('circle');
+
+    if(pct>100){
+      const extra=Math.min(100,Math.max(3,pct-100));
+      box.classList.add('mb-score-overlap');
+      circle.style.strokeDasharray=extra+' 100';
+      circle.style.strokeDashoffset='0';
+      svg.style.display='block';
+    }else{
+      box.classList.remove('mb-score-overlap');
+      circle.style.strokeDasharray='0 100';
+      svg.style.display='none';
+    }
+  }
+
+  function applySvgOverlap(){
+    setRingOverlap('ringCal','tCal','dashGoalCal');
+    setRingOverlap('ringC','tC','dashGoalC');
+    setRingOverlap('ringP','tP','dashGoalP');
+    setRingOverlap('ringF','tF','dashGoalF');
+    setDailyProgressOverlap();
+  }
+
+  const oldUpdateDashboard=window.updateDashboard;
+  if(typeof oldUpdateDashboard==='function'){
+    window.updateDashboard=function(){
+      const result=oldUpdateDashboard.apply(this,arguments);
+      setTimeout(applySvgOverlap,0);
+      return result;
+    };
+  }
+
+  const oldRenderToday=window.renderToday;
+  if(typeof oldRenderToday==='function'){
+    window.renderToday=function(){
+      const result=oldRenderToday.apply(this,arguments);
+      setTimeout(applySvgOverlap,0);
+      return result;
+    };
+  }
+
+  setInterval(applySvgOverlap,700);
+  setTimeout(applySvgOverlap,100);
+})();
+</script>
+
 </body>
 </html>
