@@ -2660,49 +2660,49 @@ function init(){setupAdd();renderIngredientResults();if(typeof renderSavedRecipe
 })();
 </script>
 
-<!-- V4b: fix remaining scrollable blank space after Today footer -->
-<style id="home-footer-no-blank-v4b">
-  .ml-stage-v26{
-    min-height:0!important;
-    margin-bottom:0!important;
-    overflow-x:hidden!important;
-    overflow-y:hidden!important;
-  }
-  .ml-track-v26{
-    align-items:flex-start!important;
-    overflow:hidden!important;
-  }
-  .ml-stage-v26 .screen:not(.active){
-    height:0!important;
-    min-height:0!important;
-    max-height:0!important;
-    overflow:hidden!important;
-  }
-  .ml-stage-v26 .screen.active{
-    height:auto!important;
-    min-height:0!important;
-    max-height:none!important;
-    overflow:visible!important;
-  }
-  #screenToday{margin-bottom:0!important;padding-bottom:0!important;}
-  #screenToday .card:last-of-type{margin-bottom:10px!important;}
-  #screenToday .today-footer{margin:8px 0 0!important;padding:0!important;}
-  .app{padding-bottom:0!important;}
+<!-- Macro Butler single-screen fallback fix: restores all tabs after home footer fix -->
+<style id="macro-butler-tab-restore-v5">
+  .ml-stage-v26{height:auto!important;min-height:0!important;overflow:visible!important;margin-bottom:0!important;}
+  .ml-track-v26{display:block!important;width:100%!important;transform:none!important;transition:none!important;}
+  .ml-stage-v26 .screen{display:none!important;width:100%!important;min-width:0!important;flex:none!important;opacity:1!important;transform:none!important;contain:none!important;}
+  .ml-stage-v26 .screen.active{display:block!important;}
+  .global-footer{display:none!important;}
+  #screenToday .today-footer{display:block!important;text-align:center!important;color:#60a5fa!important;font-style:italic!important;font-size:15px!important;margin:18px 0 10px!important;padding:0 0 8px!important;}
 </style>
-<script id="home-footer-no-blank-v4b-script">
+<script id="macro-butler-tab-restore-v5-js">
 (function(){
-  function tightHeight(){
-    var stage=document.querySelector('.ml-stage-v26');
-    var active=document.querySelector('.screen.active');
-    if(!stage || !active) return;
-    stage.style.minHeight='0px';
-    stage.style.height=Math.ceil(active.scrollHeight)+'px';
+  const tabs=['Today','Add','Log','Progress','Scan','Settings'];
+  function setScreen(name){
+    const clean=tabs.includes(name)?name:'Today';
+    document.querySelectorAll('.screen').forEach(s=>{
+      const on=s.id==='screen'+clean;
+      s.classList.toggle('active',on);
+      s.setAttribute('aria-hidden',on?'false':'true');
+    });
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.screen===clean));
+    try{
+      if(clean==='Progress'){
+        if(typeof renderProgress==='function')renderProgress();
+        if(typeof calculateWeightGoal==='function')calculateWeightGoal(false);
+      }
+      if(clean==='Log'){
+        if(typeof render==='function')render();
+        if(typeof loadDailyNotes==='function')loadDailyNotes();
+      }
+      if(typeof placeDailyProgress==='function')placeDailyProgress();
+      if(typeof applyIcons==='function')applyIcons();
+      if(typeof updateDailyProgressRing==='function')updateDailyProgressRing();
+    }catch(e){}
+    window.scrollTo({top:0,behavior:'smooth'});
   }
-  window.mbTightHomeHeight=tightHeight;
-  window.addEventListener('load',function(){setTimeout(tightHeight,50);setTimeout(tightHeight,300);setTimeout(tightHeight,900);});
-  window.addEventListener('resize',function(){setTimeout(tightHeight,80);});
-  document.addEventListener('click',function(){setTimeout(tightHeight,80);},true);
-  document.addEventListener('input',function(){setTimeout(tightHeight,80);},true);
+  window.showScreen=setScreen;
+  function wireTabs(){
+    document.querySelectorAll('.tab-btn').forEach(btn=>{
+      btn.onclick=function(e){e.preventDefault();setScreen(btn.dataset.screen)};
+    });
+    setScreen(document.querySelector('.tab-btn.active')?.dataset.screen||'Today');
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wireTabs);else wireTabs();
 })();
 </script>
 
