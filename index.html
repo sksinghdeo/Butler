@@ -4304,5 +4304,365 @@ button.recipe-fav-btn{
 })();
 </script>
 
+
+<style id="mb-final-saved-recipe-star-cancel-update-fix">
+/* Saved Custom Recipes star: visible, proportional, same height as Edit/Delete */
+#savedRecipesList .recipe-fav-btn{
+  width:54px !important;
+  height:54px !important;
+  min-width:54px !important;
+  min-height:54px !important;
+  max-width:54px !important;
+  max-height:54px !important;
+  flex:0 0 54px !important;
+  padding:0 !important;
+  margin:0 !important;
+  border-radius:17px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:rgba(15,23,42,.82) !important;
+  border:1px solid rgba(96,165,250,.28) !important;
+  box-shadow:0 0 14px rgba(37,99,235,.18) !important;
+  color:transparent !important;
+  font-size:0 !important;
+  line-height:1 !important;
+  position:relative !important;
+}
+
+#savedRecipesList .recipe-fav-btn::before{
+  content:"★" !important;
+  position:absolute !important;
+  inset:0 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  color:#94a3b8 !important;
+  font-size:31px !important;
+  line-height:1 !important;
+  text-shadow:none !important;
+}
+
+#savedRecipesList .recipe-fav-btn.active{
+  border-color:rgba(250,204,21,.60) !important;
+  box-shadow:0 0 18px rgba(250,204,21,.40) !important;
+}
+
+#savedRecipesList .recipe-fav-btn.active::before{
+  color:#facc15 !important;
+  text-shadow:0 0 14px rgba(250,204,21,.75) !important;
+}
+
+#savedRecipesList .saved-recipe-actions-final{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-end !important;
+  gap:8px !important;
+}
+
+#savedRecipesList .saved-recipe-actions-final .small-btn{
+  height:54px !important;
+  min-height:54px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  margin:0 !important;
+}
+
+/* Cancel update button for saved recipe edit mode */
+#cancelRecipeUpdateBtn{
+  display:none;
+  width:100% !important;
+  margin:10px 0 0 0 !important;
+  padding:14px 8px !important;
+  border-radius:18px !important;
+  font-size:15px !important;
+  font-weight:950 !important;
+}
+
+#customRecipeCard.editing-recipe #cancelRecipeUpdateBtn{
+  display:block !important;
+}
+
+@media(max-width:430px){
+  #savedRecipesList .recipe-fav-btn,
+  #savedRecipesList .saved-recipe-actions-final .small-btn{
+    width:50px !important;
+    height:50px !important;
+    min-width:50px !important;
+    min-height:50px !important;
+  }
+
+  #savedRecipesList .recipe-fav-btn::before{
+    font-size:28px !important;
+  }
+}
+</style>
+
+<script id="mb-final-cancel-update-js">
+(function(){
+  const $ = id => document.getElementById(id);
+
+  function ensureCancelUpdateButton(){
+    const row = document.querySelector('#customRecipeCard .recipe-action-row');
+    if(!row || $('cancelRecipeUpdateBtn')) return;
+    row.insertAdjacentHTML('afterend',
+      '<button id="cancelRecipeUpdateBtn" class="light" type="button" onclick="cancelRecipeUpdateMode()">Cancel Update</button>'
+    );
+  }
+
+  function getCurrentArray(){
+    if(Array.isArray(window._mbRecipeIngredients)) return window._mbRecipeIngredients;
+    if(Array.isArray(window.recipeIngredients)) return window.recipeIngredients;
+    try{ if(Array.isArray(_mbRecipeIngredients)) return _mbRecipeIngredients; }catch(e){}
+    try{ if(Array.isArray(recipeIngredients)) return recipeIngredients; }catch(e){}
+    return [];
+  }
+
+  function setCurrentArray(arr){
+    const copy = (arr || []).map(x => Object.assign({}, x));
+    window._mbRecipeIngredients = copy;
+    window.recipeIngredients = copy;
+    try{ _mbRecipeIngredients = copy; }catch(e){}
+    try{ recipeIngredients = copy; }catch(e){}
+  }
+
+  function renderEmptyOrCurrent(){
+    try{ if(typeof renderRecipe === 'function') renderRecipe(); }catch(e){}
+    try{ if(typeof renderRecipeBuilder === 'function') renderRecipeBuilder(); }catch(e){}
+    try{ if(typeof renderRecipeIngredients === 'function') renderRecipeIngredients(); }catch(e){}
+    try{ if(typeof updateRecipeTotals === 'function') updateRecipeTotals(); }catch(e){}
+
+    const arr = getCurrentArray();
+    const box = $('recipeIngredientList');
+    if(box && !arr.length){
+      box.innerHTML = "<p class='note'>No ingredients added yet.</p>";
+    }
+    if(!arr.length){
+      if($('recipeCal')) $('recipeCal').textContent = '0';
+      if($('recipeC')) $('recipeC').textContent = '0g';
+      if($('recipeP')) $('recipeP').textContent = '0g';
+      if($('recipeF')) $('recipeF').textContent = '0g';
+    }
+  }
+
+  window.cancelRecipeUpdateMode = function(){
+    window.__editingSavedRecipeIdFinal = null;
+    window.__editingCustomRecipeIndex = null;
+
+    if($('recipeName')) $('recipeName').value = '';
+    if($('recipeMeal')) $('recipeMeal').value = 'Breakfast';
+
+    setCurrentArray([]);
+    renderEmptyOrCurrent();
+
+    const saveBtn = document.querySelector('#customRecipeCard .recipe-action-row .purple');
+    if(saveBtn) saveBtn.textContent = 'Save Custom Recipe';
+
+    const card = $('customRecipeCard');
+    if(card) card.classList.remove('editing-recipe');
+  };
+
+  ensureCancelUpdateButton();
+
+  /* Wrap the existing edit function so Cancel Update appears whenever editing starts */
+  const oldEditSaved = window.editSavedRecipeFinal;
+  window.editSavedRecipeFinal = function(id){
+    if(typeof oldEditSaved === 'function') oldEditSaved.apply(this, arguments);
+
+    ensureCancelUpdateButton();
+    const card = $('customRecipeCard');
+    if(card) card.classList.add('editing-recipe');
+
+    const saveBtn = document.querySelector('#customRecipeCard .recipe-action-row .purple');
+    if(saveBtn) saveBtn.textContent = 'Update Custom Recipe';
+  };
+
+  /* When saving update, leave edit mode */
+  const oldSaveCustomRecipe = window.saveCustomRecipe;
+  window.saveCustomRecipe = function(){
+    const wasEditing = window.__editingSavedRecipeIdFinal !== undefined && window.__editingSavedRecipeIdFinal !== null ||
+                       window.__editingCustomRecipeIndex !== undefined && window.__editingCustomRecipeIndex !== null;
+
+    const result = oldSaveCustomRecipe ? oldSaveCustomRecipe.apply(this, arguments) : undefined;
+
+    if(wasEditing){
+      const card = $('customRecipeCard');
+      if(card) card.classList.remove('editing-recipe');
+
+      const saveBtn = document.querySelector('#customRecipeCard .recipe-action-row .purple');
+      if(saveBtn) saveBtn.textContent = 'Save Custom Recipe';
+    }
+
+    return result;
+  };
+
+  setTimeout(ensureCancelUpdateButton, 100);
+})();
+</script>
+
+
+<style id="mb-universal-star-system-final">
+/* UNIVERSAL STAR BUTTON SYSTEM
+   Applies to search results, favorites, recents, saved recipes, and popup favorite stars. */
+
+/* Shared star button shell */
+.star-btn,
+.custom-food-star-toggle,
+.recipe-fav-btn,
+button[onclick*="toggleFavorite"],
+button[onclick*="toggleFav"],
+button[onclick*="toggleSavedRecipeFavorite"],
+button[onclick*="toggleCustomFoodFavoriteStar"],
+button[onclick*="toggleCustomIngredientFavoriteStar"]{
+  width:56px !important;
+  height:56px !important;
+  min-width:56px !important;
+  min-height:56px !important;
+  max-width:56px !important;
+  max-height:56px !important;
+  flex:0 0 56px !important;
+  padding:0 !important;
+  margin:0 !important;
+  border-radius:18px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  position:relative !important;
+  font-size:0 !important;
+  line-height:1 !important;
+  color:transparent !important;
+  background:rgba(15,23,42,.82) !important;
+  border:1px solid rgba(96,165,250,.28) !important;
+  box-shadow:0 0 14px rgba(37,99,235,.18), inset 0 1px 0 rgba(255,255,255,.06) !important;
+  vertical-align:middle !important;
+}
+
+/* Draw the star ourselves so browser text sizing conflicts cannot break it */
+.star-btn::before,
+.custom-food-star-toggle::before,
+.recipe-fav-btn::before,
+button[onclick*="toggleFavorite"]::before,
+button[onclick*="toggleFav"]::before,
+button[onclick*="toggleSavedRecipeFavorite"]::before,
+button[onclick*="toggleCustomFoodFavoriteStar"]::before,
+button[onclick*="toggleCustomIngredientFavoriteStar"]::before{
+  content:"★" !important;
+  position:absolute !important;
+  inset:0 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  color:#94a3b8 !important;
+  font-size:31px !important;
+  line-height:1 !important;
+  text-shadow:none !important;
+}
+
+/* Active/favorited state */
+.star-btn.active,
+.custom-food-star-toggle.active,
+.recipe-fav-btn.active,
+button.active[onclick*="toggleFavorite"],
+button.active[onclick*="toggleFav"],
+button.active[onclick*="toggleSavedRecipeFavorite"],
+button.active[onclick*="toggleCustomFoodFavoriteStar"],
+button.active[onclick*="toggleCustomIngredientFavoriteStar"]{
+  border-color:rgba(250,204,21,.60) !important;
+  box-shadow:0 0 18px rgba(250,204,21,.42), inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+
+.star-btn.active::before,
+.custom-food-star-toggle.active::before,
+.recipe-fav-btn.active::before,
+button.active[onclick*="toggleFavorite"]::before,
+button.active[onclick*="toggleFav"]::before,
+button.active[onclick*="toggleSavedRecipeFavorite"]::before,
+button.active[onclick*="toggleCustomFoodFavoriteStar"]::before,
+button.active[onclick*="toggleCustomIngredientFavoriteStar"]::before{
+  color:#facc15 !important;
+  text-shadow:0 0 14px rgba(250,204,21,.78) !important;
+}
+
+/* Keep star aligned with neighboring action buttons */
+.food-actions,
+.saved-recipe-actions-final,
+.saved-food,
+.recipe-row .food-actions,
+.custom-food-star-row{
+  align-items:center !important;
+}
+
+/* Make adjacent action buttons visually compatible */
+.food-actions .small-btn,
+.saved-recipe-actions-final .small-btn,
+.food-actions button:not(.star-btn):not(.recipe-fav-btn),
+.saved-recipe-actions-final button:not(.recipe-fav-btn){
+  min-height:56px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+/* Popup star row alignment */
+.custom-food-star-row{
+  display:flex !important;
+  gap:14px !important;
+  align-items:center !important;
+}
+
+/* Light mode keeps same professional sizing */
+body.light-mode .star-btn,
+body.light-mode .custom-food-star-toggle,
+body.light-mode .recipe-fav-btn,
+body.light-mode button[onclick*="toggleFavorite"],
+body.light-mode button[onclick*="toggleFav"],
+body.light-mode button[onclick*="toggleSavedRecipeFavorite"],
+body.light-mode button[onclick*="toggleCustomFoodFavoriteStar"],
+body.light-mode button[onclick*="toggleCustomIngredientFavoriteStar"]{
+  background:#ffffff !important;
+  border-color:#bfdbfe !important;
+}
+
+/* Mobile fine-tuning */
+@media(max-width:430px){
+  .star-btn,
+  .custom-food-star-toggle,
+  .recipe-fav-btn,
+  button[onclick*="toggleFavorite"],
+  button[onclick*="toggleFav"],
+  button[onclick*="toggleSavedRecipeFavorite"],
+  button[onclick*="toggleCustomFoodFavoriteStar"],
+  button[onclick*="toggleCustomIngredientFavoriteStar"]{
+    width:54px !important;
+    height:54px !important;
+    min-width:54px !important;
+    min-height:54px !important;
+    max-width:54px !important;
+    max-height:54px !important;
+    flex-basis:54px !important;
+    border-radius:17px !important;
+  }
+
+  .star-btn::before,
+  .custom-food-star-toggle::before,
+  .recipe-fav-btn::before,
+  button[onclick*="toggleFavorite"]::before,
+  button[onclick*="toggleFav"]::before,
+  button[onclick*="toggleSavedRecipeFavorite"]::before,
+  button[onclick*="toggleCustomFoodFavoriteStar"]::before,
+  button[onclick*="toggleCustomIngredientFavoriteStar"]::before{
+    font-size:30px !important;
+  }
+
+  .food-actions .small-btn,
+  .saved-recipe-actions-final .small-btn,
+  .food-actions button:not(.star-btn):not(.recipe-fav-btn),
+  .saved-recipe-actions-final button:not(.recipe-fav-btn){
+    min-height:54px !important;
+  }
+}
+</style>
+
 </body>
 </html>
