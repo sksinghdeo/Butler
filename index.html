@@ -1598,8 +1598,10 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
       <div class="calc-box"><b id="recipeP">0g</b><span>Protein</span></div>
       <div class="calc-box"><b id="recipeF">0g</b><span>Fat</span></div>
     </div>
-    <button class="good" type="button" onclick="addRecipeToLog()">Add Recipe to Log</button>
-    <button class="purple" type="button" onclick="saveCustomRecipe()">Save Custom Recipe</button>
+    <div class="recipe-action-row">
+      <button class="good" type="button" onclick="addRecipeToLog()">Add Recipe to Log</button>
+      <button class="purple" type="button" onclick="saveCustomRecipe()">Save Custom Recipe</button>
+    </div>
     <details id="savedRecipeDetails" class="compact-details">
       <summary><span class="section-icon">▦</span><span>Saved Custom Recipes</span><span class="chev">⌄</span></summary>
       <div id="savedRecipesList" class="compact-list"></div>
@@ -3403,6 +3405,183 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
 }
 </style>
+
+
+<style id="mb-final-requested-layout-fixes">
+/* Portion popup: Add Food + Cancel horizontal */
+#portionMealModal .mb-modal-actions{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:10px !important;
+  margin-top:14px !important;
+}
+#portionMealModal .mb-modal-actions button{
+  width:100% !important;
+  margin:0 !important;
+  padding:14px 8px !important;
+  border-radius:16px !important;
+  font-size:15px !important;
+  font-weight:900 !important;
+}
+
+/* Add Ingredient amount popup: Add Ingredient + Cancel horizontal */
+#ingredientAmountModal .mb-modal-actions{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:10px !important;
+  margin-top:14px !important;
+}
+#ingredientAmountModal .mb-modal-actions button{
+  width:100% !important;
+  margin:0 !important;
+  padding:14px 8px !important;
+  border-radius:16px !important;
+  font-size:15px !important;
+  font-weight:900 !important;
+}
+
+/* Custom Recipe Builder: macros horizontal */
+#customRecipeCard .recipe-total-grid{
+  display:grid !important;
+  grid-template-columns:repeat(4,1fr) !important;
+  gap:8px !important;
+}
+#customRecipeCard .recipe-total-grid .calc-box{
+  padding:10px 6px !important;
+}
+#customRecipeCard .recipe-total-grid .calc-box b{
+  font-size:17px !important;
+}
+#customRecipeCard .recipe-total-grid .calc-box span{
+  font-size:11px !important;
+}
+
+/* Custom Recipe Builder: Add Recipe + Save Custom Recipe horizontal */
+#customRecipeCard .recipe-action-row{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:10px !important;
+  margin-top:12px !important;
+}
+#customRecipeCard .recipe-action-row button{
+  width:100% !important;
+  margin:0 !important;
+  padding:15px 8px !important;
+  border-radius:18px !important;
+  font-size:15px !important;
+  font-weight:950 !important;
+  line-height:1.15 !important;
+}
+
+@media(max-width:430px){
+  #customRecipeCard .recipe-total-grid{
+    grid-template-columns:repeat(4,1fr) !important;
+    gap:6px !important;
+  }
+  #customRecipeCard .recipe-total-grid .calc-box{
+    padding:9px 4px !important;
+  }
+  #customRecipeCard .recipe-total-grid .calc-box b{
+    font-size:15px !important;
+  }
+  #customRecipeCard .recipe-total-grid .calc-box span{
+    font-size:10px !important;
+  }
+  #customRecipeCard .recipe-action-row button,
+  #portionMealModal .mb-modal-actions button,
+  #ingredientAmountModal .mb-modal-actions button{
+    font-size:13px !important;
+    padding:13px 6px !important;
+  }
+}
+</style>
+
+
+<script id="mb-final-edit-saved-recipe-fix">
+(function(){
+  function $(id){return document.getElementById(id)}
+  function n(v){const x=parseFloat(v); return Number.isFinite(x)?x:0}
+  function getRecipes(){
+    try{
+      if(typeof getCustomRecipes === 'function') return getCustomRecipes() || [];
+      return JSON.parse(localStorage.getItem('customRecipes') || '[]');
+    }catch(e){return []}
+  }
+  function setRecipes(arr){
+    try{
+      if(typeof setCustomRecipes === 'function') setCustomRecipes(arr);
+      else localStorage.setItem('customRecipes', JSON.stringify(arr || []));
+    }catch(e){}
+  }
+  function renderRecipes(){
+    try{
+      if(typeof renderSavedRecipes === 'function') renderSavedRecipes();
+      else if(typeof renderCustomRecipes === 'function') renderCustomRecipes();
+    }catch(e){}
+  }
+
+  window.editCustomRecipe = function(index){
+    const recipes = getRecipes();
+    const r = recipes[index];
+    if(!r){ alert('Could not find this saved recipe.'); return; }
+
+    if($('recipeName')) $('recipeName').value = r.name || '';
+    if($('recipeMeal')) $('recipeMeal').value = r.meal || 'Breakfast';
+
+    if(Array.isArray(r.ingredients) && typeof recipeIngredients !== 'undefined'){
+      window.recipeIngredients = r.ingredients.map(x => Object.assign({}, x));
+      if(typeof renderRecipeIngredients === 'function') renderRecipeIngredients();
+      if(typeof updateRecipeTotals === 'function') updateRecipeTotals();
+    }
+
+    window.__editingCustomRecipeIndex = index;
+
+    const addBtn = document.querySelector('#customRecipeCard .recipe-action-row .purple, #customRecipeCard button[onclick="saveCustomRecipe()"].purple');
+    if(addBtn) addBtn.textContent = 'Update Custom Recipe';
+
+    const card = $('customRecipeCard');
+    if(card) card.scrollIntoView({behavior:'smooth', block:'start'});
+  };
+
+  const oldSave = window.saveCustomRecipe;
+  window.saveCustomRecipe = function(){
+    if(typeof window.__editingCustomRecipeIndex === 'number'){
+      const recipes = getRecipes();
+      const idx = window.__editingCustomRecipeIndex;
+
+      if(!Array.isArray(window.recipeIngredients) || window.recipeIngredients.length === 0){
+        alert('Add at least one ingredient.');
+        return;
+      }
+
+      const totals = window.recipeIngredients.reduce((a,x)=>{
+        a.cal += n(x.cal); a.c += n(x.c); a.p += n(x.p); a.f += n(x.f); return a;
+      },{cal:0,c:0,p:0,f:0});
+
+      recipes[idx] = Object.assign({}, recipes[idx] || {}, {
+        name: ($('recipeName')?.value || '').trim() || 'Custom Recipe',
+        meal: $('recipeMeal')?.value || 'Breakfast',
+        ingredients: window.recipeIngredients.map(x => Object.assign({}, x)),
+        cal: Math.round(totals.cal),
+        c: Math.round(totals.c*10)/10,
+        p: Math.round(totals.p*10)/10,
+        f: Math.round(totals.f*10)/10
+      });
+
+      setRecipes(recipes);
+      window.__editingCustomRecipeIndex = null;
+      const btn = document.querySelector('#customRecipeCard .recipe-action-row .purple');
+      if(btn) btn.textContent = 'Save Custom Recipe';
+      renderRecipes();
+      if(typeof showMbCleanToast === 'function') showMbCleanToast('Custom recipe updated');
+      else alert('Custom recipe updated');
+      return;
+    }
+
+    if(typeof oldSave === 'function') return oldSave.apply(this, arguments);
+  };
+})();
+</script>
 
 </body>
 </html>
