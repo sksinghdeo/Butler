@@ -5815,5 +5815,68 @@ body.light-mode button[onclick*="toggleCustomIngredientFavoriteStar"]{
 })();
 </script>
 
+
+<style id="mb-top-segment-shadow-v4">
+/* Enhance only the top overlap segment with shadow/glow */
+
+.ring .mb-clean-over-svg circle{
+  stroke:#ff6b86 !important;
+  stroke-width:8 !important;
+  stroke-linecap:round !important;
+  filter:
+    drop-shadow(0 3px 2px rgba(0,0,0,.38))
+    drop-shadow(0 0 8px rgba(255,107,134,.70))
+    drop-shadow(0 0 14px rgba(255,107,134,.35)) !important;
+}
+
+.small-stat .mb-score-clean-over-svg circle{
+  stroke:#ff6b86 !important;
+  stroke-width:8 !important;
+  stroke-linecap:round !important;
+  filter:
+    drop-shadow(0 3px 2px rgba(0,0,0,.38))
+    drop-shadow(0 0 8px rgba(255,107,134,.70))
+    drop-shadow(0 0 14px rgba(255,107,134,.35)) !important;
+}
+
+/* subtle lift for over-target whole ring */
+.ring.mb-overlap,
+.small-stat.mb-score-clean{
+  box-shadow:
+    0 8px 16px rgba(0,0,0,.18),
+    0 0 18px rgba(37,99,235,.10),
+    inset 0 1px 0 rgba(255,255,255,.05) !important;
+}
+
+@media(max-width:430px){
+  .ring .mb-clean-over-svg circle,
+  .small-stat .mb-score-clean-over-svg circle{
+    stroke-width:7 !important;
+  }
+}
+</style>
+
+
+<style id="mb-apple-fitness-shadow-final">
+/* Apple Fitness style overlap shadow:
+   subtle charcoal, small offset, no neon */
+
+.ring .mb-clean-over-svg circle,
+.small-stat .mb-score-clean-over-svg circle{
+  stroke:#ff5b7a !important;
+  filter:
+    drop-shadow(0 2px 1px rgba(18,18,18,.24))
+    drop-shadow(0 4px 5px rgba(0,0,0,.18)) !important;
+}
+
+/* remove lifted neon box look */
+.ring.mb-overlap,
+.small-stat.mb-score-clean{
+  box-shadow:
+    0 4px 10px rgba(0,0,0,.10),
+    inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+</style>
+
 </body>
 </html>
