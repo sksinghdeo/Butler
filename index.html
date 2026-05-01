@@ -6736,5 +6736,243 @@ if(typeof r==='function'){window.render=function(){const x=r.apply(this,argument
 })();
 </script>
 
+
+<style id="mb-recipe-category-add-fix-v2">
+/* Recipe category empty state should only show when truly empty */
+#ingredientResults .recipe-cat-empty{
+  padding:14px 16px;
+  border-radius:16px;
+  border:1px solid rgba(56,189,248,.18);
+  background:rgba(2,6,23,.45);
+}
+</style>
+
+<script id="mb-recipe-category-add-fix-v2-js">
+(function(){
+  function q(id){return document.getElementById(id)}
+  function N(v){const x=parseFloat(v);return Number.isFinite(x)?x:0}
+  function R(v){return Math.round(N(v)*10)/10}
+  function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+  const CATEGORY_MAP = {
+    all: [],
+    condiments: ['condiment','condiments','sauce','dressing','ketchup','mustard','mayo','mayonnaise','bbq','guacamole','salsa','dip','hummus'],
+    vegetables: ['vegetable','vegetables','onion','garlic','tomato','potato','pepper','spinach','broccoli','carrot','lettuce','cucumber','mushroom','corn','peas'],
+    fruits: ['fruit','fruits','apple','banana','orange','pineapple','berries','berry','mango','grape','melon','pear','peach'],
+    protein: ['protein','meat','chicken','beef','pork','fish','salmon','tuna','egg','tofu','paneer','beans','lentil','turkey','shrimp'],
+    carbs: ['carb','carbs','rice','bread','pasta','noodle','oat','oats','bagel','tortilla','naan','cereal','flour','barley','quinoa'],
+    dairy: ['dairy','milk','cheese','yogurt','cream','butter'],
+    oils: ['oil','oils','olive oil','canola','ghee','butter'],
+    spices: ['spice','spices','salt','pepper','cumin','turmeric','paprika','masala','cinnamon','oregano']
+  };
+
+  function norm(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}
+
+  function matchCategory(item, cat){
+    if(!cat || cat.toLowerCase()==='all') return true;
+    const key = norm(cat);
+    const text = norm([item?.name,item?.cat,item?.serving,item?.source,(item?.aliases||[]).join(' ')].join(' '));
+    const words = CATEGORY_MAP[key] || [key];
+    return words.some(w => text.includes(norm(w)));
+  }
+
+  function getAllIngredients(){
+    let arr = [];
+
+    // Pull from visible rendered rows is not enough; use available global arrays if present.
+    try{
+      if(typeof ingredientDatabase !== 'undefined' && Array.isArray(ingredientDatabase)) arr = arr.concat(ingredientDatabase);
+    }catch(e){}
+
+    try{
+      if(window.ingredientDatabase && Array.isArray(window.ingredientDatabase)) arr = arr.concat(window.ingredientDatabase);
+    }catch(e){}
+
+    try{
+      if(window.foodDatabase && Array.isArray(window.foodDatabase)) arr = arr.concat(window.foodDatabase);
+    }catch(e){}
+
+    try{
+      if(typeof foodDatabase !== 'undefined' && Array.isArray(foodDatabase)) arr = arr.concat(foodDatabase);
+    }catch(e){}
+
+    try{
+      const custom = JSON.parse(localStorage.getItem('macro_custom_foods_v3')||'[]');
+      if(Array.isArray(custom)) arr = arr.concat(custom);
+    }catch(e){}
+
+    // fallback from the current result cards if global data is hidden inside closure
+    document.querySelectorAll('#ingredientResults .ingredient-row').forEach(row=>{
+      const name = row.querySelector('b')?.textContent?.trim();
+      const meta = row.querySelector('.meta')?.textContent || '';
+      const cat = row.querySelector('.source-chip')?.textContent || '';
+      if(name) arr.push({name,cat,serving:meta.split('•')[0]?.trim()||'1 serving',cal:0,c:0,p:0,f:0});
+    });
+
+    const seen = new Set();
+    return arr.filter(x=>{
+      if(!x || !x.name) return false;
+      const k = norm(x.name)+'|'+norm(x.serving);
+      if(seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  }
+
+  function score(item, query){
+    const t = norm([item.name,item.cat,item.serving,(item.aliases||[]).join(' ')].join(' '));
+    const qn = norm(query);
+    if(!qn) return 1;
+    if(t.includes(qn)) return 99;
+    return qn.split(' ').reduce((s,w)=>s+(t.includes(w)?20:-5),0);
+  }
+
+  function currentCategory(){
+    const active = document.querySelector('#recipeCategoryPills .pill.active');
+    return active ? active.textContent.trim() : 'All';
+  }
+
+  function renderIngredientResultsFixed(){
+    const box = q('ingredientResults');
+    if(!box) return;
+
+    const query = (q('ingredientSearch')?.value || '').trim();
+    const cat = currentCategory();
+    const data = getAllIngredients();
+
+    let results = data
+      .filter(item => matchCategory(item, cat))
+      .map(item => ({item, score:score(item, query)}))
+      .filter(x => !query || x.score > 0)
+      .sort((a,b)=>b.score-a.score)
+      .slice(0,8)
+      .map(x=>x.item);
+
+    box.innerHTML = results.length ? results.map(item=>{
+      const j = JSON.stringify(item).replace(/'/g,'&apos;');
+      return `<div class="ingredient-row"><div><b>${esc(item.name)}</b><div class="meta">${esc(item.serving||'1 serving')} • ${Math.round(N(item.cal))} cal • C ${R(item.c)}g • P ${R(item.p)}g • F ${R(item.f)}g</div><span class="source-chip">${esc(item.cat||item.source||'Food')}</span></div><button class="small-btn good" type="button" onclick='openIngredientAmountModal(${j})'>Add</button></div>`;
+    }).join('') : `<p class="note recipe-cat-empty">No ingredients in this category. Try All or search by name.</p>`;
+
+    if(typeof window.mbRefreshStageHeight === 'function') setTimeout(window.mbRefreshStageHeight,50);
+  }
+
+  // Override category pill clicks after they are rendered.
+  function repairPills(){
+    const holder = q('recipeCategoryPills');
+    if(!holder) return;
+    holder.querySelectorAll('.pill').forEach(btn=>{
+      if(btn.dataset.fixedCat === '1') return;
+      btn.dataset.fixedCat = '1';
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        holder.querySelectorAll('.pill').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        renderIngredientResultsFixed();
+      }, true);
+    });
+  }
+
+  // Properly add selected ingredient to recipe.
+  function renderRecipeTotals(){
+    const arr = window._mbRecipeIngredients || [];
+    const box = q('recipeIngredientList');
+    if(box){
+      box.innerHTML = arr.length ? arr.map((x,i)=>`
+        <div class="recipe-row">
+          <div><b>${esc(x.name)}</b><div class="meta">${esc(x.amount)} ${esc(x.unit)} • ${Math.round(N(x.cal))} cal • C ${R(x.c)}g • P ${R(x.p)}g • F ${R(x.f)}g</div></div>
+          <button class="small-btn danger" type="button" onclick="removeRecipeIngredient(${i})">Remove</button>
+        </div>`).join('') : "<p class='note'>No ingredients added yet.</p>";
+    }
+
+    const t = arr.reduce((a,x)=>({cal:a.cal+N(x.cal),c:a.c+N(x.c),p:a.p+N(x.p),f:a.f+N(x.f)}),{cal:0,c:0,p:0,f:0});
+    if(q('recipeCal')) q('recipeCal').textContent = Math.round(t.cal);
+    if(q('recipeC')) q('recipeC').textContent = R(t.c)+'g';
+    if(q('recipeP')) q('recipeP').textContent = R(t.p)+'g';
+    if(q('recipeF')) q('recipeF').textContent = R(t.f)+'g';
+    if(typeof window.mbRefreshStageHeight === 'function') setTimeout(window.mbRefreshStageHeight,50);
+  }
+
+  window.removeRecipeIngredient = function(i){
+    window._mbRecipeIngredients = (window._mbRecipeIngredients || []).filter((_,idx)=>idx!==i);
+    renderRecipeTotals();
+  };
+
+  function selectedItem(){
+    return window.selectedIngredientItem || window.mbSelectedIngredientItem || null;
+  }
+
+  // Use existing corrected multiplier if available.
+  function mult(item, amount, unit){
+    if(typeof window.mbCorrectIngredientMultiplier === 'function'){
+      return window.mbCorrectIngredientMultiplier(item, amount, unit);
+    }
+    if(unit === 'serving') return amount;
+    return amount;
+  }
+
+  window.confirmIngredientAdd = function(){
+    const item = selectedItem();
+    if(!item){
+      alert('Please select an ingredient again.');
+      return;
+    }
+
+    const amount = N(q('ingredientModalAmount')?.value) || 1;
+    const unit = q('ingredientModalUnit')?.value || 'serving';
+    const m = mult(item, amount, unit);
+
+    window._mbRecipeIngredients = window._mbRecipeIngredients || [];
+    window._mbRecipeIngredients.push({
+      base:item,
+      amount,
+      unit,
+      name:item.name,
+      cal:Math.round(N(item.cal)*m),
+      c:R(N(item.c)*m),
+      p:R(N(item.p)*m),
+      f:R(N(item.f)*m)
+    });
+
+    if(typeof closeMbModal === 'function') closeMbModal('ingredientAmountModal');
+    else q('ingredientAmountModal')?.classList.remove('active');
+
+    renderRecipeTotals();
+  };
+
+  const oldOpen = window.openIngredientAmountModal;
+  if(typeof oldOpen === 'function'){
+    window.openIngredientAmountModal = function(item){
+      window.selectedIngredientItem = item;
+      window.mbSelectedIngredientItem = item;
+      oldOpen.apply(this, arguments);
+    };
+  }
+
+  // Replace render function with robust one.
+  window.renderIngredientResults = renderIngredientResultsFixed;
+
+  const oldRender = window.render;
+  if(typeof oldRender === 'function'){
+    window.render = function(){
+      const result = oldRender.apply(this, arguments);
+      setTimeout(()=>{repairPills();}, 0);
+      return result;
+    };
+  }
+
+  const oldShow = window.showScreen;
+  if(typeof oldShow === 'function'){
+    window.showScreen = function(){
+      oldShow.apply(this, arguments);
+      setTimeout(()=>{repairPills(); renderIngredientResultsFixed();}, 80);
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{repairPills(); renderIngredientResultsFixed();},400));
+  setTimeout(()=>{repairPills(); renderIngredientResultsFixed();},1000);
+})();
+</script>
+
 </body>
 </html>
