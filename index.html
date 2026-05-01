@@ -5098,5 +5098,210 @@ const r=window.render;
 if(typeof r==='function'){window.render=function(){const x=r.apply(this,arguments);apply();return x;}}
 })();
 </script>
+
+<style id="mb-add-custom-food-category-confirm-v1">
+/* Add Custom Food: category select + confirmation message */
+#customFoodModal .cf-confirm{
+  display:none;
+  margin-top:12px;
+  padding:12px 14px;
+  border-radius:16px;
+  font-size:14px;
+  font-weight:900;
+  line-height:1.35;
+  color:#bbf7d0;
+  background:rgba(20,83,45,.52);
+  border:1px solid rgba(34,197,94,.35);
+}
+#customFoodModal.confirmed .cf-confirm{display:block}
+#customFoodModal.confirmed .mb-modal-actions button:last-child{
+  color:#60a5fa !important;
+  font-weight:950 !important;
+}
+</style>
+
+<script id="mb-add-custom-food-category-confirm-v1-js">
+(function(){
+  function q(id){return document.getElementById(id)}
+  const CATEGORY_OPTIONS = ['Breakfast','Protein','Carbs','Fruits','Snacks','Drinks','Indian','Restaurant','Custom Food'];
+
+  function patchModal(){
+    const m = q('customFoodModal');
+    if(!m) return;
+
+    /* Replace free-text category input with selectable category + new category option */
+    const oldCat = q('cfCat');
+    if(oldCat && oldCat.tagName !== 'SELECT'){
+      const select = document.createElement('select');
+      select.id = 'cfCat';
+      select.innerHTML = CATEGORY_OPTIONS.map(c=>`<option value="${c}">${c}</option>`).join('') + `<option value="__new__">+ Add New Category</option>`;
+      oldCat.replaceWith(select);
+      select.addEventListener('change', function(){
+        if(select.value === '__new__'){
+          const name = prompt('New category name');
+          if(name && name.trim()){
+            const clean = name.trim();
+            const opt = document.createElement('option');
+            opt.value = clean;
+            opt.textContent = clean;
+            select.insertBefore(opt, select.lastElementChild);
+            select.value = clean;
+            addCategoryPill(clean);
+          }else{
+            select.value = 'Custom Food';
+          }
+        }
+      });
+    }
+
+    if(!m.querySelector('.cf-confirm')){
+      const actions = m.querySelector('.mb-modal-actions');
+      if(actions){
+        const msg = document.createElement('div');
+        msg.className = 'cf-confirm';
+        msg.id = 'cfConfirm';
+        msg.textContent = '';
+        actions.parentNode.insertBefore(msg, actions);
+      }
+    }
+  }
+
+  function addCategoryPill(cat){
+    const row = document.querySelector('#screenAdd .pill-row');
+    if(!row || !cat) return;
+    const exists = Array.from(row.querySelectorAll('.pill')).some(b => (b.textContent||'').trim().toLowerCase() === cat.toLowerCase());
+    if(exists) return;
+    const btn = document.createElement('button');
+    btn.className = 'pill';
+    btn.type = 'button';
+    btn.textContent = cat;
+    btn.onclick = function(){ if(typeof setCategory === 'function') setCategory(cat, btn); };
+    row.appendChild(btn);
+  }
+
+  function keepModalOpen(message){
+    const m = q('customFoodModal');
+    if(!m) return;
+    m.classList.add('active','confirmed');
+    const msg = q('cfConfirm');
+    if(msg) msg.textContent = message;
+    const cancel = m.querySelector('.mb-modal-actions button:last-child');
+    if(cancel) cancel.textContent = 'Close';
+  }
+
+  function resetConfirmation(){
+    const m = q('customFoodModal');
+    if(!m) return;
+    m.classList.remove('confirmed');
+    const msg = q('cfConfirm');
+    if(msg) msg.textContent = '';
+    const cancel = m.querySelector('.mb-modal-actions button:last-child');
+    if(cancel) cancel.textContent = 'Cancel';
+  }
+
+  function itemFromForm(){
+    const name = (q('cfName')?.value || '').trim();
+    if(!name){ alert('Enter food name'); return null; }
+    const n = id => {
+      const v = parseFloat(q(id)?.value || '0');
+      return Number.isFinite(v) ? v : 0;
+    };
+    const r1 = x => Math.round((Number(x)||0)*10)/10;
+    return {
+      id:'custom_food_'+Date.now(),
+      name,
+      serving:(q('cfServing')?.value || '').trim() || '1 serving',
+      cat:q('cfCat')?.value || 'Custom Food',
+      cal:Math.round(n('cfCal')),
+      c:r1(n('cfC')),
+      p:r1(n('cfP')),
+      f:r1(n('cfF')),
+      source:'custom',
+      aliases:[]
+    };
+  }
+
+  function saveDb(item){
+    if(typeof getCustomFoods==='function' && typeof setCustomFoods==='function'){
+      const keyFn = typeof localKey==='function' ? localKey : (x => (String(x.name||'').toLowerCase()+'|'+String(x.serving||'').toLowerCase()));
+      setCustomFoods([item,...getCustomFoods().filter(x=>keyFn(x)!==keyFn(item))].slice(0,500));
+      if(typeof loadFoodDatabase==='function') loadFoodDatabase();
+      if(typeof renderFoodDatabase==='function') renderFoodDatabase();
+    }
+    addCategoryPill(item.cat);
+  }
+
+  function saveFav(item){
+    if(!q('cfFav')?.classList.contains('active')) return;
+    if(typeof getFavorites==='function' && typeof setFavorites==='function'){
+      const keyFn = typeof itemKey==='function' ? itemKey : (x => (String(x.name||'').toLowerCase()+'|'+String(x.serving||'').toLowerCase()));
+      const favs = getFavorites().filter(x => keyFn(x)!==keyFn(item));
+      favs.unshift(item);
+      setFavorites(favs.slice(0,150));
+      if(typeof renderFavorites==='function') renderFavorites();
+    }
+  }
+
+  function resetFields(){
+    ['cfName','cfServing','cfCal','cfC','cfP','cfF'].forEach(id=>{ if(q(id)) q(id).value=''; });
+    if(q('cfServings')) q('cfServings').value='1';
+    if(q('cfMeal')) q('cfMeal').value='Breakfast';
+    if(q('cfCat')) q('cfCat').value='Custom Food';
+    q('cfFav')?.classList.remove('active');
+  }
+
+  const oldOpen = window.openCustomFoodModal;
+  window.openCustomFoodModal = function(){
+    if(typeof oldOpen === 'function') oldOpen.apply(this, arguments);
+    setTimeout(()=>{ patchModal(); resetConfirmation(); }, 0);
+  };
+
+  const oldClose = window.closeCustomFoodModal;
+  window.closeCustomFoodModal = function(){
+    resetConfirmation();
+    if(typeof oldClose === 'function') oldClose.apply(this, arguments);
+    else q('customFoodModal')?.classList.remove('active');
+  };
+
+  window.saveCustomFoodToDatabase = function(){
+    patchModal();
+    const item = itemFromForm(); if(!item) return;
+    saveDb(item);
+    saveFav(item);
+    keepModalOpen(q('cfFav')?.classList.contains('active') ? 'Saved to database and added to favourites.' : 'Saved to database.');
+    resetFields();
+  };
+
+  window.addCustomFoodToLog = function(){
+    patchModal();
+    const item = itemFromForm(); if(!item) return;
+    const mult = parseFloat(q('cfServings')?.value || '1') || 1;
+    const r1 = x => Math.round((Number(x)||0)*10)/10;
+    const logItem = {
+      name:item.name + (item.serving ? ' ('+item.serving+')' : ''),
+      meal:q('cfMeal')?.value || 'Breakfast',
+      cal:Math.round(item.cal*mult),
+      c:r1(item.c*mult),
+      p:r1(item.p*mult),
+      f:r1(item.f*mult)
+    };
+    if(typeof getLog==='function' && typeof saveLog==='function'){
+      const log = getLog();
+      log.push(logItem);
+      saveLog(log);
+    }
+    if(typeof addRecent==='function') addRecent(item);
+    saveDb(item);
+    saveFav(item);
+    if(typeof render === 'function') render();
+    keepModalOpen('Added to log.');
+    resetFields();
+  };
+
+  document.addEventListener('DOMContentLoaded', function(){ setTimeout(patchModal, 300); });
+  setTimeout(patchModal, 800);
+})();
+</script>
+
 </body>
 </html>
