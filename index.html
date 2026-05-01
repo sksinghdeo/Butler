@@ -5565,5 +5565,255 @@ body.light-mode button[onclick*="toggleCustomIngredientFavoriteStar"]{
 })();
 </script>
 
+
+<style id="mb-clean-overlap-rings-v3">
+/* CLEAN OVERLAP RING V3
+   Subtle Apple-like extra segment, not a thick blob. */
+
+/* Remove all previous overlap pseudo elements/badges */
+.ring.mb-overlap::before,
+.ring.mb-overlap::after,
+.ring.mb-over::before,
+.ring.mb-over::after,
+.ring.over-target::before,
+.ring.over-target::after,
+.ring.mb-overlap .ring-inner::before,
+.ring .mb-over-svg{
+  display:none !important;
+  content:none !important;
+}
+
+/* Rings should remain clean and full when over target */
+.ring.mb-overlap,
+.ring.mb-over,
+.ring.over-target{
+  position:relative !important;
+  overflow:visible !important;
+  background:conic-gradient(var(--ring) 100%, rgba(30,41,59,.85) 0) !important;
+  box-shadow:0 0 18px rgba(37,99,235,.14), inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+
+/* New subtle overlay segment on the same ring path */
+.ring .mb-clean-over-svg{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  pointer-events:none !important;
+  z-index:30 !important;
+  overflow:visible !important;
+}
+
+.ring .mb-clean-over-svg circle{
+  fill:none !important;
+  stroke:#ff5b7a !important;
+  stroke-width:8 !important;
+  stroke-linecap:round !important;
+  filter:drop-shadow(0 0 7px rgba(255,91,122,.65)) !important;
+}
+
+/* Daily progress actual circular ring */
+.small-stat{
+  position:relative !important;
+  overflow:visible !important;
+}
+
+.small-stat .mb-score-clean-over-svg{
+  position:absolute !important;
+  width:104px !important;
+  height:104px !important;
+  right:10px !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+  pointer-events:none !important;
+  z-index:30 !important;
+  overflow:visible !important;
+}
+
+.small-stat .mb-score-clean-over-svg circle{
+  fill:none !important;
+  stroke:#ff5b7a !important;
+  stroke-width:8 !important;
+  stroke-linecap:round !important;
+  filter:drop-shadow(0 0 7px rgba(255,91,122,.65)) !important;
+}
+
+/* remove old daily progress extra/badge */
+.small-stat.mb-score-overlap::before,
+.small-stat.mb-score-overlap::after,
+.small-stat.mb-over::before,
+.small-stat.mb-over::after,
+.small-stat.over-target::before,
+.small-stat.over-target::after,
+.small-stat .mb-score-over-svg{
+  display:none !important;
+  content:none !important;
+}
+
+.small-stat.mb-score-clean{
+  box-shadow:0 0 16px rgba(255,91,122,.16) !important;
+}
+
+/* Keep tap percentage behavior clean */
+.ring.showing-percent .ring-inner{
+  box-shadow:inset 0 0 0 2px rgba(96,165,250,.40),0 0 18px rgba(96,165,250,.25) !important;
+}
+
+@media(max-width:430px){
+  .ring .mb-clean-over-svg circle{
+    stroke-width:7 !important;
+  }
+
+  .small-stat .mb-score-clean-over-svg{
+    width:94px !important;
+    height:94px !important;
+    right:6px !important;
+  }
+
+  .small-stat .mb-score-clean-over-svg circle{
+    stroke-width:7 !important;
+  }
+}
+</style>
+
+<script id="mb-clean-overlap-rings-v3-js">
+(function(){
+  function $(id){return document.getElementById(id)}
+  function nFromText(id){
+    const el=$(id);
+    if(!el) return 0;
+    const raw=String(el.textContent || el.value || '').replace(/[^0-9.\-]/g,'');
+    const n=parseFloat(raw);
+    return Number.isFinite(n)?n:0;
+  }
+
+  function makeSvg(parent, cls, r){
+    let svg=parent.querySelector(':scope > .' + cls);
+    if(svg) return svg;
+
+    svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('class',cls);
+    svg.setAttribute('viewBox','0 0 100 100');
+
+    const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx','50');
+    c.setAttribute('cy','50');
+    c.setAttribute('r',String(r));
+    c.setAttribute('pathLength','100');
+    c.setAttribute('transform','rotate(-90 50 50)');
+
+    svg.appendChild(c);
+    parent.appendChild(svg);
+    return svg;
+  }
+
+  function setArc(svg, percent){
+    const c=svg.querySelector('circle');
+    if(!c) return;
+    if(percent>100){
+      const extra=Math.min(92,Math.max(7,percent-100));
+      c.style.strokeDasharray=extra+' 100';
+      c.style.strokeDashoffset='0';
+      svg.style.display='block';
+    }else{
+      c.style.strokeDasharray='0 100';
+      svg.style.display='none';
+    }
+  }
+
+  function applyRing(ringId,valueId,targetId){
+    const ring=$(ringId);
+    if(!ring) return;
+    const value=nFromText(valueId);
+    const target=nFromText(targetId);
+    const pct=target>0?(value/target)*100:0;
+
+    ring.dataset.percent=Math.round(pct)+'%';
+
+    const svg=makeSvg(ring,'mb-clean-over-svg',42);
+
+    if(pct>100){
+      ring.classList.add('mb-overlap');
+      ring.classList.remove('mb-over','over-target');
+      ring.style.setProperty('--p','100%');
+    }else{
+      ring.classList.remove('mb-overlap','mb-over','over-target');
+    }
+
+    setArc(svg,pct);
+  }
+
+  function applyDaily(){
+    const score=$('score');
+    const box=score?.closest('.small-stat');
+    if(!score || !box) return;
+
+    const pct=parseFloat(String(score.textContent||'').replace(/[^0-9.\-]/g,'')) || 0;
+    const svg=makeSvg(box,'mb-score-clean-over-svg',42);
+
+    if(pct>100){
+      box.classList.add('mb-score-clean');
+      box.classList.remove('mb-score-overlap','mb-over','over-target');
+    }else{
+      box.classList.remove('mb-score-clean','mb-score-overlap','mb-over','over-target');
+    }
+
+    setArc(svg,pct);
+  }
+
+  function apply(){
+    applyRing('ringCal','tCal','dashGoalCal');
+    applyRing('ringC','tC','dashGoalC');
+    applyRing('ringP','tP','dashGoalP');
+    applyRing('ringF','tF','dashGoalF');
+    applyDaily();
+  }
+
+  /* Preserve tap-to-percent from previous file if present, otherwise add it */
+  function setupTap(){
+    document.querySelectorAll('.ring').forEach(ring=>{
+      if(ring.dataset.percentTapReady==='1') return;
+      ring.dataset.percentTapReady='1';
+      ring.addEventListener('click',function(){
+        const b=ring.querySelector('.ring-inner b');
+        const s=ring.querySelector('.ring-inner span');
+        if(!b || !s || !ring.dataset.percent) return;
+        const oldB=b.textContent, oldS=s.textContent;
+        b.textContent=ring.dataset.percent;
+        s.textContent='Target';
+        ring.classList.add('showing-percent');
+        clearTimeout(ring._percentTimer);
+        ring._percentTimer=setTimeout(()=>{
+          b.textContent=oldB;
+          s.textContent=oldS;
+          ring.classList.remove('showing-percent');
+        },1400);
+      });
+    });
+  }
+
+  const oldUpdateDashboard=window.updateDashboard;
+  if(typeof oldUpdateDashboard==='function'){
+    window.updateDashboard=function(){
+      const result=oldUpdateDashboard.apply(this,arguments);
+      setTimeout(()=>{apply();setupTap();},0);
+      return result;
+    };
+  }
+
+  const oldRenderToday=window.renderToday;
+  if(typeof oldRenderToday==='function'){
+    window.renderToday=function(){
+      const result=oldRenderToday.apply(this,arguments);
+      setTimeout(()=>{apply();setupTap();},0);
+      return result;
+    };
+  }
+
+  setInterval(()=>{apply();setupTap();},700);
+  setTimeout(()=>{apply();setupTap();},100);
+})();
+</script>
+
 </body>
 </html>
