@@ -5040,210 +5040,63 @@ body.light-mode button[onclick*="toggleCustomIngredientFavoriteStar"]{
 
 
 
-<style id="mb-ios-calendar-user-icons-final">
-/* Restore native iOS calendar behavior */
-#screenToday .date-box{
-  position:relative !important;
-}
 
-#screenToday #date{
-  display:block !important;
-  position:absolute !important;
-  opacity:0 !important;
-  width:100% !important;
-  height:58px !important;
-  left:0 !important;
-  top:0 !important;
-  z-index:30 !important;
-  pointer-events:auto !important;
-  appearance:auto !important;
-  -webkit-appearance:auto !important;
-}
 
-#screenToday #dateDisplay{
-  position:relative !important;
-  z-index:20 !important;
-  pointer-events:none !important;
-}
 
-/* Hide old custom calendar if it exists */
-#mbCalendarBackdrop{
-  display:none !important;
-}
-
-/* Target icons using provided SVGs */
+<style id="mb-icons-v2">
 #screenToday .home-targets-grid .calc-box{
-  position:relative !important;
-  min-height:94px !important;
-  padding-top:42px !important;
+ position:relative!important;min-height:102px!important;padding-top:48px!important;
 }
-
-#screenToday .home-targets-grid .calc-box::before{
-  content:none !important;
-  display:none !important;
+.target-macro-icon{
+ position:absolute;top:6px;left:50%;transform:translateX(-50%);
+ width:42px;height:42px;display:flex;align-items:center;justify-content:center;
 }
-
-#screenToday .target-macro-icon{
-  position:absolute !important;
-  top:8px !important;
-  left:50% !important;
-  transform:translateX(-50%) !important;
-  width:34px !important;
-  height:34px !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  filter:none !important;
+.target-macro-icon svg,.macro-icon svg{width:42px;height:42px;display:block;margin:0 auto 8px}
+.macro-svg{
+ width:38px;height:38px;fill:none;stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round;
 }
-
-#screenToday .target-macro-icon svg{
-  width:34px !important;
-  height:34px !important;
-  display:block !important;
-}
-
-#screenToday .home-targets-grid .calc-box b,
-#screenToday .home-targets-grid .calc-box span{
-  color:var(--bc-text) !important;
-}
-
-@media(max-width:430px){
-  #screenToday .target-macro-icon,
-  #screenToday .target-macro-icon svg{
-    width:30px !important;
-    height:30px !important;
-  }
-
-  #screenToday .home-targets-grid .calc-box{
-    padding-top:39px !important;
-    min-height:88px !important;
-  }
-}
+.calories-icon{stroke:#24c8ff;filter:drop-shadow(0 0 7px #24c8ff)}
+.protein-icon{stroke:#22f26f;filter:drop-shadow(0 0 7px #22f26f)}
+.carbs-icon{stroke:#a855ff;filter:drop-shadow(0 0 7px #a855ff)}
+.fat-icon{stroke:#ffb31a;filter:drop-shadow(0 0 7px #ffb31a)}
 </style>
-
-<script id="mb-ios-calendar-user-icons-final-js">
+<script id="mb-icons-v2-js">
 (function(){
-  function $(id){ return document.getElementById(id); }
-
-  const svgIcons = [
-    // CALORIES
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="34" height="34" fill="none">
-      <defs>
-        <linearGradient id="mbCalGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#53d8ff"/>
-          <stop offset="100%" stop-color="#008cff"/>
-        </linearGradient>
-        <filter id="mbCalGlow">
-          <feDropShadow dx="0" dy="0" stdDeviation="1.25" flood-color="#32c5ff"/>
-        </filter>
-      </defs>
-      <path filter="url(#mbCalGlow)" d="M34 6C45 18 50 26 50 36C50 47 42 56 32 56S14 47 14 36C14 25 21 16 34 6Z" fill="url(#mbCalGrad)"/>
-      <path d="M31 26C37 31 39 35 39 40C39 45 35 49 30 49S21 45 21 40C21 35 24 31 31 26Z" fill="#ffffff22"/>
-    </svg>`,
-    // PROTEIN
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="34" height="34" fill="none">
-      <defs>
-        <linearGradient id="mbProGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#59ff7d"/>
-          <stop offset="100%" stop-color="#00d45a"/>
-        </linearGradient>
-        <filter id="mbProGlow">
-          <feDropShadow dx="0" dy="0" stdDeviation="1.25" flood-color="#39ff72"/>
-        </filter>
-      </defs>
-      <path filter="url(#mbProGlow)" d="M18 18C27 9 44 11 49 23C54 35 45 51 31 51C19 51 11 42 11 32C11 26 13 22 18 18Z" fill="url(#mbProGrad)"/>
-      <circle cx="42" cy="23" r="4" fill="#062b12"/>
-      <path d="M22 34C28 28 36 28 42 34" stroke="#0b5f28" stroke-width="3" stroke-linecap="round"/>
-    </svg>`,
-    // CARBS
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="34" height="34" fill="none">
-      <defs>
-        <linearGradient id="mbCarbGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#d18cff"/>
-          <stop offset="100%" stop-color="#8c38ff"/>
-        </linearGradient>
-        <filter id="mbCarbGlow">
-          <feDropShadow dx="0" dy="0" stdDeviation="1.25" flood-color="#b15dff"/>
-        </filter>
-      </defs>
-      <path filter="url(#mbCarbGlow)" d="M22 52L40 12" stroke="url(#mbCarbGrad)" stroke-width="4" stroke-linecap="round"/>
-      <ellipse cx="19" cy="39" rx="6" ry="10" fill="url(#mbCarbGrad)"/>
-      <ellipse cx="27" cy="28" rx="6" ry="10" fill="url(#mbCarbGrad)"/>
-      <ellipse cx="36" cy="21" rx="6" ry="10" fill="url(#mbCarbGrad)"/>
-      <ellipse cx="43" cy="33" rx="6" ry="10" fill="url(#mbCarbGrad)"/>
-      <ellipse cx="33" cy="42" rx="6" ry="10" fill="url(#mbCarbGrad)"/>
-    </svg>`,
-    // FAT
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="34" height="34" fill="none">
-      <defs>
-        <linearGradient id="mbFatGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#ffd54a"/>
-          <stop offset="100%" stop-color="#ff9900"/>
-        </linearGradient>
-        <filter id="mbFatGlow">
-          <feDropShadow dx="0" dy="0" stdDeviation="1.25" flood-color="#ffbf00"/>
-        </filter>
-      </defs>
-      <path filter="url(#mbFatGlow)" d="M32 8C43 20 48 28 48 38C48 48 41 56 32 56S16 48 16 38C16 28 21 20 32 8Z" fill="url(#mbFatGrad)"/>
-      <path d="M34 28C38 31 39 36 36 40C34 43 29 44 27 41C24 37 27 31 34 28Z" fill="#5a3200aa"/>
-    </svg>`
-  ];
-
-  function installUserIcons(){
-    const boxes = document.querySelectorAll('#screenToday .home-targets-grid .calc-box');
-    boxes.forEach((box, i) => {
-      let holder = box.querySelector('.target-macro-icon');
-      if(!holder){
-        holder = document.createElement('span');
-        holder.className = 'target-macro-icon';
-        box.prepend(holder);
-      }
-      holder.innerHTML = svgIcons[i] || '';
-    });
-  }
-
-  function restoreNativeCalendar(){
-    const input = $('date');
-    const display = $('dateDisplay');
-    const backdrop = $('mbCalendarBackdrop');
-
-    if(backdrop) backdrop.classList.remove('active');
-
-    if(input){
-      input.type = 'date';
-      input.style.display = 'block';
-      input.style.opacity = '0';
-      input.style.pointerEvents = 'auto';
-      input.style.position = 'absolute';
-      input.style.zIndex = '30';
-    }
-
-    if(display){
-      display.style.pointerEvents = 'none';
-    }
-  }
-
-  const oldRender = window.render;
-  if(typeof oldRender === 'function'){
-    window.render = function(){
-      const result = oldRender.apply(this, arguments);
-      installUserIcons();
-      restoreNativeCalendar();
-      return result;
-    };
-  }
-
-  document.addEventListener('DOMContentLoaded', function(){
-    installUserIcons();
-    restoreNativeCalendar();
-  });
-
-  setTimeout(function(){
-    installUserIcons();
-    restoreNativeCalendar();
-  }, 200);
+const icons=[
+`<svg class="macro-svg calories-icon" viewBox="0 0 64 64">
+<path d="M34 6C45 18 50 27 50 37C50 48 42 56 32 56C22 56 14 48 14 37C14 27 21 17 34 6Z"/>
+<path d="M31 29C37 34 39 38 39 43C39 48 35 52 30 52C25 52 21 48 21 43C21 37 25 33 31 29Z"/>
+</svg>`,
+`<svg class="macro-svg protein-icon" viewBox="0 0 64 64">
+<path d="M17 22C25 11 43 10 50 23C57 36 46 53 31 53C19 53 10 44 10 33C10 29 12 25 17 22Z"/>
+<circle cx="43" cy="24" r="5"/>
+<path d="M22 38C29 32 37 32 43 38"/>
+</svg>`,
+`<svg class="macro-svg carbs-icon" viewBox="0 0 64 64">
+<path d="M22 54L42 10"/>
+<path d="M18 42C14 35 15 29 22 25C26 31 25 38 18 42Z"/>
+<path d="M28 31C24 24 25 18 32 14C36 21 35 27 28 31Z"/>
+<path d="M40 24C37 17 38 12 46 8C50 15 48 21 40 24Z"/>
+<path d="M42 38C46 31 52 28 58 31C55 39 49 42 42 38Z"/>
+<path d="M32 48C36 41 42 38 48 41C45 49 39 52 32 48Z"/>
+</svg>`,
+`<svg class="macro-svg fat-icon" viewBox="0 0 64 64">
+<path d="M32 7C44 21 49 30 49 40C49 50 42 57 32 57C22 57 15 50 15 40C15 30 20 21 32 7Z"/>
+<path d="M36 29C40 34 40 40 36 44C33 47 28 47 25 44C22 40 25 33 36 29Z"/>
+</svg>`
+];
+function apply(){
+document.querySelectorAll('#screenToday .home-targets-grid .calc-box').forEach((b,i)=>{
+ let h=b.querySelector('.target-macro-icon');
+ if(!h){h=document.createElement('span');h.className='target-macro-icon';b.prepend(h);}
+ h.innerHTML=icons[i]||'';
+});
+}
+document.addEventListener('DOMContentLoaded',apply);
+setTimeout(apply,300);
+const r=window.render;
+if(typeof r==='function'){window.render=function(){const x=r.apply(this,arguments);apply();return x;}}
 })();
 </script>
-
 </body>
 </html>
