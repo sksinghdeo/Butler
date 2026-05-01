@@ -1335,6 +1335,12 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
 @media(max-width:430px){.scan-button-grid{grid-template-columns:1fr}.scan-action-panel{padding:14px}.ocr-details summary{padding:14px}}
 </style>
 
+
+<style id="recipe-meal-layout-fix">
+/* User requested: Meal next to Recipe Name; Amount Unit removed */
+#customRecipeCard .recipe-name-meal-row{grid-template-columns:minmax(0,1.35fr) minmax(0,.65fr)!important;align-items:end!important}
+@media(max-width:430px){#customRecipeCard .recipe-name-meal-row{grid-template-columns:1fr!important}}
+</style>
 </head>
 
 <body>
@@ -1420,8 +1426,16 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
   <div id="customRecipeCard" class="card card-purple">
     <h2><span class="bc-icon">CR</span>Custom Recipe Builder</h2>
     <p class="note">Build a dish from ingredients. Macros are calculated from the selected ingredient amount instead of storing repeated half/quarter entries.</p>
-    <label>Recipe Name</label>
-    <input id="recipeName" placeholder="Example: Chicken rice bowl / Homemade dal">
+    <div class="row recipe-name-meal-row">
+      <div>
+        <label>Recipe Name</label>
+        <input id="recipeName" placeholder="Example: Chicken rice bowl / Homemade dal">
+      </div>
+      <div>
+        <label>Meal</label>
+        <select id="recipeMeal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select>
+      </div>
+    </div>
     <div class="row">
       <div>
         <label>Search Ingredient</label>
@@ -1430,22 +1444,6 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
       <div>
         <label>Ingredient Amount</label>
         <input id="ingredientAmount" type="number" step="0.1" value="100">
-      </div>
-    </div>
-    <div class="row">
-      <div>
-        <label>Amount Unit</label>
-        <select id="ingredientUnit">
-          <option value="g">grams</option>
-          <option value="serving">listed serving</option>
-          <option value="tbsp">tablespoon</option>
-          <option value="tsp">teaspoon</option>
-          <option value="ml">ml</option>
-        </select>
-      </div>
-      <div>
-        <label>Meal</label>
-        <select id="recipeMeal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select>
       </div>
     </div>
     <div id="ingredientResults" class="mini-result-list"></div>
