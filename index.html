@@ -5957,5 +5957,290 @@ body.light-mode button[onclick*="toggleCustomIngredientFavoriteStar"]{
 })();
 </script>
 
+
+<style id="mb-final-no-glitch-ring-system">
+/* FINAL NO-GLITCH RING SYSTEM
+   Hide/remove every older overlay method so only one clean overlay exists. */
+
+.ring .mb-over-svg,
+.ring .mb-clean-over-svg,
+.small-stat .mb-score-over-svg,
+.small-stat .mb-score-clean-over-svg{
+  display:none !important;
+}
+
+.ring.mb-overlap::before,
+.ring.mb-overlap::after,
+.ring.mb-over::before,
+.ring.mb-over::after,
+.ring.over-target::before,
+.ring.over-target::after,
+.ring.mb-overlap .ring-inner::before,
+.small-stat.mb-score-overlap::before,
+.small-stat.mb-score-overlap::after,
+.small-stat.mb-over::before,
+.small-stat.mb-over::after,
+.small-stat.over-target::before,
+.small-stat.over-target::after{
+  content:none !important;
+  display:none !important;
+}
+
+/* Keep base ring clean */
+.ring.mb-final-over{
+  position:relative !important;
+  overflow:visible !important;
+  background:conic-gradient(var(--ring) 100%, rgba(30,41,59,.85) 0) !important;
+  box-shadow:0 0 18px rgba(37,99,235,.14), inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+
+.ring .mb-final-over-svg{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  pointer-events:none !important;
+  z-index:20 !important;
+  overflow:visible !important;
+}
+
+.ring .mb-final-over-svg circle{
+  fill:none !important;
+  stroke-linecap:round !important;
+}
+
+.ring .mb-final-over-svg .mb-final-shadow{
+  stroke:rgba(0,0,0,.28) !important;
+  stroke-width:8 !important;
+  filter:blur(.15px) !important;
+}
+
+.ring .mb-final-over-svg .mb-final-arc{
+  stroke:#ff5b7a !important;
+  stroke-width:7 !important;
+}
+
+/* Daily progress overlay */
+.small-stat{
+  position:relative !important;
+  overflow:visible !important;
+}
+
+.small-stat .mb-final-score-svg{
+  position:absolute !important;
+  width:100px !important;
+  height:100px !important;
+  right:11px !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+  pointer-events:none !important;
+  z-index:20 !important;
+  overflow:visible !important;
+}
+
+.small-stat .mb-final-score-svg circle{
+  fill:none !important;
+  stroke-linecap:round !important;
+}
+
+.small-stat .mb-final-score-svg .mb-final-shadow{
+  stroke:rgba(0,0,0,.28) !important;
+  stroke-width:8 !important;
+  filter:blur(.15px) !important;
+}
+
+.small-stat .mb-final-score-svg .mb-final-arc{
+  stroke:#ff5b7a !important;
+  stroke-width:7 !important;
+}
+
+.small-stat.mb-final-score-over{
+  box-shadow:0 0 16px rgba(255,91,122,.12) !important;
+}
+
+@media(max-width:430px){
+  .ring .mb-final-over-svg .mb-final-shadow,
+  .small-stat .mb-final-score-svg .mb-final-shadow{
+    stroke-width:7 !important;
+  }
+
+  .ring .mb-final-over-svg .mb-final-arc,
+  .small-stat .mb-final-score-svg .mb-final-arc{
+    stroke-width:6.5 !important;
+  }
+
+  .small-stat .mb-final-score-svg{
+    width:90px !important;
+    height:90px !important;
+    right:7px !important;
+  }
+}
+</style>
+
+<script id="mb-final-no-glitch-ring-system-js">
+(function(){
+  function $(id){return document.getElementById(id)}
+  function val(id){
+    const el=$(id);
+    if(!el) return 0;
+    const n=parseFloat(String(el.textContent || el.value || '').replace(/[^0-9.\-]/g,''));
+    return Number.isFinite(n)?n:0;
+  }
+
+  function removeOldOverlays(){
+    document.querySelectorAll('.mb-over-svg,.mb-clean-over-svg,.mb-score-over-svg,.mb-score-clean-over-svg').forEach(el=>el.remove());
+  }
+
+  function makeSvg(parent, className){
+    let svg=parent.querySelector(':scope > .' + className);
+    if(svg) return svg;
+
+    svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('class',className);
+    svg.setAttribute('viewBox','0 0 100 100');
+
+    const shadow=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    shadow.setAttribute('class','mb-final-shadow');
+    shadow.setAttribute('cx','50');
+    shadow.setAttribute('cy','50');
+    shadow.setAttribute('r','42');
+    shadow.setAttribute('pathLength','100');
+    shadow.setAttribute('transform','rotate(-90 50 50) translate(2.5 3)');
+
+    const arc=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    arc.setAttribute('class','mb-final-arc');
+    arc.setAttribute('cx','50');
+    arc.setAttribute('cy','50');
+    arc.setAttribute('r','42');
+    arc.setAttribute('pathLength','100');
+    arc.setAttribute('transform','rotate(-90 50 50)');
+
+    svg.appendChild(shadow);
+    svg.appendChild(arc);
+    parent.appendChild(svg);
+    return svg;
+  }
+
+  function setArc(svg,pct){
+    const shadow=svg.querySelector('.mb-final-shadow');
+    const arc=svg.querySelector('.mb-final-arc');
+
+    if(pct>100){
+      /* cap the visible extra so it reads as overlap, not multiple rings */
+      const extra=Math.min(72,Math.max(6,pct-100));
+      [shadow,arc].forEach(c=>{
+        c.style.strokeDasharray=extra+' 100';
+        c.style.strokeDashoffset='0';
+      });
+      svg.style.display='block';
+    }else{
+      [shadow,arc].forEach(c=>{
+        c.style.strokeDasharray='0 100';
+        c.style.strokeDashoffset='0';
+      });
+      svg.style.display='none';
+    }
+  }
+
+  function applyRing(ringId,valueId,targetId){
+    const ring=$(ringId);
+    if(!ring) return;
+
+    const value=val(valueId);
+    const target=val(targetId);
+    const pct=target>0?(value/target)*100:0;
+
+    ring.dataset.percent=Math.round(pct)+'%';
+
+    const svg=makeSvg(ring,'mb-final-over-svg');
+
+    if(pct>100){
+      ring.classList.add('mb-final-over');
+      ring.classList.remove('mb-overlap','mb-over','over-target');
+      ring.style.setProperty('--p','100%');
+    }else{
+      ring.classList.remove('mb-final-over','mb-overlap','mb-over','over-target');
+    }
+
+    setArc(svg,pct);
+  }
+
+  function applyDaily(){
+    const score=$('score');
+    const box=score?.closest('.small-stat');
+    if(!score || !box) return;
+
+    const pct=parseFloat(String(score.textContent || '').replace(/[^0-9.\-]/g,'')) || 0;
+    const svg=makeSvg(box,'mb-final-score-svg');
+
+    if(pct>100){
+      box.classList.add('mb-final-score-over');
+      box.classList.remove('mb-score-overlap','mb-score-clean','mb-over','over-target');
+    }else{
+      box.classList.remove('mb-final-score-over','mb-score-overlap','mb-score-clean','mb-over','over-target');
+    }
+
+    setArc(svg,pct);
+  }
+
+  function setupTap(){
+    document.querySelectorAll('.ring').forEach(ring=>{
+      if(ring.dataset.finalPercentTapReady==='1') return;
+      ring.dataset.finalPercentTapReady='1';
+      ring.addEventListener('click',function(){
+        const b=ring.querySelector('.ring-inner b');
+        const s=ring.querySelector('.ring-inner span');
+        if(!b || !s || !ring.dataset.percent) return;
+
+        const oldB=b.textContent;
+        const oldS=s.textContent;
+
+        b.textContent=ring.dataset.percent;
+        s.textContent='Target';
+        ring.classList.add('showing-percent');
+
+        clearTimeout(ring._finalPercentTimer);
+        ring._finalPercentTimer=setTimeout(()=>{
+          b.textContent=oldB;
+          s.textContent=oldS;
+          ring.classList.remove('showing-percent');
+        },1400);
+      });
+    });
+  }
+
+  function apply(){
+    removeOldOverlays();
+    applyRing('ringCal','tCal','dashGoalCal');
+    applyRing('ringC','tC','dashGoalC');
+    applyRing('ringP','tP','dashGoalP');
+    applyRing('ringF','tF','dashGoalF');
+    applyDaily();
+    setupTap();
+  }
+
+  const oldUpdateDashboard=window.updateDashboard;
+  if(typeof oldUpdateDashboard==='function'){
+    window.updateDashboard=function(){
+      const result=oldUpdateDashboard.apply(this,arguments);
+      setTimeout(apply,0);
+      return result;
+    };
+  }
+
+  const oldRenderToday=window.renderToday;
+  if(typeof oldRenderToday==='function'){
+    window.renderToday=function(){
+      const result=oldRenderToday.apply(this,arguments);
+      setTimeout(apply,0);
+      return result;
+    };
+  }
+
+  setInterval(apply,800);
+  setTimeout(apply,100);
+})();
+</script>
+
 </body>
 </html>
