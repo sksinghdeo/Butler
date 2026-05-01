@@ -6536,5 +6536,205 @@ if(typeof r==='function'){window.render=function(){const x=r.apply(this,argument
 })();
 </script>
 
+
+<style id="mb-final-unit-conversion-and-search-align">
+/* Better aligned search icons inside Favorites / Saved Recipes headers */
+#favoriteDetails summary,
+#savedRecipeDetails summary{
+  display:grid !important;
+  grid-template-columns:auto 1fr 42px 28px !important;
+  align-items:center !important;
+  gap:10px !important;
+}
+
+#favoriteDetails summary .mb-tab-search-btn,
+#savedRecipeDetails summary .mb-tab-search-btn{
+  grid-column:3 !important;
+  width:40px !important;
+  height:40px !important;
+  min-width:40px !important;
+  border-radius:15px !important;
+  margin:0 !important;
+  padding:0 !important;
+  font-size:18px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+#favoriteDetails summary .chev,
+#savedRecipeDetails summary .chev{
+  grid-column:4 !important;
+  justify-self:center !important;
+}
+</style>
+
+<script id="mb-final-unit-conversion-and-search-align-js">
+(function(){
+  function $(id){return document.getElementById(id)}
+  function N(v){const x=parseFloat(v);return Number.isFinite(x)?x:0}
+  function R(v){return Math.round(N(v)*10)/10}
+
+  const ML = {
+    tsp:5, teaspoon:5, teaspoons:5,
+    tbsp:15, tablespoon:15, tablespoons:15,
+    ml:1, milliliter:1, milliliters:1,
+    cup:240, cups:240,
+    floz:30, 'fl oz':30, fluidounce:30, fluidounces:30
+  };
+
+  const G = {
+    g:1, gram:1, grams:1,
+    oz:28.3495, ounce:28.3495, ounces:28.3495
+  };
+
+  function cleanUnit(u){
+    return String(u||'').toLowerCase()
+      .replace(/\./g,'')
+      .replace(/fluid ounces?/g,'fl oz')
+      .replace(/\s+/g,' ')
+      .trim();
+  }
+
+  function fractionToNumber(s){
+    s = String(s||'').trim();
+    if(!s) return null;
+    if(s.includes('/')){
+      const [a,b] = s.split('/').map(Number);
+      return b ? a/b : null;
+    }
+    const n = Number(s);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function servingQtyToNumber(qtyText){
+    const txt = String(qtyText||'').trim();
+    if(!txt) return 1;
+
+    // supports "1", "1.5", "1/2", "1 1/2"
+    const mixed = txt.match(/^(\d+(?:\.\d+)?)\s+(\d+\/\d+)$/);
+    if(mixed){
+      return Number(mixed[1]) + (fractionToNumber(mixed[2]) || 0);
+    }
+
+    return fractionToNumber(txt) || 1;
+  }
+
+  function density(item){
+    const t = String([item?.name,item?.cat,item?.serving].join(' ')).toLowerCase();
+    if(/oil|ghee|butter|margarine/.test(t)) return 0.92;
+    if(/mayonnaise|mayo/.test(t)) return 0.91;
+    if(/honey|syrup|molasses/.test(t)) return 1.35;
+    if(/peanut butter|nut butter/.test(t)) return 1.10;
+    if(/flour|powder|cocoa/.test(t)) return 0.53;
+    if(/sugar/.test(t)) return 0.85;
+    if(/rice|oats|cereal|granola/.test(t)) return 0.60;
+    if(/milk|yogurt|cream/.test(t)) return 1.03;
+    if(/sauce|dressing|ketchup|mustard|condiment|bbq/.test(t)) return 1.05;
+    return 1.00;
+  }
+
+  function parseBaseServing(item){
+    const s = String(item?.serving || '1 serving').toLowerCase();
+
+    // This parses the FIRST valid numeric-unit pair from the serving string.
+    // Example: "2 tbsp" => volume 30 mL. "100 g" => mass 100 g.
+    const re = /(\d+(?:\.\d+)?(?:\s+\d+\/\d+)?|\d+\/\d+)\s*(fl\s*oz|fluid ounces?|tablespoons?|tbsp|teaspoons?|tsp|cups?|ml|milliliters?|grams?|g|ounces?|oz|servings?|serving|pieces?|piece|slice|slices|sandwich|container)\b/i;
+    const m = s.match(re);
+
+    if(!m){
+      return {kind:'serving', value:1, unit:'serving'};
+    }
+
+    const qty = servingQtyToNumber(m[1]);
+    const unit = cleanUnit(m[2]);
+
+    if(G[unit]) return {kind:'mass', value:qty * G[unit], unit};
+    if(ML[unit]) return {kind:'volume', value:qty * ML[unit], unit};
+    return {kind:'serving', value:qty || 1, unit};
+  }
+
+  function selectedAmount(amount, unit){
+    amount = N(amount) || 1;
+    unit = cleanUnit(unit);
+
+    if(unit === 'serving' || unit === 'listed serving'){
+      return {kind:'serving', value:amount, unit:'serving'};
+    }
+
+    if(G[unit]) return {kind:'mass', value:amount * G[unit], unit};
+    if(ML[unit]) return {kind:'volume', value:amount * ML[unit], unit};
+
+    return {kind:'serving', value:amount, unit};
+  }
+
+  function multiplier(item, amount, unit){
+    const base = parseBaseServing(item);
+    const sel = selectedAmount(amount, unit);
+    const rho = density(item);
+
+    if(base.kind === sel.kind){
+      return base.value ? sel.value / base.value : sel.value;
+    }
+
+    if(sel.kind === 'serving') return sel.value;
+    if(base.kind === 'serving') return sel.value / 100;
+
+    // Cross mass-volume fallback using density estimate.
+    // volume mL * density g/mL = grams
+    if(base.kind === 'mass' && sel.kind === 'volume'){
+      return base.value ? (sel.value * rho) / base.value : 1;
+    }
+
+    if(base.kind === 'volume' && sel.kind === 'mass'){
+      return base.value ? (sel.value / rho) / base.value : 1;
+    }
+
+    return sel.value / (base.value || 1);
+  }
+
+  window.mbCorrectIngredientMultiplier = multiplier;
+
+  // Override the ACTUAL ingredient popup confirmation.
+  window.confirmIngredientAdd = function(){
+    const item = window.selectedIngredientItem || (typeof selectedIngredientItem !== 'undefined' ? selectedIngredientItem : null);
+    if(!item){
+      return;
+    }
+
+    const amount = N($('ingredientModalAmount')?.value) || 1;
+    const unit = $('ingredientModalUnit')?.value || 'serving';
+    const m = multiplier(item, amount, unit);
+
+    window._mbRecipeIngredients = window._mbRecipeIngredients || [];
+    window._mbRecipeIngredients.push({
+      base:item,
+      amount,
+      unit,
+      name:item.name,
+      cal:Math.round(N(item.cal) * m),
+      c:R(N(item.c) * m),
+      p:R(N(item.p) * m),
+      f:R(N(item.f) * m)
+    });
+
+    if(typeof closeMbModal === 'function') closeMbModal('ingredientAmountModal');
+    else $('ingredientAmountModal')?.classList.remove('active');
+
+    if(typeof renderRecipe === 'function') renderRecipe();
+    else if(typeof window.renderRecipe === 'function') window.renderRecipe();
+  };
+
+  // Make selectedIngredientItem accessible even if older code kept it in closure.
+  const oldOpen = window.openIngredientAmountModal;
+  if(typeof oldOpen === 'function'){
+    window.openIngredientAmountModal = function(item){
+      window.selectedIngredientItem = item;
+      oldOpen.apply(this, arguments);
+    };
+  }
+})();
+</script>
+
 </body>
 </html>
