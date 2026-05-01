@@ -6242,5 +6242,424 @@ body.light-mode button[onclick*="toggleCustomIngredientFavoriteStar"]{
 })();
 </script>
 
+
+<style id="mb-daily-progress-real-ring-fix">
+/* FINAL DAILY PROGRESS RING FIX
+   The daily progress circle is not a .ring, so target its actual visual area directly. */
+
+.small-stat{
+  position:relative !important;
+  overflow:visible !important;
+}
+
+/* Create the extra overlap segment exactly over the Daily Progress circular ring */
+.small-stat .mb-daily-final-svg{
+  position:absolute !important;
+  width:104px !important;
+  height:104px !important;
+  right:11px !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+  pointer-events:none !important;
+  z-index:80 !important;
+  overflow:visible !important;
+}
+
+.small-stat .mb-daily-final-svg circle{
+  fill:none !important;
+  stroke-linecap:round !important;
+}
+
+.small-stat .mb-daily-final-svg .mb-daily-shadow{
+  stroke:rgba(0,0,0,.30) !important;
+  stroke-width:8 !important;
+  filter:blur(.15px) !important;
+}
+
+.small-stat .mb-daily-final-svg .mb-daily-arc{
+  stroke:#ff5b7a !important;
+  stroke-width:7 !important;
+}
+
+/* remove older daily progress overlays */
+.small-stat .mb-final-score-svg,
+.small-stat .mb-score-clean-over-svg,
+.small-stat .mb-score-over-svg{
+  display:none !important;
+}
+
+.small-stat.mb-daily-over{
+  box-shadow:0 0 16px rgba(255,91,122,.12) !important;
+}
+
+@media(max-width:430px){
+  .small-stat .mb-daily-final-svg{
+    width:94px !important;
+    height:94px !important;
+    right:6px !important;
+  }
+
+  .small-stat .mb-daily-final-svg .mb-daily-shadow{
+    stroke-width:7 !important;
+  }
+
+  .small-stat .mb-daily-final-svg .mb-daily-arc{
+    stroke-width:6.5 !important;
+  }
+}
+</style>
+
+<script id="mb-daily-progress-real-ring-fix-js">
+(function(){
+  function makeDailySvg(box){
+    let svg=box.querySelector(':scope > .mb-daily-final-svg');
+    if(svg) return svg;
+
+    svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('class','mb-daily-final-svg');
+    svg.setAttribute('viewBox','0 0 100 100');
+
+    const shadow=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    shadow.setAttribute('class','mb-daily-shadow');
+    shadow.setAttribute('cx','50');
+    shadow.setAttribute('cy','50');
+    shadow.setAttribute('r','42');
+    shadow.setAttribute('pathLength','100');
+    shadow.setAttribute('transform','rotate(-90 50 50) translate(2.5 3)');
+
+    const arc=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    arc.setAttribute('class','mb-daily-arc');
+    arc.setAttribute('cx','50');
+    arc.setAttribute('cy','50');
+    arc.setAttribute('r','42');
+    arc.setAttribute('pathLength','100');
+    arc.setAttribute('transform','rotate(-90 50 50)');
+
+    svg.appendChild(shadow);
+    svg.appendChild(arc);
+    box.appendChild(svg);
+    return svg;
+  }
+
+  function applyDailyProgressEffect(){
+    const score=document.getElementById('score');
+    const box=score?.closest('.small-stat');
+    if(!score || !box) return;
+
+    const pct=parseFloat(String(score.textContent || '').replace(/[^0-9.\-]/g,'')) || 0;
+    const svg=makeDailySvg(box);
+    const shadow=svg.querySelector('.mb-daily-shadow');
+    const arc=svg.querySelector('.mb-daily-arc');
+
+    if(pct>100){
+      const extra=Math.min(72,Math.max(6,pct-100));
+      shadow.style.strokeDasharray=extra + ' 100';
+      arc.style.strokeDasharray=extra + ' 100';
+      shadow.style.strokeDashoffset='0';
+      arc.style.strokeDashoffset='0';
+      svg.style.display='block';
+      box.classList.add('mb-daily-over');
+    }else{
+      shadow.style.strokeDasharray='0 100';
+      arc.style.strokeDasharray='0 100';
+      svg.style.display='none';
+      box.classList.remove('mb-daily-over');
+    }
+  }
+
+  const oldUpdateDashboard=window.updateDashboard;
+  if(typeof oldUpdateDashboard==='function'){
+    window.updateDashboard=function(){
+      const result=oldUpdateDashboard.apply(this,arguments);
+      setTimeout(applyDailyProgressEffect,0);
+      return result;
+    };
+  }
+
+  const oldRenderToday=window.renderToday;
+  if(typeof oldRenderToday==='function'){
+    window.renderToday=function(){
+      const result=oldRenderToday.apply(this,arguments);
+      setTimeout(applyDailyProgressEffect,0);
+      return result;
+    };
+  }
+
+  setInterval(applyDailyProgressEffect,500);
+  setTimeout(applyDailyProgressEffect,100);
+})();
+</script>
+
+
+<style id="mb-final-same-color-overlap-and-daily-fix">
+/* FINAL: keep over-target rings their original color; overlap uses same color */
+
+/* Macro rings: force completed ring to original --ring color, not red */
+.ring.mb-final-over,
+.ring.mb-overlap,
+.ring.mb-over,
+.ring.over-target{
+  background:conic-gradient(var(--ring) 100%, rgba(30,41,59,.85) 0) !important;
+}
+
+/* Macro overlap arc + its shadow use the same ring color */
+.ring .mb-final-over-svg .mb-final-arc,
+.ring .mb-clean-over-svg circle:not(.mb-shadow-arc),
+.ring .mb-over-svg circle:not(.mb-shadow-arc){
+  stroke:var(--ring) !important;
+}
+
+.ring .mb-final-over-svg .mb-final-shadow,
+.ring .mb-clean-over-svg circle.mb-shadow-arc,
+.ring .mb-over-svg circle.mb-shadow-arc{
+  stroke:rgba(0,0,0,.30) !important;
+}
+
+/* remove red forced earlier styles */
+.ring .mb-final-over-svg circle,
+.ring .mb-clean-over-svg circle,
+.ring .mb-over-svg circle{
+  filter:none !important;
+}
+
+/* DAILY PROGRESS: actual visible overlay matching its ring color, starting at 12 o'clock */
+.small-stat{
+  position:relative !important;
+  overflow:visible !important;
+}
+
+/* Hide all older daily overlays that were not lining up */
+.small-stat .mb-final-score-svg,
+.small-stat .mb-score-clean-over-svg,
+.small-stat .mb-score-over-svg,
+.small-stat .mb-daily-final-svg{
+  display:none !important;
+}
+
+/* New daily overlay drawn over the existing daily ring */
+.small-stat .mb-daily-match-svg{
+  position:absolute !important;
+  width:106px !important;
+  height:106px !important;
+  right:8px !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+  pointer-events:none !important;
+  z-index:90 !important;
+  overflow:visible !important;
+}
+
+.small-stat .mb-daily-match-svg circle{
+  fill:none !important;
+  stroke-linecap:round !important;
+}
+
+.small-stat .mb-daily-match-svg .mb-daily-match-shadow{
+  stroke:rgba(0,0,0,.30) !important;
+  stroke-width:8 !important;
+  filter:blur(.15px) !important;
+}
+
+.small-stat .mb-daily-match-svg .mb-daily-match-arc{
+  stroke:#22d3ee !important;
+  stroke-width:7 !important;
+}
+
+/* make the daily progress closed ring stay blue/cyan, not red */
+.small-stat.mb-daily-match-over{
+  box-shadow:0 0 16px rgba(34,211,238,.12) !important;
+}
+
+@media(max-width:430px){
+  .small-stat .mb-daily-match-svg{
+    width:96px !important;
+    height:96px !important;
+    right:3px !important;
+  }
+
+  .small-stat .mb-daily-match-svg .mb-daily-match-shadow{
+    stroke-width:7 !important;
+  }
+
+  .small-stat .mb-daily-match-svg .mb-daily-match-arc{
+    stroke-width:6.5 !important;
+  }
+}
+</style>
+
+<script id="mb-final-same-color-overlap-and-daily-fix-js">
+(function(){
+  function $(id){return document.getElementById(id)}
+  function numeric(id){
+    const el=$(id);
+    if(!el) return 0;
+    const raw=String(el.textContent || el.value || '').replace(/[^0-9.\-]/g,'');
+    const n=parseFloat(raw);
+    return Number.isFinite(n)?n:0;
+  }
+
+  function getRingColor(ring){
+    return getComputedStyle(ring).getPropertyValue('--ring').trim() || '#38bdf8';
+  }
+
+  function ensureMacroSvg(ring){
+    let svg=ring.querySelector(':scope > .mb-final-over-svg');
+    if(!svg){
+      svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+      svg.setAttribute('class','mb-final-over-svg');
+      svg.setAttribute('viewBox','0 0 100 100');
+
+      const shadow=document.createElementNS('http://www.w3.org/2000/svg','circle');
+      shadow.setAttribute('class','mb-final-shadow');
+      shadow.setAttribute('cx','50');
+      shadow.setAttribute('cy','50');
+      shadow.setAttribute('r','42');
+      shadow.setAttribute('pathLength','100');
+      shadow.setAttribute('transform','rotate(-90 50 50) translate(2.5 3)');
+
+      const arc=document.createElementNS('http://www.w3.org/2000/svg','circle');
+      arc.setAttribute('class','mb-final-arc');
+      arc.setAttribute('cx','50');
+      arc.setAttribute('cy','50');
+      arc.setAttribute('r','42');
+      arc.setAttribute('pathLength','100');
+      arc.setAttribute('transform','rotate(-90 50 50)');
+
+      svg.appendChild(shadow);
+      svg.appendChild(arc);
+      ring.appendChild(svg);
+    }
+    return svg;
+  }
+
+  function setDash(svg,pct,color){
+    const shadow=svg.querySelector('.mb-final-shadow');
+    const arc=svg.querySelector('.mb-final-arc');
+    if(pct>100){
+      const extra=Math.min(72,Math.max(6,pct-100));
+      shadow.style.strokeDasharray=extra+' 100';
+      arc.style.strokeDasharray=extra+' 100';
+      shadow.style.strokeDashoffset='0';
+      arc.style.strokeDashoffset='0';
+      arc.style.stroke=color;
+      svg.style.display='block';
+    }else{
+      shadow.style.strokeDasharray='0 100';
+      arc.style.strokeDasharray='0 100';
+      svg.style.display='none';
+    }
+  }
+
+  function applyMacro(ringId,valueId,targetId){
+    const ring=$(ringId);
+    if(!ring) return;
+    const value=numeric(valueId);
+    const target=numeric(targetId);
+    const pct=target>0?(value/target)*100:0;
+    const color=getRingColor(ring);
+
+    ring.dataset.percent=Math.round(pct)+'%';
+
+    if(pct>100){
+      ring.classList.add('mb-final-over');
+      ring.classList.remove('mb-overlap','mb-over','over-target');
+      ring.style.setProperty('--p','100%');
+    }else{
+      ring.classList.remove('mb-final-over','mb-overlap','mb-over','over-target');
+    }
+
+    setDash(ensureMacroSvg(ring),pct,color);
+  }
+
+  function ensureDailySvg(box){
+    let svg=box.querySelector(':scope > .mb-daily-match-svg');
+    if(svg) return svg;
+
+    svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('class','mb-daily-match-svg');
+    svg.setAttribute('viewBox','0 0 100 100');
+
+    const shadow=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    shadow.setAttribute('class','mb-daily-match-shadow');
+    shadow.setAttribute('cx','50');
+    shadow.setAttribute('cy','50');
+    shadow.setAttribute('r','42');
+    shadow.setAttribute('pathLength','100');
+    /* start at 12 o'clock, then cast shadow slightly down/right */
+    shadow.setAttribute('transform','rotate(-90 50 50) translate(2.5 3)');
+
+    const arc=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    arc.setAttribute('class','mb-daily-match-arc');
+    arc.setAttribute('cx','50');
+    arc.setAttribute('cy','50');
+    arc.setAttribute('r','42');
+    arc.setAttribute('pathLength','100');
+    /* start at 12 o'clock */
+    arc.setAttribute('transform','rotate(-90 50 50)');
+
+    svg.appendChild(shadow);
+    svg.appendChild(arc);
+    box.appendChild(svg);
+    return svg;
+  }
+
+  function applyDaily(){
+    const score=$('score');
+    const box=score?.closest('.small-stat');
+    if(!score || !box) return;
+
+    const pct=parseFloat(String(score.textContent||'').replace(/[^0-9.\-]/g,'')) || 0;
+    const svg=ensureDailySvg(box);
+    const shadow=svg.querySelector('.mb-daily-match-shadow');
+    const arc=svg.querySelector('.mb-daily-match-arc');
+
+    if(pct>100){
+      const extra=Math.min(72,Math.max(6,pct-100));
+      shadow.style.strokeDasharray=extra+' 100';
+      arc.style.strokeDasharray=extra+' 100';
+      shadow.style.strokeDashoffset='0';
+      arc.style.strokeDashoffset='0';
+      svg.style.display='block';
+      box.classList.add('mb-daily-match-over');
+      box.classList.remove('mb-final-score-over','mb-score-overlap','mb-score-clean','mb-daily-over','mb-over','over-target');
+    }else{
+      shadow.style.strokeDasharray='0 100';
+      arc.style.strokeDasharray='0 100';
+      svg.style.display='none';
+      box.classList.remove('mb-daily-match-over','mb-final-score-over','mb-score-overlap','mb-score-clean','mb-daily-over','mb-over','over-target');
+    }
+  }
+
+  function applyAll(){
+    applyMacro('ringCal','tCal','dashGoalCal');
+    applyMacro('ringC','tC','dashGoalC');
+    applyMacro('ringP','tP','dashGoalP');
+    applyMacro('ringF','tF','dashGoalF');
+    applyDaily();
+  }
+
+  const oldUpdateDashboard=window.updateDashboard;
+  if(typeof oldUpdateDashboard==='function'){
+    window.updateDashboard=function(){
+      const result=oldUpdateDashboard.apply(this,arguments);
+      setTimeout(applyAll,0);
+      return result;
+    };
+  }
+
+  const oldRenderToday=window.renderToday;
+  if(typeof oldRenderToday==='function'){
+    window.renderToday=function(){
+      const result=oldRenderToday.apply(this,arguments);
+      setTimeout(applyAll,0);
+      return result;
+    };
+  }
+
+  setInterval(applyAll,600);
+  setTimeout(applyAll,100);
+})();
+</script>
+
 </body>
 </html>
