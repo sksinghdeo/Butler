@@ -1335,12 +1335,6 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
 @media(max-width:430px){.scan-button-grid{grid-template-columns:1fr}.scan-action-panel{padding:14px}.ocr-details summary{padding:14px}}
 </style>
 
-
-<style id="recipe-meal-layout-fix">
-/* User requested: Meal next to Recipe Name; Amount Unit removed */
-#customRecipeCard .recipe-name-meal-row{grid-template-columns:minmax(0,1.35fr) minmax(0,.65fr)!important;align-items:end!important}
-@media(max-width:430px){#customRecipeCard .recipe-name-meal-row{grid-template-columns:1fr!important}}
-</style>
 </head>
 
 <body>
@@ -1426,16 +1420,8 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
   <div id="customRecipeCard" class="card card-purple">
     <h2><span class="bc-icon">CR</span>Custom Recipe Builder</h2>
     <p class="note">Build a dish from ingredients. Macros are calculated from the selected ingredient amount instead of storing repeated half/quarter entries.</p>
-    <div class="row recipe-name-meal-row">
-      <div>
-        <label>Recipe Name</label>
-        <input id="recipeName" placeholder="Example: Chicken rice bowl / Homemade dal">
-      </div>
-      <div>
-        <label>Meal</label>
-        <select id="recipeMeal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select>
-      </div>
-    </div>
+    <label>Recipe Name</label>
+    <input id="recipeName" placeholder="Example: Chicken rice bowl / Homemade dal">
     <div class="row">
       <div>
         <label>Search Ingredient</label>
@@ -1444,6 +1430,22 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
       <div>
         <label>Ingredient Amount</label>
         <input id="ingredientAmount" type="number" step="0.1" value="100">
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>Amount Unit</label>
+        <select id="ingredientUnit">
+          <option value="g">grams</option>
+          <option value="serving">listed serving</option>
+          <option value="tbsp">tablespoon</option>
+          <option value="tsp">teaspoon</option>
+          <option value="ml">ml</option>
+        </select>
+      </div>
+      <div>
+        <label>Meal</label>
+        <select id="recipeMeal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select>
       </div>
     </div>
     <div id="ingredientResults" class="mini-result-list"></div>
@@ -2973,54 +2975,189 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 </script>
 
 
-<!-- PATCH: home calendar open fix only -->
-<style id="home-calendar-open-fix">
-  /* Let the real date input receive the tap on the Home date box.
-     The visible button remains underneath for styling/text. */
-  #screenToday .date-box{
-    position:relative !important;
-    overflow:visible !important;
+
+<!-- MB FINAL PATCH: calendar + custom recipe requested changes only -->
+<style id="mb-requested-fixes-css">
+  .hidden-date{
+    pointer-events:auto!important;
+    opacity:0.001!important;
+    position:absolute!important;
+    inset:0!important;
+    width:100%!important;
+    height:58px!important;
+    z-index:10!important;
   }
-  #screenToday #date.hidden-date{
-    position:absolute !important;
-    inset:0 !important;
-    width:100% !important;
-    height:58px !important;
-    opacity:.001 !important;
-    z-index:20 !important;
-    pointer-events:auto !important;
-    cursor:pointer !important;
+  #mbRecipeTopRow{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,.62fr)!important;
+    gap:14px!important;
+    align-items:end!important;
+    margin-top:6px!important;
   }
-  #screenToday #dateDisplay{
-    pointer-events:none !important;
+  #mbRecipeTopRow label{margin-top:0!important;}
+  #customRecipeCard .mb-hide-requested{display:none!important;}
+  #customIngredientModal .mb-modal-actions.three{
+    display:grid!important;
+    grid-template-columns:1fr 1fr 1fr!important;
+    gap:10px!important;
+  }
+  #customIngredientModal .mb-modal-actions.three button{
+    width:100%!important;
+    margin-top:0!important;
+    padding-left:8px!important;
+    padding-right:8px!important;
+    white-space:nowrap!important;
+  }
+  @media(max-width:430px){
+    #mbRecipeTopRow{grid-template-columns:1fr 1fr!important;gap:10px!important;}
+    #customIngredientModal .mb-modal-actions.three{grid-template-columns:1fr 1fr 1fr!important;gap:8px!important;}
+    #customIngredientModal .mb-modal-actions.three button{font-size:12px!important;padding:12px 6px!important;}
   }
 </style>
-<script id="home-calendar-open-fix-script">
+<script id="mb-requested-fixes-js">
 (function(){
-  function byId(id){return document.getElementById(id)}
-  function openHomeDatePicker(){
-    var input=byId('date');
-    if(!input) return;
-    try{
-      input.focus({preventScroll:true});
-      if(typeof input.showPicker==='function') input.showPicker();
-      else input.click();
-    }catch(e){
-      try{input.click();}catch(_){ }
+  const byId=id=>document.getElementById(id);
+  const num=v=>Number.isFinite(parseFloat(v))?parseFloat(v):0;
+  const r1=v=>Math.round(num(v)*10)/10;
+  const esc=s=>String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function readJSON(k){try{return JSON.parse(localStorage.getItem(k)||'[]')}catch(e){return[]}}
+  function writeJSON(k,v){localStorage.setItem(k,JSON.stringify(v||[]))}
+  function clean(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}
+  function keyOf(i){return clean(i&&i.name)+'|'+clean(i&&i.serving)}
+  function toast(t){
+    if(typeof window.showToast==='function')return window.showToast(t);
+    if(typeof window.mbToast==='function')return window.mbToast(t);
+    if(typeof window.toast==='function')return window.toast(t);
+    alert(t);
+  }
+  function closeModal(id){
+    if(typeof window.closeMbModal==='function')window.closeMbModal(id);
+    else byId(id)?.classList.remove('active');
+  }
+  function getCustoms(){return readJSON('macro_custom_foods_v3')}
+  function saveCustomItem(item){
+    const list=[item,...getCustoms().filter(x=>keyOf(x)!==keyOf(item))].slice(0,500);
+    writeJSON('macro_custom_foods_v3',list);
+  }
+  function getModalItem(){
+    const name=(byId('ciName')?.value||'').trim();
+    if(!name){alert('Enter ingredient name');return null;}
+    return {
+      id:'custom_ing_'+Date.now(),
+      name,
+      serving:(byId('ciServing')?.value||'1 serving').trim(),
+      cat:(byId('ciCat')?.value||'Custom Ingredient').trim(),
+      cal:Math.round(num(byId('ciCal')?.value)),
+      c:r1(byId('ciC')?.value),
+      p:r1(byId('ciP')?.value),
+      f:r1(byId('ciF')?.value),
+      source:'custom_ingredient'
+    };
+  }
+  function renderRecipeDirect(){
+    const box=byId('recipeIngredientList');
+    if(!box)return;
+    const arr=window._mbRecipeIngredients||[];
+    box.innerHTML=arr.length?arr.map((x,i)=>`<div class="recipe-row"><div><b>${esc(x.name)}</b><div class="meta">${esc(x.amount||'1')} ${esc(x.unit||'serving')} • ${Math.round(num(x.cal))} cal • C ${r1(x.c)}g • P ${r1(x.p)}g • F ${r1(x.f)}g</div></div><button class="small-btn danger" type="button" onclick="removeRecipeIngredient(${i})">Remove</button></div>`).join(''):"<p class='note'>No ingredients added yet.</p>";
+    const t=arr.reduce((a,x)=>({cal:a.cal+num(x.cal),c:a.c+num(x.c),p:a.p+num(x.p),f:a.f+num(x.f)}),{cal:0,c:0,p:0,f:0});
+    if(byId('recipeCal'))byId('recipeCal').textContent=Math.round(t.cal);
+    if(byId('recipeC'))byId('recipeC').textContent=r1(t.c)+'g';
+    if(byId('recipeP'))byId('recipeP').textContent=r1(t.p)+'g';
+    if(byId('recipeF'))byId('recipeF').textContent=r1(t.f)+'g';
+    if(typeof window.mbRefreshStageHeight==='function')setTimeout(window.mbRefreshStageHeight,50);
+  }
+  window.removeRecipeIngredient=function(i){
+    window._mbRecipeIngredients=(window._mbRecipeIngredients||[]).filter((_,idx)=>idx!==i);
+    renderRecipeDirect();
+  };
+  function addItemToRecipe(item){
+    window._mbRecipeIngredients=window._mbRecipeIngredients||[];
+    window._mbRecipeIngredients.push({base:item,amount:1,unit:'serving',name:item.name,cal:Math.round(num(item.cal)),c:r1(item.c),p:r1(item.p),f:r1(item.f)});
+    renderRecipeDirect();
+  }
+  function repairCalendar(){
+    const display=byId('dateDisplay'),input=byId('date');
+    if(!display||!input)return;
+    const open=function(e){
+      if(e)e.preventDefault();
+      try{ if(input.showPicker){input.showPicker();return;} }catch(err){}
+      input.focus();
+      input.click();
+    };
+    display.onclick=open;
+    display.addEventListener('touchend',open,{passive:false});
+  }
+  function repairRecipeTopRow(){
+    const card=byId('customRecipeCard'),recipe=byId('recipeName'),meal=byId('recipeMeal');
+    if(!card||!recipe||!meal)return;
+    let top=byId('mbRecipeTopRow');
+    if(!top){
+      top=document.createElement('div');
+      top.id='mbRecipeTopRow';
+      top.innerHTML='<div id="mbRecipeNameCell"></div><div id="mbRecipeMealCell"></div>';
+      const oldLabel=[...card.querySelectorAll('label')].find(l=>l.textContent.trim()==='Recipe Name');
+      card.insertBefore(top,oldLabel||recipe);
+    }
+    const nameCell=byId('mbRecipeNameCell'),mealCell=byId('mbRecipeMealCell');
+    const nameLabel=[...card.querySelectorAll('label')].find(l=>l.textContent.trim()==='Recipe Name');
+    const mealLabel=[...card.querySelectorAll('label')].find(l=>l.textContent.trim()==='Meal');
+    if(nameLabel&&nameLabel.parentElement!==nameCell)nameCell.appendChild(nameLabel);
+    if(recipe.parentElement!==nameCell)nameCell.appendChild(recipe);
+    if(mealLabel&&mealLabel.parentElement!==mealCell)mealCell.appendChild(mealLabel);
+    if(meal.parentElement!==mealCell)mealCell.appendChild(meal);
+    const unit=byId('ingredientUnit');
+    if(unit){
+      const unitCell=unit.closest('div');
+      if(unitCell)unitCell.classList.add('mb-hide-requested');
+      const unitRow=unit.closest('.row');
+      if(unitRow)unitRow.classList.add('mb-hide-requested');
     }
   }
-  function attachHomeCalendarFix(){
-    var btn=byId('dateDisplay');
-    var input=byId('date');
-    if(!btn || !input) return;
-    btn.onclick=openHomeDatePicker;
-    input.addEventListener('input',function(){
-      if(typeof window.dateChanged==='function') window.dateChanged();
-      else if(typeof window.updateDateDisplay==='function') window.updateDateDisplay();
-    });
-  }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',attachHomeCalendarFix);
-  else attachHomeCalendarFix();
+  window.openCustomIngredientModal=function(){
+    let m=byId('customIngredientModal');
+    if(!m){
+      document.body.insertAdjacentHTML('beforeend',`<div id="customIngredientModal" class="mb-modal"><div class="mb-modal-card"><h3>New Ingredient</h3><p class="note">Save an ingredient once, then use it inside recipes anytime.</p><label>Name</label><input id="ciName" placeholder="Example: homemade sauce"><div class="mb-unit-grid"><div><label>Serving</label><input id="ciServing" placeholder="100 g / 1 tbsp"></div><div><label>Category</label><input id="ciCat" placeholder="Custom Ingredient"></div></div><div class="mb-unit-grid"><div><label>Calories</label><input id="ciCal" type="number"></div><div><label>Carbs (g)</label><input id="ciC" type="number" step="0.1"></div><div><label>Protein (g)</label><input id="ciP" type="number" step="0.1"></div><div><label>Fat (g)</label><input id="ciF" type="number" step="0.1"></div></div><div class="mb-modal-actions three"><button class="purple" type="button" onclick="addCustomIngredientToRecipe()">Add to Recipe</button><button class="good" type="button" onclick="saveCustomIngredientModal()">Save Ingredient</button><button class="light" type="button" onclick="closeMbModal('customIngredientModal')">Cancel</button></div></div></div>`);
+      m=byId('customIngredientModal');
+    }else{
+      const card=m.querySelector('.mb-modal-card');
+      if(card){
+        card.querySelectorAll('.custom-food-star-row').forEach(el=>el.remove());
+        let actions=card.querySelector('.mb-modal-actions');
+        if(actions){
+          actions.className='mb-modal-actions three';
+          actions.innerHTML='<button class="purple" type="button" onclick="addCustomIngredientToRecipe()">Add to Recipe</button><button class="good" type="button" onclick="saveCustomIngredientModal()">Save Ingredient</button><button class="light" type="button" onclick="closeMbModal(\'customIngredientModal\')">Cancel</button>';
+        }
+      }
+    }
+    ['ciName','ciServing','ciCat','ciCal','ciC','ciP','ciF'].forEach(id=>{const el=byId(id);if(el)el.value=''});
+    m.classList.add('active');
+  };
+  window.saveCustomIngredientModal=function(){
+    const item=getModalItem();
+    if(!item)return;
+    saveCustomItem(item);
+    closeModal('customIngredientModal');
+    toast('Ingredient saved');
+    if(typeof window.loadFoodDatabase==='function')window.loadFoodDatabase();
+    if(typeof window.renderIngredientResults==='function')window.renderIngredientResults();
+  };
+  window.addCustomIngredientToRecipe=function(){
+    const item=getModalItem();
+    if(!item)return;
+    saveCustomItem(item);
+    addItemToRecipe(item);
+    closeModal('customIngredientModal');
+    toast('Ingredient added to recipe');
+    if(typeof window.loadFoodDatabase==='function')window.loadFoodDatabase();
+    if(typeof window.renderIngredientResults==='function')window.renderIngredientResults();
+  };
+  const oldShow=window.showScreen;
+  window.showScreen=function(name){
+    if(typeof oldShow==='function')oldShow.apply(this,arguments);
+    setTimeout(()=>{repairCalendar();repairRecipeTopRow();},80);
+  };
+  function init(){repairCalendar();repairRecipeTopRow();setTimeout(repairRecipeTopRow,300);setTimeout(repairRecipeTopRow,1000);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
 
