@@ -4664,5 +4664,377 @@ body.light-mode button[onclick*="toggleCustomIngredientFavoriteStar"]{
 }
 </style>
 
+
+
+<style id="mb-master-ring-system">
+/* MASTER RING SYSTEM
+   Scope: Home page rings only.
+   Does not touch Add Food, Recipe Builder, Scan, Log, or Settings.
+*/
+
+#screenToday .ring{
+  position:relative !important;
+  overflow:visible !important;
+  cursor:pointer !important;
+  -webkit-tap-highlight-color:transparent !important;
+  background:
+    conic-gradient(from -90deg,
+      var(--mb-ring-color) 0 var(--mb-ring-fill),
+      rgba(30,41,59,.86) var(--mb-ring-fill) 100%) !important;
+  box-shadow:
+    0 0 12px var(--mb-ring-halo-soft),
+    0 0 26px var(--mb-ring-halo),
+    inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+
+#screenToday .ring::before,
+#screenToday .ring::after,
+#screenToday .ring .ring-inner::before{
+  content:none !important;
+  display:none !important;
+}
+
+#screenToday .ring .ring-inner{
+  position:relative !important;
+  z-index:5 !important;
+}
+
+#screenToday .ring .mb-ring-over-svg{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  overflow:visible !important;
+  pointer-events:none !important;
+  z-index:4 !important;
+}
+
+#screenToday .ring .mb-ring-over-svg circle{
+  fill:none !important;
+  stroke-linecap:round !important;
+}
+
+/* Full, soft, same-color shadow under the top overlap. No one-sided offset. */
+#screenToday .ring .mb-ring-over-svg .over-shadow{
+  stroke:var(--mb-ring-color) !important;
+  stroke-width:11 !important;
+  opacity:.24 !important;
+  filter:blur(2.2px) !important;
+}
+
+#screenToday .ring .mb-ring-over-svg .over-arc{
+  stroke:var(--mb-ring-color) !important;
+  stroke-width:7 !important;
+}
+
+#screenToday .ring.showing-percent .ring-inner{
+  box-shadow:
+    inset 0 0 0 2px rgba(96,165,250,.42),
+    0 0 18px rgba(96,165,250,.24) !important;
+}
+
+/* Daily progress ring starts at 12 o'clock, like all other rings */
+#screenToday .small-stat{
+  position:relative !important;
+  overflow:visible !important;
+  min-height:132px !important;
+  box-shadow:
+    0 0 12px rgba(34,211,238,.14),
+    0 0 28px rgba(34,211,238,.22),
+    inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+
+#screenToday .small-stat::before,
+#screenToday .small-stat::after{
+  content:none !important;
+  display:none !important;
+}
+
+#screenToday .small-stat .mb-daily-ring-svg{
+  position:absolute !important;
+  width:104px !important;
+  height:104px !important;
+  left:50% !important;
+  top:50% !important;
+  transform:translate(-50%,-50%) !important;
+  overflow:visible !important;
+  pointer-events:none !important;
+  z-index:2 !important;
+}
+
+#screenToday .small-stat .mb-daily-ring-svg circle{
+  fill:none !important;
+  stroke-linecap:round !important;
+}
+
+#screenToday .small-stat .mb-daily-ring-svg .daily-track{
+  stroke:rgba(30,41,59,.86) !important;
+  stroke-width:8 !important;
+}
+
+#screenToday .small-stat .mb-daily-ring-svg .daily-main{
+  stroke:#22d3ee !important;
+  stroke-width:8 !important;
+}
+
+#screenToday .small-stat .mb-daily-ring-svg .daily-shadow{
+  stroke:#22d3ee !important;
+  stroke-width:11 !important;
+  opacity:.24 !important;
+  filter:blur(2.2px) !important;
+}
+
+#screenToday .small-stat .mb-daily-ring-svg .daily-over{
+  stroke:#22d3ee !important;
+  stroke-width:7 !important;
+}
+
+#screenToday .small-stat b,
+#screenToday .small-stat span{
+  position:relative !important;
+  z-index:5 !important;
+}
+
+@media(max-width:430px){
+  #screenToday .ring .mb-ring-over-svg .over-shadow,
+  #screenToday .small-stat .mb-daily-ring-svg .daily-shadow{
+    stroke-width:10 !important;
+  }
+
+  #screenToday .ring .mb-ring-over-svg .over-arc,
+  #screenToday .small-stat .mb-daily-ring-svg .daily-over{
+    stroke-width:6.5 !important;
+  }
+
+  #screenToday .small-stat .mb-daily-ring-svg{
+    width:96px !important;
+    height:96px !important;
+  }
+}
+</style>
+
+<script id="mb-master-ring-system-js">
+(function(){
+  const $ = id => document.getElementById(id);
+
+  const RINGS = {
+    ringCal:    { color:'#2f7dff', halo:'rgba(47,125,255,.28)', soft:'rgba(47,125,255,.16)' },
+    ringC:      { color:'#8b5cf6', halo:'rgba(139,92,246,.28)', soft:'rgba(139,92,246,.16)' },
+    ringP:      { color:'#17e67a', halo:'rgba(23,230,122,.28)', soft:'rgba(23,230,122,.16)' },
+    ringF:      { color:'#ffb020', halo:'rgba(255,176,32,.28)', soft:'rgba(255,176,32,.16)' },
+    ringMeals:  { color:'#20d9ff', halo:'rgba(32,217,255,.26)', soft:'rgba(32,217,255,.14)' },
+    ringStreak: { color:'#ff4d7d', halo:'rgba(255,77,125,.26)', soft:'rgba(255,77,125,.14)' }
+  };
+
+  function clamp(x,min,max){ return Math.max(min, Math.min(max, x)); }
+  function toNumber(x){ const n = Number(x); return Number.isFinite(n) ? n : 0; }
+  function parsePercentText(text){
+    const n = parseFloat(String(text || '').replace(/[^0-9.\-]/g,''));
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function removeOldRingOverlays(){
+    document.querySelectorAll(
+      '#screenToday .mb-over-svg,' +
+      '#screenToday .mb-clean-over-svg,' +
+      '#screenToday .mb-final-over-svg,' +
+      '#screenToday .mb-one-over-svg,' +
+      '#screenToday .mb-overlap-svg,' +
+      '#screenToday .ov,' +
+      '#screenToday .dsvg,' +
+      '#screenToday .mb-score-over-svg,' +
+      '#screenToday .mb-score-clean-over-svg,' +
+      '#screenToday .mb-final-score-svg,' +
+      '#screenToday .mb-daily-final-svg,' +
+      '#screenToday .mb-daily-match-svg'
+    ).forEach(el => el.remove());
+  }
+
+  function makeRingSvg(ring){
+    let svg = ring.querySelector(':scope > .mb-ring-over-svg');
+    if(svg) return svg;
+
+    svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('class','mb-ring-over-svg');
+    svg.setAttribute('viewBox','0 0 100 100');
+
+    const shadow = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    shadow.setAttribute('class','over-shadow');
+    shadow.setAttribute('cx','50');
+    shadow.setAttribute('cy','50');
+    shadow.setAttribute('r','42');
+    shadow.setAttribute('pathLength','100');
+    shadow.setAttribute('transform','rotate(-90 50 50)');
+
+    const arc = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    arc.setAttribute('class','over-arc');
+    arc.setAttribute('cx','50');
+    arc.setAttribute('cy','50');
+    arc.setAttribute('r','42');
+    arc.setAttribute('pathLength','100');
+    arc.setAttribute('transform','rotate(-90 50 50)');
+
+    svg.appendChild(shadow);
+    svg.appendChild(arc);
+    ring.appendChild(svg);
+    return svg;
+  }
+
+  function setOverlap(svg, percent){
+    const extra = percent > 100 ? clamp(percent - 100, 0, 100) : 0;
+    const shadow = svg.querySelector('.over-shadow');
+    const arc = svg.querySelector('.over-arc');
+
+    shadow.style.strokeDasharray = extra + ' 100';
+    arc.style.strokeDasharray = extra + ' 100';
+    shadow.style.strokeDashoffset = '0';
+    arc.style.strokeDashoffset = '0';
+
+    svg.style.display = extra > 0 ? 'block' : 'none';
+  }
+
+  function masterSetRing(id, value, target){
+    const ring = $(id);
+    if(!ring) return;
+
+    const cfg = RINGS[id] || RINGS.ringCal;
+    const v = toNumber(value);
+    const t = toNumber(target);
+    const percent = t > 0 ? (v / t) * 100 : 0;
+    const fill = clamp(percent, 0, 100);
+
+    ring.dataset.rawValue = String(v);
+    ring.dataset.rawTarget = String(t);
+    ring.dataset.percent = Math.round(percent) + '%';
+
+    ring.style.setProperty('--mb-ring-color', cfg.color);
+    ring.style.setProperty('--ring', cfg.color);       // compatibility with older CSS
+    ring.style.setProperty('--mb-ring-fill', fill + '%');
+    ring.style.setProperty('--p', fill + '%');         // compatibility with older CSS
+    ring.style.setProperty('--mb-ring-halo', cfg.halo);
+    ring.style.setProperty('--mb-ring-halo-soft', cfg.soft);
+
+    setOverlap(makeRingSvg(ring), percent);
+  }
+
+  /* Replace all old ring functions used by render(). */
+  window.setRing = masterSetRing;
+  try { setRing = masterSetRing; } catch(e) {}
+
+  function makeDailySvg(box){
+    let svg = box.querySelector(':scope > .mb-daily-ring-svg');
+    if(svg) return svg;
+
+    svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('class','mb-daily-ring-svg');
+    svg.setAttribute('viewBox','0 0 100 100');
+
+    const parts = [
+      ['daily-track','rotate(-90 50 50)'],
+      ['daily-main','rotate(-90 50 50)'],
+      ['daily-shadow','rotate(-90 50 50)'],
+      ['daily-over','rotate(-90 50 50)']
+    ];
+
+    parts.forEach(([cls, transform]) => {
+      const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      c.setAttribute('class', cls);
+      c.setAttribute('cx','50');
+      c.setAttribute('cy','50');
+      c.setAttribute('r','42');
+      c.setAttribute('pathLength','100');
+      c.setAttribute('transform', transform);
+      svg.appendChild(c);
+    });
+
+    box.appendChild(svg);
+    return svg;
+  }
+
+  function updateDailyProgressRing(){
+    const score = $('score');
+    const box = score && score.closest('.small-stat');
+    if(!score || !box) return;
+
+    const percent = parsePercentText(score.textContent);
+    const fill = clamp(percent, 0, 100);
+    const extra = percent > 100 ? clamp(percent - 100, 0, 100) : 0;
+
+    const svg = makeDailySvg(box);
+    const main = svg.querySelector('.daily-main');
+    const shadow = svg.querySelector('.daily-shadow');
+    const over = svg.querySelector('.daily-over');
+
+    main.style.strokeDasharray = fill + ' 100';
+    main.style.strokeDashoffset = '0';
+
+    shadow.style.strokeDasharray = extra + ' 100';
+    over.style.strokeDasharray = extra + ' 100';
+    shadow.style.strokeDashoffset = '0';
+    over.style.strokeDashoffset = '0';
+
+    shadow.style.display = extra > 0 ? 'block' : 'none';
+    over.style.display = extra > 0 ? 'block' : 'none';
+  }
+
+  function setupRingTap(){
+    document.querySelectorAll('#screenToday .ring').forEach(ring => {
+      if(ring.dataset.mbMasterTapReady === '1') return;
+      ring.dataset.mbMasterTapReady = '1';
+
+      ring.addEventListener('click', function(){
+        const b = ring.querySelector('.ring-inner b');
+        const s = ring.querySelector('.ring-inner span');
+        if(!b || !s) return;
+
+        const originalValue = b.textContent;
+        const originalLabel = s.textContent;
+
+        b.textContent = ring.dataset.percent || '0%';
+        s.textContent = 'Target';
+        ring.classList.add('showing-percent');
+
+        clearTimeout(ring._mbMasterPercentTimer);
+        ring._mbMasterPercentTimer = setTimeout(() => {
+          b.textContent = originalValue;
+          s.textContent = originalLabel;
+          ring.classList.remove('showing-percent');
+        }, 1400);
+      });
+    });
+  }
+
+  function afterRender(){
+    removeOldRingOverlays();
+    updateDailyProgressRing();
+    setupRingTap();
+  }
+
+  const oldRender = window.render;
+  window.render = function(){
+    if(typeof oldRender === 'function') oldRender.apply(this, arguments);
+    afterRender();
+  };
+
+  const oldShowScreen = window.showScreen;
+  if(typeof oldShowScreen === 'function'){
+    window.showScreen = function(){
+      oldShowScreen.apply(this, arguments);
+      setTimeout(afterRender, 20);
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if(typeof window.render === 'function') window.render();
+    afterRender();
+  });
+
+  setTimeout(() => {
+    if(typeof window.render === 'function') window.render();
+    afterRender();
+  }, 120);
+})();
+</script>
+
 </body>
 </html>
