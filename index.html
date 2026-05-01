@@ -1386,14 +1386,12 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
   <div class="card card-green">
     <div class="card-title-row">
       <h2><span class="bc-icon">＋</span>Add Food</h2>
-      <div class="quick-links">
-        <button type="button" class="quick-link" onclick="scrollToSection('customRecipeCard')">Recipe</button>
-        <button type="button" class="quick-link" onclick="scrollToSection('favoriteDetails')">Favorites</button>
-        <button type="button" class="quick-link" onclick="scrollToSection('recentDetails')">Recent</button>
-      </div>
     </div>
     <label>Search Food Database</label>
-    <input id="dbSearch" placeholder="Search cheezit, chipotle, milk, chicken..." oninput="renderFoodDatabase()">
+    <div class="db-search-plus-row">
+      <input id="dbSearch" placeholder="Search cheezit, chipotle, milk, chicken..." oninput="renderFoodDatabase()">
+      <button id="openCustomFoodBtn" class="add-custom-plus-btn" type="button" onclick="openCustomFoodModal()" aria-label="Add custom food">+</button>
+    </div>
     <div class="pill-row">
       <button class="pill active" type="button" onclick="setCategory('',this)">All</button>
       <button class="pill" type="button" onclick="setCategory('Breakfast',this)">Breakfast</button>
@@ -1467,18 +1465,7 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
     </details>
   </div>
 
-  <div class="card card-green">
-    <h2><span class="bc-icon">MN</span>Manual / Selected Food</h2>
-    <label>Meal</label><select id="mealType"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select>
-    <label>Food Name</label><input id="food" placeholder="Example: Banana / Chicken / Belvita">
-    <div class="row"><div><label>Servings</label><input id="servings" type="number" step="0.1" value="1"></div><div><label>Serving Note</label><input id="note" placeholder="1 pack / 100g / 1 cup"></div></div>
-    <div class="row"><div><label>Serving Mode</label><select id="servingMode"><option value="serving">serving multiplier</option><option value="grams">grams</option><option value="oz">oz</option><option value="cups">cups</option><option value="pieces">pieces</option></select></div><div><label>Amount</label><input id="servingAmount" type="number" step="0.1" placeholder="optional"></div></div>
-    <p class="note">Serving multiplier is most accurate. Other modes quick-scale the listed serving.</p>
-    <div class="macro-heading">Macros per serving</div>
-    <div class="row"><div><label>Calories</label><input id="cal" type="number"></div><div><label>Carbs (g)</label><input id="carbs" type="number" step="0.1"></div><div><label>Protein (g)</label><input id="protein" type="number" step="0.1"></div><div><label>Fat (g)</label><input id="fat" type="number" step="0.1"></div></div>
-    <button class="good" onclick="addFood()">Add Food</button>
-    <button class="purple" onclick="saveCustomFoodFromForm()">Save as Favorite</button>
-  </div>
+
 </section>
 
 <section id="screenLog" class="screen">
@@ -2794,6 +2781,50 @@ function init(){setupAdd();renderIngredientResults();if(typeof renderSavedRecipe
   }else{
     fixAddFoodHeader();setTimeout(fixAddFoodHeader,100);setTimeout(fixAddFoodHeader,800);
   }
+})();
+</script>
+
+
+<!-- FINAL PATCH: custom plus add food flow, no right quick links, no bottom manual card -->
+<style id="mb-custom-food-plus-final">
+  #screenAdd > .card:first-of-type .card-title-row{display:flex !important;align-items:center !important;justify-content:flex-start !important;gap:12px !important;margin-bottom:18px !important;}
+  #screenAdd > .card:first-of-type .card-title-row h2{margin:0 !important;flex:0 1 auto !important;min-width:0 !important;white-space:normal !important;}
+  #screenAdd > .card:first-of-type .quick-links{display:none !important;}
+  .db-search-plus-row{display:grid !important;grid-template-columns:minmax(0,1fr) 58px !important;gap:10px !important;align-items:center !important;}
+  .db-search-plus-row #dbSearch{margin:0 !important;}
+  .add-custom-plus-btn{width:58px !important;height:58px !important;min-width:58px !important;margin:0 !important;padding:0 !important;border-radius:18px !important;font-size:34px !important;line-height:1 !important;font-weight:950 !important;display:flex !important;align-items:center !important;justify-content:center !important;background:linear-gradient(135deg,#0072ff,#7c3aed) !important;box-shadow:0 0 22px rgba(37,99,235,.55), inset 0 1px 0 rgba(255,255,255,.18) !important;}
+  .custom-food-star-row{display:flex;align-items:center;gap:10px;margin-top:12px;color:#cbd5e1;font-weight:900;}
+  .custom-food-star-toggle{width:52px !important;height:52px !important;margin:0 !important;padding:0 !important;border-radius:16px !important;background:rgba(15,23,42,.80) !important;border:1px solid rgba(96,165,250,.24) !important;color:#64748b !important;box-shadow:none !important;font-size:29px !important;}
+  .custom-food-star-toggle.active{color:#38bdf8 !important;background:rgba(37,99,235,.28) !important;box-shadow:0 0 18px rgba(56,189,248,.30) !important;}
+  #customFoodModal .mb-modal-actions.three{grid-template-columns:1fr 1fr 1fr !important;}
+  @media(max-width:430px){.db-search-plus-row{grid-template-columns:minmax(0,1fr) 54px !important;gap:8px !important;}.add-custom-plus-btn{width:54px !important;height:54px !important;min-width:54px !important;font-size:31px !important;}#customFoodModal .mb-modal-actions.three{grid-template-columns:1fr !important;}}
+</style>
+<script id="mb-custom-food-plus-final-script">
+(function(){
+  function q(id){return document.getElementById(id)}
+  function val(id){return (q(id)?.value||'').trim()}
+  function numVal(id){const v=parseFloat(q(id)?.value||'0');return isNaN(v)?0:v}
+  function round1(x){return Math.round((Number(x)||0)*10)/10}
+  function showToast(msg){ if(typeof toast==='function') toast(msg); else alert(msg); }
+  function ensureCustomFoodModal(){
+    let m=q('customFoodModal'); if(m) return m;
+    document.body.insertAdjacentHTML('beforeend',`<div id="customFoodModal" class="mb-modal"><div class="mb-modal-card"><h3>Add Custom Food</h3><p class="note">Enter macros once. Then add it to your log, save it to the database, or mark it as favourite.</p><label>Food Name</label><input id="cfName" placeholder="Example: Homemade milkshake"><div class="mb-unit-grid"><div><label>Serving Note</label><input id="cfServing" placeholder="1 cup / 100 g / 1 plate"></div><div><label>Servings</label><input id="cfServings" type="number" step="0.1" value="1"></div></div><div class="mb-unit-grid"><div><label>Meal</label><select id="cfMeal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select></div><div><label>Category</label><input id="cfCat" placeholder="Custom Food"></div></div><div class="mb-unit-grid"><div><label>Calories</label><input id="cfCal" type="number" step="1"></div><div><label>Carbs (g)</label><input id="cfC" type="number" step="0.1"></div><div><label>Protein (g)</label><input id="cfP" type="number" step="0.1"></div><div><label>Fat (g)</label><input id="cfF" type="number" step="0.1"></div></div><div class="custom-food-star-row"><button id="cfFav" class="custom-food-star-toggle" type="button" onclick="toggleCustomFoodFavoriteStar()">★</button><span>Mark as favourite</span></div><div class="mb-modal-actions three"><button class="good" type="button" onclick="addCustomFoodToLog()">Add to Log</button><button class="purple" type="button" onclick="saveCustomFoodToDatabase()">Save Database</button><button class="light" type="button" onclick="closeCustomFoodModal()">Cancel</button></div></div></div>`);
+    return q('customFoodModal');
+  }
+  function customFoodItem(){const name=val('cfName'); if(!name){alert('Enter food name');return null;} return {id:'custom_food_'+Date.now(),name:name,serving:val('cfServing')||'1 serving',cat:val('cfCat')||'Custom Food',cal:Math.round(numVal('cfCal')),c:round1(numVal('cfC')),p:round1(numVal('cfP')),f:round1(numVal('cfF')),source:'custom',aliases:[]};}
+  function saveToDb(item){if(typeof getCustomFoods==='function' && typeof setCustomFoods==='function'){const keyFn=typeof localKey==='function'?localKey:(x=>(String(x.name||'').toLowerCase()+'|'+String(x.serving||'').toLowerCase()));setCustomFoods([item,...getCustomFoods().filter(x=>keyFn(x)!==keyFn(item))].slice(0,500));if(typeof loadFoodDatabase==='function') loadFoodDatabase();}}
+  function saveFav(item){if(!q('cfFav')?.classList.contains('active')) return; if(typeof getFavorites==='function' && typeof setFavorites==='function'){const keyFn=typeof itemKey==='function'?itemKey:(x=>(String(x.name||'').toLowerCase()+'|'+String(x.serving||'').toLowerCase()));const f=getFavorites().filter(x=>keyFn(x)!==keyFn(item));f.unshift(item);setFavorites(f.slice(0,150));if(typeof renderFavorites==='function') renderFavorites();}}
+  function resetCustomFoodModal(){['cfName','cfServing','cfCal','cfC','cfP','cfF','cfCat'].forEach(id=>{if(q(id))q(id).value=''});if(q('cfServings')) q('cfServings').value='1';if(q('cfMeal')) q('cfMeal').value='Breakfast';q('cfFav')?.classList.remove('active');}
+  window.openCustomFoodModal=function(){const m=ensureCustomFoodModal();const meal=q('mealType')?.value || 'Breakfast';if(q('cfMeal')) q('cfMeal').value=meal;m.classList.add('active');setTimeout(()=>q('cfName')?.focus(),80);};
+  window.closeCustomFoodModal=function(){q('customFoodModal')?.classList.remove('active')};
+  window.toggleCustomFoodFavoriteStar=function(){q('cfFav')?.classList.toggle('active')};
+  window.saveCustomFoodToDatabase=function(){const item=customFoodItem(); if(!item) return;saveToDb(item); saveFav(item);showToast(q('cfFav')?.classList.contains('active')?'Saved to database and favourites':'Saved to database');resetCustomFoodModal(); closeCustomFoodModal();if(typeof renderFoodDatabase==='function') renderFoodDatabase();};
+  window.addCustomFoodToLog=function(){const item=customFoodItem(); if(!item) return;const mult=numVal('cfServings')||1;const logItem={name:item.name+(item.serving?' ('+item.serving+')':''),meal:q('cfMeal')?.value||'Breakfast',cal:Math.round(item.cal*mult),c:round1(item.c*mult),p:round1(item.p*mult),f:round1(item.f*mult)};if(typeof getLog==='function' && typeof saveLog==='function'){const log=getLog(); log.push(logItem); saveLog(log);}if(typeof addRecent==='function') addRecent(item);saveToDb(item); saveFav(item);showToast('Added to log');resetCustomFoodModal(); closeCustomFoodModal();if(typeof showScreen==='function') showScreen('Log');};
+  function finalCleanAddPage(){const firstCard=document.querySelector('#screenAdd > .card:first-of-type');if(firstCard){const row=firstCard.querySelector('.card-title-row');if(row){row.querySelector('.quick-links')?.remove();const h2=row.querySelector('h2');if(h2) h2.innerHTML='<span class="bc-icon">＋</span><span>Add Food</span>';}}document.querySelectorAll('#screenAdd > .card').forEach(card=>{if(/Manual\s*\/\s*Selected Food|New Food\s*\/\s*Ingredient/i.test(card.textContent||'')) card.remove();});const db=q('dbSearch');if(db && !db.closest('.db-search-plus-row')){const wrap=document.createElement('div');wrap.className='db-search-plus-row';db.parentNode.insertBefore(wrap,db);wrap.appendChild(db);wrap.insertAdjacentHTML('beforeend','<button id="openCustomFoodBtn" class="add-custom-plus-btn" type="button" onclick="openCustomFoodModal()" aria-label="Add custom food">+</button>');}}
+  const oldSetup=window.setupAdd; window.setupAdd=function(){ if(typeof oldSetup==='function') oldSetup.apply(this,arguments); finalCleanAddPage(); };
+  const oldShow=window.showScreen; if(typeof oldShow==='function') window.showScreen=function(){ oldShow.apply(this,arguments); setTimeout(finalCleanAddPage,0); };
+  const oldRender=window.render; if(typeof oldRender==='function') window.render=function(){ oldRender.apply(this,arguments); finalCleanAddPage(); };
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>{finalCleanAddPage();setTimeout(finalCleanAddPage,100);setTimeout(finalCleanAddPage,800);}); else {finalCleanAddPage();setTimeout(finalCleanAddPage,100);setTimeout(finalCleanAddPage,800);}
 })();
 </script>
 
