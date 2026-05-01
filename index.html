@@ -1476,89 +1476,6 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
 @media(max-width:430px){.scan-button-grid{grid-template-columns:1fr}.scan-action-panel{padding:14px}.ocr-details summary{padding:14px}}
 </style>
 
-
-<style id="final-popup-layout-fix">
-/* FINAL POPUP LAYOUT FIX */
-
-/* Add Custom Food popup:
-   Add to Log + Save to Database in one horizontal row, Cancel full-width below */
-#customFoodModal .mb-modal-actions,
-#customFoodModal .mb-modal-actions.three{
-  display:grid !important;
-  grid-template-columns:1fr 1fr !important;
-  gap:10px !important;
-  margin-top:14px !important;
-}
-
-#customFoodModal .mb-modal-actions button,
-#customFoodModal .mb-modal-actions.three button{
-  width:100% !important;
-  margin:0 !important;
-  padding:14px 8px !important;
-  border-radius:16px !important;
-  font-size:15px !important;
-  font-weight:900 !important;
-  line-height:1.15 !important;
-}
-
-#customFoodModal .mb-modal-actions button:last-child,
-#customFoodModal .mb-modal-actions.three button:last-child{
-  grid-column:1 / -1 !important;
-}
-
-/* New Ingredient popup:
-   Add to Recipe + Save Ingredient in one horizontal row, Cancel full-width below */
-#customIngredientModal .mb-modal-actions,
-#customIngredientModal .mb-modal-actions.three{
-  display:grid !important;
-  grid-template-columns:1fr 1fr !important;
-  gap:10px !important;
-  margin-top:14px !important;
-}
-
-#customIngredientModal .mb-modal-actions button,
-#customIngredientModal .mb-modal-actions.three button{
-  width:100% !important;
-  margin:0 !important;
-  padding:14px 8px !important;
-  border-radius:16px !important;
-  font-size:14px !important;
-  font-weight:900 !important;
-  line-height:1.15 !important;
-  white-space:normal !important;
-}
-
-#customIngredientModal .mb-modal-actions button:last-child,
-#customIngredientModal .mb-modal-actions.three button:last-child{
-  grid-column:1 / -1 !important;
-}
-
-@media(max-width:430px){
-  #customFoodModal .mb-modal-actions,
-  #customFoodModal .mb-modal-actions.three,
-  #customIngredientModal .mb-modal-actions,
-  #customIngredientModal .mb-modal-actions.three{
-    grid-template-columns:1fr 1fr !important;
-    gap:9px !important;
-  }
-
-  #customFoodModal .mb-modal-actions button,
-  #customFoodModal .mb-modal-actions.three button,
-  #customIngredientModal .mb-modal-actions button,
-  #customIngredientModal .mb-modal-actions.three button{
-    font-size:13px !important;
-    padding:13px 6px !important;
-  }
-
-  #customFoodModal .mb-modal-actions button:last-child,
-  #customFoodModal .mb-modal-actions.three button:last-child,
-  #customIngredientModal .mb-modal-actions button:last-child,
-  #customIngredientModal .mb-modal-actions.three button:last-child{
-    grid-column:1 / -1 !important;
-  }
-}
-</style>
-
 </head>
 
 <body>
@@ -3384,6 +3301,108 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
+
+
+<style id="mb-final-popup-layout-absolute-last">
+/* FINAL OVERRIDE PLACED AT END OF FILE */
+
+/* Add Custom Food popup */
+#customFoodModal .mb-modal-actions,
+#customFoodModal .mb-modal-actions.three{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+  gap:10px !important;
+  margin-top:14px !important;
+}
+
+#customFoodModal .mb-modal-actions button,
+#customFoodModal .mb-modal-actions.three button{
+  width:100% !important;
+  min-width:0 !important;
+  margin:0 !important;
+  padding:14px 8px !important;
+  border-radius:16px !important;
+  font-size:15px !important;
+  font-weight:900 !important;
+  line-height:1.15 !important;
+}
+
+#customFoodModal .mb-modal-actions button:nth-child(1),
+#customFoodModal .mb-modal-actions.three button:nth-child(1){
+  grid-column:1 !important;
+  grid-row:1 !important;
+}
+
+#customFoodModal .mb-modal-actions button:nth-child(2),
+#customFoodModal .mb-modal-actions.three button:nth-child(2){
+  grid-column:2 !important;
+  grid-row:1 !important;
+}
+
+#customFoodModal .mb-modal-actions button:nth-child(3),
+#customFoodModal .mb-modal-actions.three button:nth-child(3){
+  grid-column:1 / -1 !important;
+  grid-row:2 !important;
+}
+
+/* New Ingredient popup */
+#customIngredientModal .mb-modal-actions,
+#customIngredientModal .mb-modal-actions.three{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+  gap:10px !important;
+  margin-top:14px !important;
+}
+
+#customIngredientModal .mb-modal-actions button,
+#customIngredientModal .mb-modal-actions.three button{
+  width:100% !important;
+  min-width:0 !important;
+  margin:0 !important;
+  padding:14px 8px !important;
+  border-radius:16px !important;
+  font-size:14px !important;
+  font-weight:900 !important;
+  line-height:1.15 !important;
+  white-space:normal !important;
+}
+
+#customIngredientModal .mb-modal-actions button:nth-child(1),
+#customIngredientModal .mb-modal-actions.three button:nth-child(1){
+  grid-column:1 !important;
+  grid-row:1 !important;
+}
+
+#customIngredientModal .mb-modal-actions button:nth-child(2),
+#customIngredientModal .mb-modal-actions.three button:nth-child(2){
+  grid-column:2 !important;
+  grid-row:1 !important;
+}
+
+#customIngredientModal .mb-modal-actions button:nth-child(3),
+#customIngredientModal .mb-modal-actions.three button:nth-child(3){
+  grid-column:1 / -1 !important;
+  grid-row:2 !important;
+}
+
+@media(max-width:430px){
+  #customFoodModal .mb-modal-actions,
+  #customFoodModal .mb-modal-actions.three,
+  #customIngredientModal .mb-modal-actions,
+  #customIngredientModal .mb-modal-actions.three{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+    gap:9px !important;
+  }
+
+  #customFoodModal .mb-modal-actions button,
+  #customFoodModal .mb-modal-actions.three button,
+  #customIngredientModal .mb-modal-actions button,
+  #customIngredientModal .mb-modal-actions.three button{
+    font-size:13px !important;
+    padding:13px 6px !important;
+  }
+}
+</style>
 
 </body>
 </html>
