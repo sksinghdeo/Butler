@@ -1307,6 +1307,78 @@ body.light-mode .scan-method-card b{color:#0f172a}
 body.light-mode .scan-method-card span{color:#64748b}
 @media(max-width:430px){.scan-method-grid{grid-template-columns:1fr}.barcode-input-row{grid-template-columns:1fr}.barcode-input-row button{width:100%}}
 
+.mb-modal-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:10px;
+  margin-top:14px;
+}
+.mb-modal-actions button{
+  width:100%;
+  margin:0 !important;
+  padding:14px 8px !important;
+  border-radius:16px !important;
+  font-size:15px !important;
+  font-weight:900 !important;
+}
+
+/* HOME TARGETS ONLY: keep 4 macros horizontal, Edit Targets below */
+.home-targets-grid{
+  grid-template-columns:repeat(4,1fr) !important;
+  gap:8px !important;
+}
+
+.home-targets-grid .calc-box{
+  padding:10px 6px !important;
+}
+
+.home-targets-grid .calc-box b{
+  font-size:17px !important;
+}
+
+.home-targets-grid .calc-box span{
+  font-size:11px !important;
+}
+
+@media(max-width:430px){
+  .home-targets-grid{
+    grid-template-columns:repeat(4,1fr) !important;
+    gap:6px !important;
+  }
+
+  .home-targets-grid .calc-box{
+    padding:9px 4px !important;
+  }
+
+  .home-targets-grid .calc-box b{
+    font-size:15px !important;
+  }
+
+  .home-targets-grid .calc-box span{
+    font-size:10px !important;
+  }
+}
+
+
+/* POPUP BUTTONS: two top buttons, cancel full row */
+.mb-modal-actions{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:10px !important;
+  margin-top:14px !important;
+}
+.mb-modal-actions button{
+  width:100% !important;
+  margin:0 !important;
+  padding:14px 8px !important;
+  border-radius:16px !important;
+  font-size:15px !important;
+  font-weight:900 !important;
+}
+.mb-modal-actions button:last-child{
+  grid-column:1 / -1 !important;
+}
+
 </style>
 
 <style id="v12-scan-cleanup">
@@ -1371,7 +1443,7 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
   </div>
   <div class="card card-red">
     <h2><span class="bc-icon">TG</span>Targets</h2>
-    <div class="calc-grid">
+    <div class="calc-grid home-targets-grid">
       <div class="calc-box"><b id="dashGoalCal">0</b><span>Calories</span></div>
       <div class="calc-box"><b id="dashGoalP">0g</b><span>Protein</span></div>
       <div class="calc-box"><b id="dashGoalC">0g</b><span>Carbs</span></div>
