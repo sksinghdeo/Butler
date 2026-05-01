@@ -4664,5 +4664,166 @@ body.light-mode button[onclick*="toggleCustomIngredientFavoriteStar"]{
 }
 </style>
 
+
+<style id="mb-final-popup-horizontal-and-ring-overflow">
+/* FINAL: Add Food popup and Add Ingredient popup buttons horizontal */
+#portionMealModal .mb-modal-actions,
+#ingredientAmountModal .mb-modal-actions{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+  gap:10px !important;
+  margin-top:14px !important;
+  align-items:stretch !important;
+}
+
+#portionMealModal .mb-modal-actions button,
+#ingredientAmountModal .mb-modal-actions button{
+  width:100% !important;
+  min-width:0 !important;
+  margin:0 !important;
+  padding:14px 8px !important;
+  border-radius:16px !important;
+  font-size:15px !important;
+  font-weight:900 !important;
+  line-height:1.15 !important;
+  grid-column:auto !important;
+  grid-row:auto !important;
+}
+
+/* FINAL: better over-target ring clarity */
+.ring{
+  position:relative !important;
+  overflow:visible !important;
+}
+
+/* normal progress still shows normally */
+.ring:not(.over-target){
+  box-shadow:0 0 24px rgba(34,242,107,.18), inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+
+/* over target: full circle remains visible, with outer warning halo instead of becoming a flat red disk */
+.ring.over-target{
+  background:
+    conic-gradient(var(--ring) 100%, rgba(30,41,59,.85) 0) !important;
+  box-shadow:
+    0 0 0 5px rgba(255,59,79,.22),
+    0 0 24px rgba(255,59,79,.34),
+    inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+
+.ring.over-target::after{
+  content:"+" attr(data-over) !important;
+  position:absolute !important;
+  top:-8px !important;
+  right:-8px !important;
+  min-width:34px !important;
+  height:24px !important;
+  padding:0 7px !important;
+  border-radius:999px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  color:#fff !important;
+  background:linear-gradient(135deg,#ff3b4f,#fb7185) !important;
+  border:1px solid rgba(255,255,255,.25) !important;
+  box-shadow:0 0 16px rgba(255,59,79,.55) !important;
+  font-size:11px !important;
+  font-weight:950 !important;
+  line-height:1 !important;
+  z-index:3 !important;
+}
+
+.ring.over-target .ring-inner{
+  border:1px solid rgba(255,59,79,.38) !important;
+}
+
+/* Daily progress circle overflow clarity */
+.small-stat.over-target{
+  position:relative !important;
+  overflow:visible !important;
+  border-color:rgba(255,59,79,.42) !important;
+  box-shadow:0 0 0 5px rgba(255,59,79,.16),0 0 24px rgba(255,59,79,.26) !important;
+}
+
+.small-stat.over-target::after{
+  content:"OVER" !important;
+  position:absolute !important;
+  top:-9px !important;
+  right:-8px !important;
+  padding:5px 8px !important;
+  border-radius:999px !important;
+  color:#fff !important;
+  background:linear-gradient(135deg,#ff3b4f,#fb7185) !important;
+  font-size:10px !important;
+  font-weight:950 !important;
+  letter-spacing:.4px !important;
+  box-shadow:0 0 16px rgba(255,59,79,.55) !important;
+}
+
+@media(max-width:430px){
+  #portionMealModal .mb-modal-actions button,
+  #ingredientAmountModal .mb-modal-actions button{
+    font-size:13px !important;
+    padding:13px 6px !important;
+  }
+
+  .ring.over-target::after{
+    top:-7px !important;
+    right:-7px !important;
+    height:22px !important;
+    min-width:30px !important;
+    font-size:10px !important;
+  }
+}
+</style>
+
+<script id="mb-final-ring-overflow-js">
+(function(){
+  function n(v){const x=parseFloat(v);return Number.isFinite(x)?x:0}
+
+  function applyRingOverflow(){
+    document.querySelectorAll('.ring').forEach(r=>{
+      const raw=(r.style.getPropertyValue('--p')||'0').replace('%','').trim();
+      const p=n(raw);
+      if(p>100){
+        r.classList.add('over-target');
+        r.setAttribute('data-over', Math.round(p-100) + '%');
+      }else{
+        r.classList.remove('over-target');
+        r.removeAttribute('data-over');
+      }
+    });
+
+    const score=document.getElementById('score');
+    const box=score?.closest('.small-stat');
+    if(score && box){
+      const p=n(score.textContent.replace('%',''));
+      box.classList.toggle('over-target', p>100);
+    }
+  }
+
+  const oldUpdateDashboard=window.updateDashboard;
+  if(typeof oldUpdateDashboard==='function'){
+    window.updateDashboard=function(){
+      const result=oldUpdateDashboard.apply(this,arguments);
+      setTimeout(applyRingOverflow,0);
+      return result;
+    };
+  }
+
+  const oldRenderToday=window.renderToday;
+  if(typeof oldRenderToday==='function'){
+    window.renderToday=function(){
+      const result=oldRenderToday.apply(this,arguments);
+      setTimeout(applyRingOverflow,0);
+      return result;
+    };
+  }
+
+  setInterval(applyRingOverflow,700);
+  setTimeout(applyRingOverflow,100);
+})();
+</script>
+
 </body>
 </html>
