@@ -5001,5 +5001,346 @@ body.light-mode button[onclick*="toggleCustomIngredientFavoriteStar"]{
 })();
 </script>
 
+
+<style id="mb-apple-style-ring-overlap-final">
+/* Apple-style over-target ring:
+   Full target circle stays visible, extra amount overlays on the same ring path. */
+
+/* Disable earlier badge/halo method */
+.ring.mb-over::after,
+.ring.over-target::after{
+  content:none !important;
+  display:none !important;
+}
+
+.ring.mb-over,
+.ring.over-target{
+  position:relative !important;
+  overflow:visible !important;
+  background:conic-gradient(var(--ring) 100%, rgba(30,41,59,.85) 0) !important;
+  box-shadow:0 0 22px rgba(37,99,235,.16), inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+
+/* The extra-over-goal arc sits directly on top of the original ring, not outside it */
+.ring.mb-overlap::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  border-radius:50% !important;
+  background:conic-gradient(from -90deg, var(--overColor,#ff3b4f) var(--overArc,0%), transparent 0) !important;
+  padding:9px !important;
+  box-sizing:border-box !important;
+  -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 16px), #000 calc(100% - 15px));
+  mask:radial-gradient(farthest-side, transparent calc(100% - 16px), #000 calc(100% - 15px));
+  filter:drop-shadow(0 0 10px rgba(255,59,79,.55)) !important;
+  z-index:2 !important;
+  pointer-events:none !important;
+}
+
+/* Round leading cap to make the overlap feel like Apple rings */
+.ring.mb-overlap .ring-inner::before{
+  content:"" !important;
+  position:absolute !important;
+  width:14px !important;
+  height:14px !important;
+  border-radius:50% !important;
+  background:var(--overColor,#ff3b4f) !important;
+  top:4px !important;
+  left:50% !important;
+  transform:translateX(-50%) !important;
+  box-shadow:0 0 12px rgba(255,59,79,.55) !important;
+  z-index:3 !important;
+  pointer-events:none !important;
+}
+
+.ring.mb-overlap .ring-inner{
+  position:relative !important;
+  z-index:4 !important;
+}
+
+/* Tap feedback when percentage is being shown */
+.ring.showing-percent .ring-inner{
+  box-shadow:inset 0 0 0 2px rgba(96,165,250,.40),0 0 18px rgba(96,165,250,.25) !important;
+}
+
+.ring{
+  cursor:pointer !important;
+  user-select:none !important;
+  -webkit-tap-highlight-color:transparent !important;
+}
+
+/* Daily progress big circle: no badge, just subtle over glow */
+.small-stat.mb-over::after,
+.small-stat.over-target::after{
+  content:none !important;
+  display:none !important;
+}
+
+.small-stat.mb-over,
+.small-stat.over-target{
+  border-color:rgba(255,59,79,.42) !important;
+  box-shadow:0 0 22px rgba(255,59,79,.22) !important;
+}
+
+@media(max-width:430px){
+  .ring.mb-overlap::before{
+    padding:8px !important;
+    -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 14px), #000 calc(100% - 13px));
+    mask:radial-gradient(farthest-side, transparent calc(100% - 14px), #000 calc(100% - 13px));
+  }
+
+  .ring.mb-overlap .ring-inner::before{
+    width:12px !important;
+    height:12px !important;
+    top:4px !important;
+  }
+}
+</style>
+
+<script id="mb-apple-style-ring-overlap-final-js">
+(function(){
+  function $(id){return document.getElementById(id)}
+  function numText(id){
+    const el=$(id);
+    if(!el) return 0;
+    const v=String(el.textContent || el.value || '').replace(/[^0-9.\-]/g,'');
+    const n=parseFloat(v);
+    return Number.isFinite(n)?n:0;
+  }
+
+  const ringMap=[
+    ['ringCal','tCal','dashGoalCal'],
+    ['ringC','tC','dashGoalC'],
+    ['ringP','tP','dashGoalP'],
+    ['ringF','tF','dashGoalF']
+  ];
+
+  function setOverlapRing(ringId,valueId,targetId){
+    const ring=$(ringId);
+    if(!ring) return;
+
+    const value=numText(valueId);
+    const target=numText(targetId);
+
+    if(target > 0){
+      const percent=(value/target)*100;
+      ring.dataset.percent=Math.round(percent) + '%';
+
+      if(percent > 100){
+        const extra=percent-100;
+        const arc=Math.min(100, Math.max(4, extra));
+        ring.classList.add('mb-overlap','mb-over');
+        ring.classList.remove('over-target');
+        ring.style.setProperty('--p','100%');
+        ring.style.setProperty('--overArc',arc + '%');
+        ring.style.setProperty('--overColor','#ff3b4f');
+      }else{
+        ring.classList.remove('mb-overlap','mb-over','over-target');
+        ring.style.removeProperty('--overArc');
+        ring.style.removeProperty('--overColor');
+      }
+    }
+  }
+
+  function applyOverlapRings(){
+    ringMap.forEach(x=>setOverlapRing(...x));
+
+    const score=$('score');
+    const scoreBox=score?.closest('.small-stat');
+    if(score && scoreBox){
+      const scoreNum=parseFloat(String(score.textContent||'').replace(/[^0-9.\-]/g,'')) || 0;
+      scoreBox.classList.toggle('mb-over',scoreNum>100);
+      scoreBox.classList.toggle('over-target',false);
+    }
+  }
+
+  function setupTapPercent(){
+    document.querySelectorAll('.ring').forEach(ring=>{
+      if(ring.dataset.percentTapReady==='1') return;
+      ring.dataset.percentTapReady='1';
+
+      ring.addEventListener('click',function(){
+        const b=ring.querySelector('.ring-inner b');
+        const s=ring.querySelector('.ring-inner span');
+        if(!b || !s) return;
+
+        const oldB=b.textContent;
+        const oldS=s.textContent;
+        const pct=ring.dataset.percent || '';
+
+        if(!pct) return;
+
+        ring.classList.add('showing-percent');
+        b.textContent=pct;
+        s.textContent='Target';
+
+        clearTimeout(ring._percentTimer);
+        ring._percentTimer=setTimeout(()=>{
+          b.textContent=oldB;
+          s.textContent=oldS;
+          ring.classList.remove('showing-percent');
+        },1400);
+      });
+    });
+  }
+
+  const oldUpdateDashboard=window.updateDashboard;
+  if(typeof oldUpdateDashboard==='function'){
+    window.updateDashboard=function(){
+      const result=oldUpdateDashboard.apply(this,arguments);
+      setTimeout(()=>{applyOverlapRings();setupTapPercent();},0);
+      return result;
+    };
+  }
+
+  const oldRenderToday=window.renderToday;
+  if(typeof oldRenderToday==='function'){
+    window.renderToday=function(){
+      const result=oldRenderToday.apply(this,arguments);
+      setTimeout(()=>{applyOverlapRings();setupTapPercent();},0);
+      return result;
+    };
+  }
+
+  setInterval(function(){
+    applyOverlapRings();
+    setupTapPercent();
+  },700);
+
+  setTimeout(function(){
+    applyOverlapRings();
+    setupTapPercent();
+  },100);
+})();
+</script>
+
+
+<style id="mb-daily-progress-overlap-ring-final">
+/* Daily Progress Apple-style overlap ring */
+.small-stat{
+  position:relative !important;
+  overflow:visible !important;
+}
+
+.small-stat #score{
+  position:relative !important;
+  z-index:5 !important;
+}
+
+.small-stat span{
+  position:relative !important;
+  z-index:5 !important;
+}
+
+/* the daily progress ring itself */
+.small-stat.mb-score-overlap::before{
+  content:"" !important;
+  position:absolute !important;
+  width:96px !important;
+  height:96px !important;
+  border-radius:50% !important;
+  right:14px !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+  background:
+    conic-gradient(from -90deg, #ff3b4f var(--scoreOverArc,0%), transparent 0) !important;
+  padding:9px !important;
+  box-sizing:border-box !important;
+  -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 16px), #000 calc(100% - 15px));
+  mask:radial-gradient(farthest-side, transparent calc(100% - 16px), #000 calc(100% - 15px));
+  filter:drop-shadow(0 0 10px rgba(255,59,79,.55)) !important;
+  z-index:3 !important;
+  pointer-events:none !important;
+}
+
+/* round cap for daily progress extra segment */
+.small-stat.mb-score-overlap::after{
+  content:"" !important;
+  position:absolute !important;
+  width:14px !important;
+  height:14px !important;
+  border-radius:50% !important;
+  background:#ff3b4f !important;
+  right:55px !important;
+  top:calc(50% - 48px) !important;
+  box-shadow:0 0 12px rgba(255,59,79,.55) !important;
+  z-index:4 !important;
+  pointer-events:none !important;
+}
+
+/* remove old OVER badge/box effect if present */
+.small-stat.mb-over,
+.small-stat.over-target{
+  box-shadow:0 0 22px rgba(255,59,79,.16) !important;
+}
+
+.small-stat.mb-over::after,
+.small-stat.over-target::after{
+  content:"" !important;
+}
+
+@media(max-width:430px){
+  .small-stat.mb-score-overlap::before{
+    width:86px !important;
+    height:86px !important;
+    right:10px !important;
+    padding:8px !important;
+    -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 14px), #000 calc(100% - 13px));
+    mask:radial-gradient(farthest-side, transparent calc(100% - 14px), #000 calc(100% - 13px));
+  }
+
+  .small-stat.mb-score-overlap::after{
+    width:12px !important;
+    height:12px !important;
+    right:47px !important;
+    top:calc(50% - 43px) !important;
+  }
+}
+</style>
+
+<script id="mb-daily-progress-overlap-ring-final-js">
+(function(){
+  function applyDailyProgressOverlap(){
+    const score=document.getElementById('score');
+    const box=score?.closest('.small-stat');
+    if(!score || !box) return;
+
+    const pct=parseFloat(String(score.textContent||'').replace(/[^0-9.\-]/g,'')) || 0;
+
+    if(pct>100){
+      const extra=pct-100;
+      const arc=Math.min(100,Math.max(4,extra));
+      box.classList.add('mb-score-overlap','mb-over');
+      box.classList.remove('over-target');
+      box.style.setProperty('--scoreOverArc',arc+'%');
+    }else{
+      box.classList.remove('mb-score-overlap','mb-over','over-target');
+      box.style.removeProperty('--scoreOverArc');
+    }
+  }
+
+  const oldUpdateDashboard=window.updateDashboard;
+  if(typeof oldUpdateDashboard==='function'){
+    window.updateDashboard=function(){
+      const result=oldUpdateDashboard.apply(this,arguments);
+      setTimeout(applyDailyProgressOverlap,0);
+      return result;
+    };
+  }
+
+  const oldRenderToday=window.renderToday;
+  if(typeof oldRenderToday==='function'){
+    window.renderToday=function(){
+      const result=oldRenderToday.apply(this,arguments);
+      setTimeout(applyDailyProgressOverlap,0);
+      return result;
+    };
+  }
+
+  setInterval(applyDailyProgressOverlap,700);
+  setTimeout(applyDailyProgressOverlap,100);
+})();
+</script>
+
 </body>
 </html>
