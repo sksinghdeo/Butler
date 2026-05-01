@@ -86,7 +86,7 @@ button:active{transform:scale(.97)}
 .status{color:#16a34a;font-weight:900;display:none;margin-top:10px;animation:pop .3s ease both}
 .date-box{width:100%;padding:0;overflow:hidden;position:relative}
 .date-display{width:100%;height:58px;border-radius:18px;border:1.5px solid var(--border);background:white;color:#0f172a;font-size:18px;font-weight:800;text-align:center;box-shadow:none;margin-top:0}
-.hidden-date{position:absolute;opacity:0;width:100%;height:58px;left:0;top:0;z-index:5}
+.hidden-date{position:absolute;opacity:0;width:100%;height:58px;left:0;top:0;z-index:5;pointer-events:none}
 .hero-stats{display:grid;grid-template-columns:1.15fr .85fr;gap:12px;align-items:stretch}
 .big-cal{background:linear-gradient(135deg,#0f172a,#1d4ed8);color:white;border-radius:26px;padding:18px;min-height:132px;display:flex;flex-direction:column;justify-content:center;box-shadow:0 14px 32px rgba(29,78,216,.25)}
 .big-cal b{font-size:46px;line-height:1;font-weight:950}.big-cal span{font-size:14px;color:#dbeafe;margin-top:8px;font-weight:800}
@@ -2703,6 +2703,97 @@ function init(){setupAdd();renderIngredientResults();if(typeof renderSavedRecipe
     setScreen(document.querySelector('.tab-btn.active')?.dataset.screen||'Today');
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wireTabs);else wireTabs();
+})();
+</script>
+
+
+
+<!-- PATCH: Add Food header vertical quick tabs - minimal override -->
+<style id="add-food-header-vertical-final-fix">
+  #screenAdd > .card:first-of-type .card-title-row{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) auto !important;
+    align-items:start !important;
+    gap:12px !important;
+    margin-bottom:14px !important;
+  }
+  #screenAdd > .card:first-of-type .card-title-row h2{
+    margin:0 !important;
+    min-width:0 !important;
+    white-space:nowrap !important;
+  }
+  #screenAdd > .card:first-of-type .quick-links{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:6px !important;
+    justify-items:stretch !important;
+    align-items:start !important;
+    justify-content:end !important;
+    width:auto !important;
+    min-width:96px !important;
+  }
+  #screenAdd > .card:first-of-type .quick-link{
+    width:100% !important;
+    margin:0 !important;
+    padding:7px 10px !important;
+    font-size:11px !important;
+    line-height:1.05 !important;
+    border-radius:999px !important;
+    white-space:nowrap !important;
+    text-align:center !important;
+  }
+  @media(max-width:430px){
+    #screenAdd > .card:first-of-type .card-title-row{
+      grid-template-columns:minmax(0,1fr) auto !important;
+      gap:8px !important;
+    }
+    #screenAdd > .card:first-of-type .quick-links{
+      min-width:88px !important;
+    }
+    #screenAdd > .card:first-of-type .quick-link{
+      font-size:10.5px !important;
+      padding:7px 8px !important;
+    }
+  }
+</style>
+<script id="add-food-header-vertical-final-fix-script">
+(function(){
+  function fixAddFoodHeader(){
+    const firstCard=document.querySelector('#screenAdd > .card:first-of-type');
+    if(!firstCard) return;
+    const row=firstCard.querySelector('.card-title-row');
+    if(!row) return;
+    const h2=row.querySelector('h2');
+    if(h2){
+      h2.innerHTML='<span class="bc-icon">＋</span><span>Add Food</span>';
+    }
+    const ql=row.querySelector('.quick-links');
+    if(ql){
+      ql.innerHTML=[
+        '<button type="button" class="quick-link" onclick="scrollToSection(\'favoriteDetails\')">Favourite</button>',
+        '<button type="button" class="quick-link" onclick="scrollToSection(\'recentDetails\')">Recent</button>',
+        '<button type="button" class="quick-link" onclick="scrollToSection(\'customRecipeCard\')">Custom</button>'
+      ].join('');
+    }
+  }
+  window.fixAddFoodHeader=fixAddFoodHeader;
+  const oldSetup=window.setupAdd;
+  if(typeof oldSetup==='function'){
+    window.setupAdd=function(){oldSetup.apply(this,arguments);fixAddFoodHeader();};
+  }
+  const oldShow=window.showScreen;
+  if(typeof oldShow==='function'){
+    window.showScreen=function(name){oldShow.apply(this,arguments);setTimeout(fixAddFoodHeader,0);};
+  }
+  const oldRender=window.render;
+  if(typeof oldRender==='function'){
+    window.render=function(){oldRender.apply(this,arguments);fixAddFoodHeader();};
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){setTimeout(fixAddFoodHeader,0);setTimeout(fixAddFoodHeader,100);setTimeout(fixAddFoodHeader,800);});
+  }else{
+    fixAddFoodHeader();setTimeout(fixAddFoodHeader,100);setTimeout(fixAddFoodHeader,800);
+  }
 })();
 </script>
 
