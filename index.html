@@ -2974,5 +2974,57 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
+
+<!-- PATCH: home calendar open fix only -->
+<style id="home-calendar-open-fix">
+  /* Let the real date input receive the tap on the Home date box.
+     The visible button remains underneath for styling/text. */
+  #screenToday .date-box{
+    position:relative !important;
+    overflow:visible !important;
+  }
+  #screenToday #date.hidden-date{
+    position:absolute !important;
+    inset:0 !important;
+    width:100% !important;
+    height:58px !important;
+    opacity:.001 !important;
+    z-index:20 !important;
+    pointer-events:auto !important;
+    cursor:pointer !important;
+  }
+  #screenToday #dateDisplay{
+    pointer-events:none !important;
+  }
+</style>
+<script id="home-calendar-open-fix-script">
+(function(){
+  function byId(id){return document.getElementById(id)}
+  function openHomeDatePicker(){
+    var input=byId('date');
+    if(!input) return;
+    try{
+      input.focus({preventScroll:true});
+      if(typeof input.showPicker==='function') input.showPicker();
+      else input.click();
+    }catch(e){
+      try{input.click();}catch(_){ }
+    }
+  }
+  function attachHomeCalendarFix(){
+    var btn=byId('dateDisplay');
+    var input=byId('date');
+    if(!btn || !input) return;
+    btn.onclick=openHomeDatePicker;
+    input.addEventListener('input',function(){
+      if(typeof window.dateChanged==='function') window.dateChanged();
+      else if(typeof window.updateDateDisplay==='function') window.updateDateDisplay();
+    });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',attachHomeCalendarFix);
+  else attachHomeCalendarFix();
+})();
+</script>
+
 </body>
 </html>
