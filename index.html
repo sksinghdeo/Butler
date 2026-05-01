@@ -6661,5 +6661,317 @@ body.light-mode button[onclick*="toggleCustomIngredientFavoriteStar"]{
 })();
 </script>
 
+
+<style id="mb-one-clean-ring-system-final">
+/* ONE CLEAN RING SYSTEM — final override */
+
+/* Hide all old overlay SVGs/pseudo effects */
+.mb-over-svg,
+.mb-clean-over-svg,
+.mb-final-over-svg,
+.mb-score-over-svg,
+.mb-score-clean-over-svg,
+.mb-final-score-svg,
+.mb-daily-final-svg,
+.mb-daily-match-svg{
+  display:none !important;
+}
+
+.ring::before,
+.ring::after,
+.ring .ring-inner::before,
+.small-stat::before,
+.small-stat::after{
+  content:none !important;
+  display:none !important;
+}
+
+/* New clean macro-ring overlay */
+.ring{
+  position:relative !important;
+  overflow:visible !important;
+}
+
+.ring .mb-one-over-svg{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  overflow:visible !important;
+  pointer-events:none !important;
+  z-index:40 !important;
+}
+
+.ring .mb-one-over-svg circle{
+  fill:none !important;
+  stroke-linecap:round !important;
+}
+
+.ring .mb-one-over-svg .shadow{
+  stroke:rgba(0,0,0,.28) !important;
+  stroke-width:8 !important;
+  filter:blur(.2px) !important;
+}
+
+.ring .mb-one-over-svg .arc{
+  stroke:var(--mb-ring-color,#38bdf8) !important;
+  stroke-width:7 !important;
+}
+
+/* Daily progress overlay placed by JS around the score text */
+.small-stat{
+  position:relative !important;
+  overflow:visible !important;
+}
+
+.small-stat .mb-one-daily-svg{
+  position:absolute !important;
+  width:104px !important;
+  height:104px !important;
+  overflow:visible !important;
+  pointer-events:none !important;
+  z-index:90 !important;
+}
+
+.small-stat .mb-one-daily-svg circle{
+  fill:none !important;
+  stroke-linecap:round !important;
+}
+
+.small-stat .mb-one-daily-svg .shadow{
+  stroke:rgba(0,0,0,.28) !important;
+  stroke-width:8 !important;
+  filter:blur(.2px) !important;
+}
+
+.small-stat .mb-one-daily-svg .arc{
+  stroke:#22d3ee !important;
+  stroke-width:7 !important;
+}
+
+/* no old red/halo states */
+.ring.mb-over,
+.ring.over-target,
+.ring.mb-overlap,
+.ring.mb-final-over,
+.small-stat.mb-over,
+.small-stat.over-target,
+.small-stat.mb-score-clean,
+.small-stat.mb-daily-match-over,
+.small-stat.mb-final-score-over{
+  box-shadow:0 0 18px rgba(37,99,235,.10), inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+/* tap percentage feedback retained */
+.ring.showing-percent .ring-inner{
+  box-shadow:inset 0 0 0 2px rgba(96,165,250,.40),0 0 18px rgba(96,165,250,.25) !important;
+}
+
+@media(max-width:430px){
+  .ring .mb-one-over-svg .shadow,
+  .small-stat .mb-one-daily-svg .shadow{
+    stroke-width:7 !important;
+  }
+
+  .ring .mb-one-over-svg .arc,
+  .small-stat .mb-one-daily-svg .arc{
+    stroke-width:6.5 !important;
+  }
+
+  .small-stat .mb-one-daily-svg{
+    width:96px !important;
+    height:96px !important;
+  }
+}
+</style>
+
+<script id="mb-one-clean-ring-system-final-js">
+(function(){
+  const COLORS = {
+    ringCal: '#2f80ff',
+    ringC: '#ff3b6b',
+    ringP: '#22e67a',
+    ringF: '#f5b942',
+    ringMeals: '#22d3ee',
+    ringStreak: '#ff4f83'
+  };
+
+  function $(id){return document.getElementById(id)}
+  function num(id){
+    const el=$(id);
+    if(!el) return 0;
+    const n=parseFloat(String(el.textContent || el.value || '').replace(/[^0-9.\-]/g,''));
+    return Number.isFinite(n)?n:0;
+  }
+
+  function removeOld(){
+    document.querySelectorAll(
+      '.mb-over-svg,.mb-clean-over-svg,.mb-final-over-svg,.mb-score-over-svg,.mb-score-clean-over-svg,.mb-final-score-svg,.mb-daily-final-svg,.mb-daily-match-svg'
+    ).forEach(el=>el.remove());
+
+    document.querySelectorAll('.ring').forEach(r=>{
+      r.classList.remove('mb-over','over-target','mb-overlap','mb-final-over');
+    });
+
+    document.querySelectorAll('.small-stat').forEach(s=>{
+      s.classList.remove('mb-over','over-target','mb-score-clean','mb-daily-match-over','mb-final-score-over');
+    });
+  }
+
+  function makeSvg(parent, cls){
+    let svg=parent.querySelector(':scope > .' + cls);
+    if(svg) return svg;
+
+    svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('class',cls);
+    svg.setAttribute('viewBox','0 0 100 100');
+
+    const shadow=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    shadow.setAttribute('class','shadow');
+    shadow.setAttribute('cx','50');
+    shadow.setAttribute('cy','50');
+    shadow.setAttribute('r','42');
+    shadow.setAttribute('pathLength','100');
+    shadow.setAttribute('transform','rotate(-90 50 50) translate(2.5 3)');
+
+    const arc=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    arc.setAttribute('class','arc');
+    arc.setAttribute('cx','50');
+    arc.setAttribute('cy','50');
+    arc.setAttribute('r','42');
+    arc.setAttribute('pathLength','100');
+    arc.setAttribute('transform','rotate(-90 50 50)');
+
+    svg.appendChild(shadow);
+    svg.appendChild(arc);
+    parent.appendChild(svg);
+    return svg;
+  }
+
+  function dash(svg,pct,color){
+    const shadow=svg.querySelector('.shadow');
+    const arc=svg.querySelector('.arc');
+
+    if(pct>100){
+      const extra=Math.min(72,Math.max(7,pct-100));
+      shadow.style.strokeDasharray=extra+' 100';
+      arc.style.strokeDasharray=extra+' 100';
+      shadow.style.strokeDashoffset='0';
+      arc.style.strokeDashoffset='0';
+      arc.style.stroke=color;
+      svg.style.display='block';
+    }else{
+      shadow.style.strokeDasharray='0 100';
+      arc.style.strokeDasharray='0 100';
+      svg.style.display='none';
+    }
+  }
+
+  function applyMacro(ringId,valueId,targetId){
+    const ring=$(ringId);
+    if(!ring) return;
+
+    const value=num(valueId);
+    const target=num(targetId);
+    const pct=target>0 ? (value/target)*100 : 0;
+    const color=COLORS[ringId] || getComputedStyle(ring).getPropertyValue('--ring').trim() || '#38bdf8';
+
+    ring.dataset.percent=Math.round(pct)+'%';
+    ring.style.setProperty('--ring',color);
+    ring.style.setProperty('--mb-ring-color',color);
+    ring.style.setProperty('--p',Math.min(pct,100)+'%');
+
+    if(pct>100){
+      ring.style.background=`conic-gradient(${color} 100%, rgba(30,41,59,.85) 0)`;
+    }
+
+    dash(makeSvg(ring,'mb-one-over-svg'),pct,color);
+  }
+
+  function applyDaily(){
+    const score=$('score');
+    const box=score?.closest('.small-stat');
+    if(!score || !box) return;
+
+    const pct=parseFloat(String(score.textContent||'').replace(/[^0-9.\-]/g,'')) || 0;
+    const color='#22d3ee';
+    const svg=makeSvg(box,'mb-one-daily-svg');
+
+    /* position overlay around the real score text center */
+    const boxRect=box.getBoundingClientRect();
+    const scoreRect=score.getBoundingClientRect();
+    const size=window.innerWidth<=430 ? 96 : 104;
+    const cx=(scoreRect.left + scoreRect.width/2) - boxRect.left;
+    const cy=(scoreRect.top + scoreRect.height/2) - boxRect.top;
+
+    svg.style.left=(cx - size/2)+'px';
+    svg.style.top=(cy - size/2)+'px';
+    svg.style.width=size+'px';
+    svg.style.height=size+'px';
+
+    dash(svg,pct,color);
+  }
+
+  function setupTap(){
+    document.querySelectorAll('.ring').forEach(ring=>{
+      if(ring.dataset.oneTapReady==='1') return;
+      ring.dataset.oneTapReady='1';
+
+      ring.addEventListener('click',function(){
+        const b=ring.querySelector('.ring-inner b');
+        const s=ring.querySelector('.ring-inner span');
+        if(!b || !s || !ring.dataset.percent) return;
+
+        const oldB=b.textContent;
+        const oldS=s.textContent;
+
+        b.textContent=ring.dataset.percent;
+        s.textContent='Target';
+        ring.classList.add('showing-percent');
+
+        clearTimeout(ring._oneTimer);
+        ring._oneTimer=setTimeout(()=>{
+          b.textContent=oldB;
+          s.textContent=oldS;
+          ring.classList.remove('showing-percent');
+        },1400);
+      });
+    });
+  }
+
+  function apply(){
+    removeOld();
+    applyMacro('ringCal','tCal','dashGoalCal');
+    applyMacro('ringC','tC','dashGoalC');
+    applyMacro('ringP','tP','dashGoalP');
+    applyMacro('ringF','tF','dashGoalF');
+    applyDaily();
+    setupTap();
+  }
+
+  const oldUpdateDashboard=window.updateDashboard;
+  if(typeof oldUpdateDashboard==='function'){
+    window.updateDashboard=function(){
+      const result=oldUpdateDashboard.apply(this,arguments);
+      setTimeout(apply,0);
+      return result;
+    };
+  }
+
+  const oldRenderToday=window.renderToday;
+  if(typeof oldRenderToday==='function'){
+    window.renderToday=function(){
+      const result=oldRenderToday.apply(this,arguments);
+      setTimeout(apply,0);
+      return result;
+    };
+  }
+
+  window.addEventListener('resize',()=>setTimeout(apply,50));
+  setInterval(apply,700);
+  setTimeout(apply,100);
+})();
+</script>
+
 </body>
 </html>
