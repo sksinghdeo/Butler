@@ -5878,5 +5878,84 @@ body.light-mode button[onclick*="toggleCustomIngredientFavoriteStar"]{
 }
 </style>
 
+
+<style id="mb-real-overlap-shadow-arc-final">
+/* REAL overlap shadow arc: separate dark arc under the colored top segment */
+
+.ring .mb-clean-over-svg,
+.small-stat .mb-score-clean-over-svg{
+  overflow:visible !important;
+}
+
+.ring .mb-clean-over-svg circle.mb-shadow-arc,
+.small-stat .mb-score-clean-over-svg circle.mb-shadow-arc{
+  stroke:rgba(0,0,0,.42) !important;
+  stroke-width:9 !important;
+  stroke-linecap:round !important;
+  fill:none !important;
+  filter:blur(.25px) !important;
+  opacity:.85 !important;
+}
+
+.ring .mb-clean-over-svg circle:not(.mb-shadow-arc),
+.small-stat .mb-score-clean-over-svg circle:not(.mb-shadow-arc){
+  stroke:#ff5b7a !important;
+  stroke-width:8 !important;
+  stroke-linecap:round !important;
+  filter:none !important;
+  opacity:1 !important;
+}
+
+@media(max-width:430px){
+  .ring .mb-clean-over-svg circle.mb-shadow-arc,
+  .small-stat .mb-score-clean-over-svg circle.mb-shadow-arc{
+    stroke-width:8 !important;
+  }
+
+  .ring .mb-clean-over-svg circle:not(.mb-shadow-arc),
+  .small-stat .mb-score-clean-over-svg circle:not(.mb-shadow-arc){
+    stroke-width:7 !important;
+  }
+}
+</style>
+
+<script id="mb-real-overlap-shadow-arc-final-js">
+(function(){
+  function ensureShadow(svg){
+    if(!svg) return;
+    const main = svg.querySelector('circle:not(.mb-shadow-arc)');
+    if(!main) return;
+
+    let shadow = svg.querySelector('circle.mb-shadow-arc');
+    if(!shadow){
+      shadow = main.cloneNode(false);
+      shadow.classList.add('mb-shadow-arc');
+      svg.insertBefore(shadow, main);
+    }
+
+    shadow.setAttribute('cx', main.getAttribute('cx') || '50');
+    shadow.setAttribute('cy', main.getAttribute('cy') || '50');
+    shadow.setAttribute('r', main.getAttribute('r') || '42');
+    shadow.setAttribute('pathLength', main.getAttribute('pathLength') || '100');
+
+    /* Offset creates the Apple-like cast shadow under the overlap cap */
+    shadow.setAttribute('transform','rotate(-90 50 50) translate(3 4)');
+
+    shadow.style.strokeDasharray = main.style.strokeDasharray || main.getAttribute('stroke-dasharray') || '0 100';
+    shadow.style.strokeDashoffset = main.style.strokeDashoffset || '0';
+    shadow.style.display = main.style.display;
+  }
+
+  function applyRealShadows(){
+    document.querySelectorAll('.mb-clean-over-svg, .mb-score-clean-over-svg').forEach(svg=>{
+      ensureShadow(svg);
+    });
+  }
+
+  setInterval(applyRealShadows,300);
+  setTimeout(applyRealShadows,100);
+})();
+</script>
+
 </body>
 </html>
