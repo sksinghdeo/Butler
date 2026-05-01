@@ -4003,5 +4003,306 @@ button[onclick*="toggleFav"]{
 }
 </style>
 
+
+<style id="mb-final-star-and-edit-visible-fix">
+/* Make all favorite stars visually match the neighboring button height */
+.star-btn,
+.food-actions .star-btn,
+.food-actions .recipe-fav-btn,
+.saved-recipe-actions-final .recipe-fav-btn,
+button.recipe-fav-btn{
+  width:56px !important;
+  height:56px !important;
+  min-width:56px !important;
+  min-height:56px !important;
+  max-width:56px !important;
+  max-height:56px !important;
+  padding:0 !important;
+  margin:0 !important;
+  border-radius:18px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  flex:0 0 56px !important;
+  font-size:0 !important;
+  line-height:1 !important;
+  vertical-align:middle !important;
+}
+
+/* star glyph inside actual .star-btn buttons */
+.star-btn::before{
+  font-size:31px !important;
+  line-height:1 !important;
+}
+
+/* star glyph for saved recipe favorite button */
+.recipe-fav-btn{
+  font-size:31px !important;
+  line-height:1 !important;
+}
+
+.food-actions,
+.saved-recipe-actions-final{
+  display:flex !important;
+  align-items:center !important;
+  gap:10px !important;
+}
+
+@media(max-width:430px){
+  .star-btn,
+  .food-actions .star-btn,
+  .food-actions .recipe-fav-btn,
+  .saved-recipe-actions-final .recipe-fav-btn,
+  button.recipe-fav-btn{
+    width:54px !important;
+    height:54px !important;
+    min-width:54px !important;
+    min-height:54px !important;
+    max-width:54px !important;
+    max-height:54px !important;
+    flex-basis:54px !important;
+    border-radius:17px !important;
+  }
+
+  .star-btn::before,
+  .recipe-fav-btn{
+    font-size:30px !important;
+  }
+}
+</style>
+
+<script id="mb-final-saved-recipe-edit-visible-js">
+(function(){
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const num = v => Number.isFinite(parseFloat(v)) ? parseFloat(v) : 0;
+  const r1 = v => Math.round(num(v)*10)/10;
+  const norm = s => String(s || '').trim().toLowerCase();
+
+  const RECIPE_KEYS = ['macro_custom_recipes_v3','macro_custom_recipes_v1','customRecipes','macro_custom_recipes'];
+
+  function readKey(k){
+    try{ const v = JSON.parse(localStorage.getItem(k) || '[]'); return Array.isArray(v) ? v : []; }
+    catch(e){ return []; }
+  }
+
+  function allRecipes(){
+    const out = [];
+    const seen = new Set();
+    RECIPE_KEYS.forEach(k=>{
+      readKey(k).forEach(r=>{
+        const rr = Object.assign({}, r);
+        if(!rr.id) rr.id = Date.now() + Math.floor(Math.random()*100000);
+        const key = String(rr.id);
+        const nameKey = norm(rr.name);
+        const finalKey = key + '|' + nameKey;
+        if(!seen.has(finalKey)){
+          seen.add(finalKey);
+          out.push(rr);
+        }
+      });
+    });
+    return out;
+  }
+
+  function saveAllRecipes(arr){
+    RECIPE_KEYS.forEach(k=>{
+      try{ localStorage.setItem(k, JSON.stringify(arr || [])); }catch(e){}
+    });
+  }
+
+  function getCurrentIngredients(){
+    if(Array.isArray(window._mbRecipeIngredients) && window._mbRecipeIngredients.length) return window._mbRecipeIngredients.map(x=>Object.assign({},x));
+    if(Array.isArray(window.recipeIngredients) && window.recipeIngredients.length) return window.recipeIngredients.map(x=>Object.assign({},x));
+    try{ if(Array.isArray(_mbRecipeIngredients) && _mbRecipeIngredients.length) return _mbRecipeIngredients.map(x=>Object.assign({},x)); }catch(e){}
+    try{ if(Array.isArray(recipeIngredients) && recipeIngredients.length) return recipeIngredients.map(x=>Object.assign({},x)); }catch(e){}
+    return [];
+  }
+
+  function setCurrentIngredients(arr){
+    const copy = (arr || []).map(x => Object.assign({}, x));
+    window._mbRecipeIngredients = copy;
+    window.recipeIngredients = copy;
+    try{ _mbRecipeIngredients = copy; }catch(e){}
+    try{ recipeIngredients = copy; }catch(e){}
+  }
+
+  function totals(arr){
+    return (arr || []).reduce((a,x)=>{
+      a.cal += num(x.cal); a.c += num(x.c); a.p += num(x.p); a.f += num(x.f);
+      return a;
+    }, {cal:0,c:0,p:0,f:0});
+  }
+
+  function renderIngredientListFromArray(arr){
+    const box = $('recipeIngredientList');
+    if(!box) return;
+
+    box.innerHTML = arr.length ? arr.map((x,i)=>`
+      <div class="recipe-row">
+        <div>
+          <b>${esc(x.name || 'Ingredient')}</b>
+          <div class="meta">${esc(x.amount ?? '')} ${esc(x.unit ?? '')} • ${Math.round(num(x.cal))} cal • C ${r1(x.c)}g • P ${r1(x.p)}g • F ${r1(x.f)}g</div>
+        </div>
+        <button class="small-btn danger" type="button" onclick="removeRecipeIngredient(${i})">Remove</button>
+      </div>
+    `).join('') : "<p class='note'>No ingredients added yet.</p>";
+
+    const t = totals(arr);
+    if($('recipeCal')) $('recipeCal').textContent = Math.round(t.cal);
+    if($('recipeC')) $('recipeC').textContent = r1(t.c) + 'g';
+    if($('recipeP')) $('recipeP').textContent = r1(t.p) + 'g';
+    if($('recipeF')) $('recipeF').textContent = r1(t.f) + 'g';
+  }
+
+  function getFavs(){
+    try{
+      if(typeof getFavorites === 'function') return getFavorites() || [];
+      return JSON.parse(localStorage.getItem('macro_favorites') || localStorage.getItem('favorites') || '[]') || [];
+    }catch(e){ return []; }
+  }
+
+  function setFavs(arr){
+    try{
+      if(typeof setFavorites === 'function') setFavorites(arr || []);
+      else localStorage.setItem('macro_favorites', JSON.stringify(arr || []));
+    }catch(e){}
+  }
+
+  function favKey(x){
+    return norm(x.name) + '|' + norm(x.serving || '1 recipe');
+  }
+
+  function recipeFood(r){
+    return {
+      id:'recipe_food_'+(r.id || Date.now()),
+      name:r.name || 'Custom Recipe',
+      serving:'1 recipe',
+      cat:'Custom Recipe',
+      cal:Math.round(num(r.cal)),
+      c:r1(r.c),
+      p:r1(r.p),
+      f:r1(r.f),
+      source:'custom_recipe',
+      ingredients:Array.isArray(r.ingredients) ? r.ingredients : []
+    };
+  }
+
+  window.isSavedRecipeFavoriteFinal = function(id){
+    const r = allRecipes().find(x => String(x.id) === String(id));
+    if(!r) return false;
+    const key = favKey(recipeFood(r));
+    return getFavs().some(f => favKey(f) === key);
+  };
+
+  window.toggleSavedRecipeFavoriteFinal = function(id){
+    const r = allRecipes().find(x => String(x.id) === String(id));
+    if(!r){ alert('Could not find this saved recipe.'); return; }
+    const item = recipeFood(r);
+    const key = favKey(item);
+    let favs = getFavs();
+    if(favs.some(f => favKey(f) === key)) favs = favs.filter(f => favKey(f) !== key);
+    else favs.unshift(item);
+    setFavs(favs.slice(0,150));
+    if(typeof renderFavorites === 'function') renderFavorites();
+    renderSavedRecipes();
+  };
+
+  window.editSavedRecipeFinal = function(id){
+    const r = allRecipes().find(x => String(x.id) === String(id));
+    if(!r){ alert('Could not find this saved recipe.'); return; }
+
+    if($('recipeName')) $('recipeName').value = r.name || '';
+    if($('recipeMeal')) $('recipeMeal').value = r.meal || 'Breakfast';
+
+    const arr = Array.isArray(r.ingredients) ? r.ingredients.map(x=>Object.assign({},x)) : [];
+    setCurrentIngredients(arr);
+    window.__editingSavedRecipeIdFinal = String(r.id);
+
+    /* Clear prior visible recipe ingredient area and show the saved recipe ingredients immediately */
+    renderIngredientListFromArray(arr);
+
+    const btn = document.querySelector('#customRecipeCard .recipe-action-row .purple');
+    if(btn) btn.textContent = 'Update Custom Recipe';
+
+    $('customRecipeCard')?.scrollIntoView({behavior:'smooth', block:'start'});
+  };
+
+  window.deleteSavedRecipe = function(id){
+    const arr = allRecipes().filter(r => String(r.id) !== String(id));
+    saveAllRecipes(arr);
+    renderSavedRecipes();
+  };
+
+  window.renderSavedRecipes = function(){
+    const box = $('savedRecipesList');
+    if(!box) return;
+    const recipes = allRecipes();
+
+    box.innerHTML = recipes.length ? recipes.map(r => {
+      const fav = isSavedRecipeFavoriteFinal(r.id) ? 'active' : '';
+      return `<div class="recipe-row">
+        <div>
+          <b>${esc(r.name || 'Custom Recipe')}</b>
+          <div class="meta">${Math.round(num(r.cal))} cal • C ${r1(r.c)}g • P ${r1(r.p)}g • F ${r1(r.f)}g</div>
+        </div>
+        <div class="food-actions saved-recipe-actions-final">
+          <button class="recipe-fav-btn ${fav}" type="button" onclick="toggleSavedRecipeFavoriteFinal('${esc(r.id)}')" aria-label="Favorite recipe">★</button>
+          <button class="small-btn light" type="button" onclick="editSavedRecipeFinal('${esc(r.id)}')">Edit</button>
+          <button class="small-btn danger" type="button" onclick="deleteSavedRecipe('${esc(r.id)}')">Delete</button>
+        </div>
+      </div>`;
+    }).join('') : "<p class='note'>Saved recipes appear here.</p>";
+  };
+
+  const oldSave = window.saveCustomRecipe;
+  window.saveCustomRecipe = function(){
+    const name = ($('recipeName')?.value || '').trim();
+    const arr = getCurrentIngredients();
+
+    if(!name){ alert('Enter recipe name'); return; }
+    if(!arr.length){ alert('Add ingredients first'); return; }
+
+    const t = totals(arr);
+    const editId = window.__editingSavedRecipeIdFinal;
+    let recipes = allRecipes();
+
+    const recipe = {
+      id: editId || Date.now(),
+      name,
+      meal: $('recipeMeal')?.value || 'Breakfast',
+      serving:'1 recipe',
+      cat:'Custom Recipe',
+      cal:Math.round(t.cal),
+      c:r1(t.c),
+      p:r1(t.p),
+      f:r1(t.f),
+      ingredients:arr.map(x=>Object.assign({},x)),
+      source:'custom_recipe'
+    };
+
+    if(editId){
+      const i = recipes.findIndex(r => String(r.id) === String(editId));
+      if(i >= 0) recipes[i] = recipe;
+      else recipes.unshift(recipe);
+      window.__editingSavedRecipeIdFinal = null;
+      const btn = document.querySelector('#customRecipeCard .recipe-action-row .purple');
+      if(btn) btn.textContent = 'Save Custom Recipe';
+    }else{
+      recipes = [recipe, ...recipes.filter(r => norm(r.name) !== norm(name))];
+    }
+
+    saveAllRecipes(recipes.slice(0,100));
+    renderSavedRecipes();
+
+    if(typeof showMbCleanToast === 'function') showMbCleanToast(editId ? 'Custom recipe updated' : 'Recipe saved');
+    else if(typeof mbToast === 'function') mbToast(editId ? 'Custom recipe updated' : 'Recipe saved');
+    else alert(editId ? 'Custom recipe updated' : 'Recipe saved');
+  };
+
+  setTimeout(renderSavedRecipes, 100);
+})();
+</script>
+
 </body>
 </html>
