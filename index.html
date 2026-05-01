@@ -2641,7 +2641,10 @@ body.light-mode .quick-link{background:#fff!important;color:#1d4ed8!important;bo
   window.renderSavedRecipes=function(){
     const box=q('savedRecipesList'); if(!box) return;
     const recipes=getRecipes();
-    box.innerHTML=recipes.length?recipes.map(r=>`<div class="recipe-row"><div><b>${r.name}</b><div class="meta">${r.cal} cal • C ${r.c}g • P ${r.p}g • F ${r.f}g</div></div><div class="food-actions"><button class="small-btn light" type="button" onclick="useSavedRecipe(${r.id})">Edit</button><button class="small-btn danger" type="button" onclick="deleteSavedRecipe(${r.id})">Delete</button></div></div>`).join(''):"<p class='note'>Saved recipes appear here.</p>";
+    box.innerHTML=recipes.length?recipes.map(r=>{
+      const fav=(typeof isSavedRecipeFavoriteFinal==='function' && isSavedRecipeFavoriteFinal(r.id))?'active':'';
+      return `<div class="recipe-row"><div><b>${r.name}</b><div class="meta">${r.cal} cal • C ${r.c}g • P ${r.p}g • F ${r.f}g</div></div><div class="food-actions saved-recipe-actions-final"><button class="recipe-fav-btn ${fav}" type="button" onclick="toggleSavedRecipeFavoriteFinal('${r.id}')">★</button><button class="small-btn light" type="button" onclick="editSavedRecipeFinal('${r.id}')">Edit</button><button class="small-btn danger" type="button" onclick="deleteSavedRecipe(${r.id})">Delete</button></div></div>`;
+    }).join(''):"<p class='note'>Saved recipes appear here.</p>";
   };
 
   window.previewLabelPhoto=function(event){
@@ -2749,7 +2752,7 @@ function ensureIngModal(){return modal('ingredientAmountModal',`<div id="ingredi
 window.openIngredientAmountModal=function(item){selectedIngredientItem=item;ensureIngModal();$('ingredientModalTitle').textContent=item.name||'Ingredient';$('ingredientModalMeta').textContent=`Base: ${item.serving||'1 serving'} • ${Math.round(N(item.cal))} cal`;$('ingredientModalUnit').innerHTML=units(item).map(([l,v])=>`<option value="${v}">${l}</option>`).join('');$('ingredientModalAmount').value=1;$('ingredientAmountModal').classList.add('active')};
 function totalsRecipe(){return(window._mbRecipeIngredients||[]).reduce((a,x)=>({cal:a.cal+N(x.cal),c:a.c+N(x.c),p:a.p+N(x.p),f:a.f+N(x.f)}),{cal:0,c:0,p:0,f:0})}function renderRecipe(){const box=$('recipeIngredientList');if(!box)return;const arr=window._mbRecipeIngredients||[];box.innerHTML=arr.length?arr.map((x,i)=>`<div class="recipe-row"><div><b>${esc(x.name)}</b><div class="meta">${esc(x.amount)} ${esc(x.unit)} • ${Math.round(N(x.cal))} cal • C ${R(x.c)}g • P ${R(x.p)}g • F ${R(x.f)}g</div></div><button class="small-btn danger" type="button" onclick="removeRecipeIngredient(${i})">Remove</button></div>`).join(''):"<p class='note'>No ingredients added yet.</p>";const t=totalsRecipe();if($('recipeCal'))$('recipeCal').textContent=Math.round(t.cal);if($('recipeC'))$('recipeC').textContent=R(t.c)+'g';if($('recipeP'))$('recipeP').textContent=R(t.p)+'g';if($('recipeF'))$('recipeF').textContent=R(t.f)+'g';refreshStage()}
 window.confirmIngredientAdd=function(){const item=selectedIngredientItem;if(!item)return;const amount=N($('ingredientModalAmount')?.value)||1,unit=$('ingredientModalUnit')?.value||'serving',m=mult(item,amount,unit);window._mbRecipeIngredients=window._mbRecipeIngredients||[];window._mbRecipeIngredients.push({base:item,amount,unit,name:item.name,cal:Math.round(N(item.cal)*m),c:R(N(item.c)*m),p:R(N(item.p)*m),f:R(N(item.f)*m)});close('ingredientAmountModal');renderRecipe()};window.removeRecipeIngredient=function(i){window._mbRecipeIngredients=(window._mbRecipeIngredients||[]).filter((_,idx)=>idx!==i);renderRecipe()};
-window.addRecipeToLog=function(){const name=($('recipeName')?.value||'Custom recipe').trim(),arr=window._mbRecipeIngredients||[];if(!arr.length){alert('Add ingredients first');return}const t=totalsRecipe(),log=typeof getLog==='function'?getLog():[];log.push({name,meal:$('recipeMeal')?.value||'Lunch',cal:Math.round(t.cal),c:R(t.c),p:R(t.p),f:R(t.f)});if(typeof saveLog==='function')saveLog(log);toast('Recipe added');showScreen('Log')};function getRecipes(){try{return JSON.parse(localStorage.getItem('macro_custom_recipes_v3')||'[]')}catch(e){return[]}}function setRecipes(x){localStorage.setItem('macro_custom_recipes_v3',JSON.stringify(x||[]))}window.saveCustomRecipe=function(){const name=($('recipeName')?.value||'').trim(),arr=window._mbRecipeIngredients||[];if(!name){alert('Enter recipe name');return}if(!arr.length){alert('Add ingredients first');return}const t=totalsRecipe(),r={id:Date.now(),name,serving:'1 recipe',cat:'Custom Recipe',cal:Math.round(t.cal),c:R(t.c),p:R(t.p),f:R(t.f),ingredients:arr,source:'custom_recipe'};setRecipes([r,...getRecipes().filter(x=>norm(x.name)!==norm(name))].slice(0,100));renderSavedRecipes();toast('Recipe saved')};window.useSavedRecipe=function(id){const r=getRecipes().find(x=>x.id===id);if(!r)return;window._mbRecipeIngredients=r.ingredients||[];if($('recipeName'))$('recipeName').value=r.name;renderRecipe()};window.deleteSavedRecipe=function(id){setRecipes(getRecipes().filter(r=>r.id!==id));renderSavedRecipes()};window.renderSavedRecipes=function(){const box=$('savedRecipesList');if(!box)return;const recipes=getRecipes();box.innerHTML=recipes.length?recipes.map(r=>`<div class="recipe-row"><div><b>${esc(r.name)}</b><div class="meta">${Math.round(N(r.cal))} cal • C ${R(r.c)}g • P ${R(r.p)}g • F ${R(r.f)}g</div></div><div class="food-actions"><button class="small-btn light" type="button" onclick="useSavedRecipe(${r.id})">Edit</button><button class="small-btn danger" type="button" onclick="deleteSavedRecipe(${r.id})">Delete</button></div></div>`).join(''):"<p class='note'>Saved recipes appear here.</p>"};
+window.addRecipeToLog=function(){const name=($('recipeName')?.value||'Custom recipe').trim(),arr=window._mbRecipeIngredients||[];if(!arr.length){alert('Add ingredients first');return}const t=totalsRecipe(),log=typeof getLog==='function'?getLog():[];log.push({name,meal:$('recipeMeal')?.value||'Lunch',cal:Math.round(t.cal),c:R(t.c),p:R(t.p),f:R(t.f)});if(typeof saveLog==='function')saveLog(log);toast('Recipe added');showScreen('Log')};function getRecipes(){try{return JSON.parse(localStorage.getItem('macro_custom_recipes_v3')||'[]')}catch(e){return[]}}function setRecipes(x){localStorage.setItem('macro_custom_recipes_v3',JSON.stringify(x||[]))}window.saveCustomRecipe=function(){const name=($('recipeName')?.value||'').trim(),arr=window._mbRecipeIngredients||[];if(!name){alert('Enter recipe name');return}if(!arr.length){alert('Add ingredients first');return}const t=totalsRecipe(),r={id:Date.now(),name,serving:'1 recipe',cat:'Custom Recipe',cal:Math.round(t.cal),c:R(t.c),p:R(t.p),f:R(t.f),ingredients:arr,source:'custom_recipe'};setRecipes([r,...getRecipes().filter(x=>norm(x.name)!==norm(name))].slice(0,100));renderSavedRecipes();toast('Recipe saved')};window.useSavedRecipe=function(id){const r=getRecipes().find(x=>x.id===id);if(!r)return;window._mbRecipeIngredients=r.ingredients||[];if($('recipeName'))$('recipeName').value=r.name;renderRecipe()};window.deleteSavedRecipe=function(id){setRecipes(getRecipes().filter(r=>r.id!==id));renderSavedRecipes()};window.renderSavedRecipes=function(){const box=$('savedRecipesList');if(!box)return;const recipes=getRecipes();box.innerHTML=recipes.length?recipes.map(r=>{const fav=(typeof isSavedRecipeFavoriteFinal==='function'&&isSavedRecipeFavoriteFinal(r.id))?'active':'';return `<div class="recipe-row"><div><b>${esc(r.name)}</b><div class="meta">${Math.round(N(r.cal))} cal • C ${R(r.c)}g • P ${R(r.p)}g • F ${R(r.f)}g</div></div><div class="food-actions saved-recipe-actions-final"><button class="recipe-fav-btn ${fav}" type="button" onclick="toggleSavedRecipeFavoriteFinal('${r.id}')">★</button><button class="small-btn light" type="button" onclick="editSavedRecipeFinal('${r.id}')">Edit</button><button class="small-btn danger" type="button" onclick="deleteSavedRecipe(${r.id})">Delete</button></div></div>`}).join(''):"<p class='note'>Saved recipes appear here.</p>"};
 window.openCustomIngredientModal=function(){modal('customIngredientModal',`<div id="customIngredientModal" class="mb-modal"><div class="mb-modal-card"><h3>New Ingredient</h3><label>Name</label><input id="ciName"><div class="mb-unit-grid"><div><label>Serving</label><input id="ciServing" placeholder="100 g / 1 tbsp"></div><div><label>Category</label><input id="ciCat" placeholder="Custom Ingredient"></div></div><div class="mb-unit-grid"><div><label>Calories</label><input id="ciCal" type="number"></div><div><label>Carbs (g)</label><input id="ciC" type="number" step="0.1"></div><div><label>Protein (g)</label><input id="ciP" type="number" step="0.1"></div><div><label>Fat (g)</label><input id="ciF" type="number" step="0.1"></div></div><div class="mb-modal-actions"><button class="good" type="button" onclick="saveCustomIngredientModal()">Save</button><button class="light" type="button" onclick="closeMbModal('customIngredientModal')">Cancel</button></div></div></div>`).classList.add('active')};window.saveCustomIngredientModal=function(){const name=($('ciName')?.value||'').trim();if(!name){alert('Enter ingredient name');return}const item={id:'custom_ing_'+Date.now(),name,serving:$('ciServing')?.value||'100 g',cat:$('ciCat')?.value||'Custom Ingredient',cal:Math.round(N($('ciCal')?.value)),c:R($('ciC')?.value),p:R($('ciP')?.value),f:R($('ciF')?.value),source:'custom_ingredient'};setCustomFoods([item,...getCustomFoods().filter(x=>localKey(x)!==localKey(item))].slice(0,500));close('customIngredientModal');toast('Ingredient saved');if(typeof loadFoodDatabase==='function')loadFoodDatabase()};
 function getW(){try{return JSON.parse(localStorage.getItem('macro_weight_entries')||'[]')}catch(e){return[]}}function setW(w){localStorage.setItem('macro_weight_entries',JSON.stringify(w||[]))}function ensureWeight(){return modal('weightEditModal',`<div id="weightEditModal" class="mb-modal"><div class="mb-modal-card"><h3>Edit Weight</h3><input id="weightEditOriginalDate" type="hidden"><div class="mb-unit-grid"><div><label>Date</label><input id="weightEditDate" type="date"></div><div><label>Weight</label><input id="weightEditValue" type="number" step="0.1"></div></div><label>Unit</label><select id="weightEditUnit"><option value="lb">lb</option><option value="kg">kg</option></select><div class="mb-modal-actions three"><button class="good" type="button" onclick="saveWeightEditModal()">Save</button><button class="danger" type="button" onclick="deleteWeightEditModal()">Delete</button><button class="light" type="button" onclick="closeMbModal('weightEditModal')">Cancel</button></div></div></div>`)}
 window.renderWeightTrend=function(){const e=getW().sort((a,b)=>String(a.date).localeCompare(String(b.date))).slice(-30),box=$('weightTrend');if(!box)return;if(!e.length){box.innerHTML='<p class="note">No weight entries yet.</p>';return}if(e.length<=3){box.innerHTML=e.map(x=>`<div class="saved-food"><div><b>${typeof formatDatePretty==='function'?formatDatePretty(x.date):x.date}</b><div class="meta">${x.weight} ${x.unit}</div></div><div class="weight-actions"><button class="light" type="button" onclick="editWeightEntry('${x.date}')">Edit</button><button class="danger" type="button" onclick="editWeightEntry('${x.date}')">Delete</button></div></div>`).join('');return}const vals=e.map(x=>N(x.weight)),min=Math.min(...vals),max=Math.max(...vals),span=(max-min)||1,pts=e.map((x,i)=>({x:30+(i/(e.length-1))*300,y:145-((N(x.weight)-min)/span)*110,e:x}));box.innerHTML=`<div class="weight-chart"><svg viewBox="0 0 360 180" preserveAspectRatio="none"><line class="axis" x1="24" y1="150" x2="340" y2="150"/><line class="axis" x1="24" y1="30" x2="24" y2="150"/><polyline class="line" points="${pts.map(p=>p.x+','+p.y).join(' ')}"/>${pts.map(p=>`<circle class="dot" cx="${p.x}" cy="${p.y}" r="4"></circle>`).join('')}<text x="28" y="24">${max} ${e[0].unit}</text><text x="28" y="170">${min} ${e[0].unit}</text></svg><p class="note">${e.length} entries. Trend chart shown because there are more than 3 entries.</p></div>`};
@@ -3584,21 +3587,21 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 </script>
 
 
-<style id="mb-saved-recipe-edit-fav-final-css">
+<style id="mb-direct-saved-recipe-star-edit-css">
 .saved-recipe-actions-final{
   display:flex !important;
   align-items:center !important;
-  gap:8px !important;
   justify-content:flex-end !important;
+  gap:8px !important;
 }
 .saved-recipe-actions-final .recipe-fav-btn{
-  width:46px !important;
-  height:46px !important;
-  min-width:46px !important;
+  width:44px !important;
+  height:44px !important;
+  min-width:44px !important;
   padding:0 !important;
   margin:0 !important;
-  border-radius:16px !important;
-  font-size:24px !important;
+  border-radius:15px !important;
+  font-size:23px !important;
   line-height:1 !important;
   background:rgba(15,23,42,.82) !important;
   color:#94a3b8 !important;
@@ -3610,210 +3613,62 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   border-color:rgba(250,204,21,.55) !important;
   box-shadow:0 0 18px rgba(250,204,21,.38) !important;
 }
-.saved-recipe-actions-final button{
-  margin:0 !important;
-}
-@media(max-width:430px){
-  .saved-recipe-actions-final{
-    gap:7px !important;
-  }
-  .saved-recipe-actions-final .recipe-fav-btn{
-    width:42px !important;
-    height:42px !important;
-    min-width:42px !important;
-    font-size:22px !important;
-  }
-}
+.saved-recipe-actions-final button{margin:0 !important}
 </style>
-
-
-<script id="mb-saved-recipe-edit-fav-final-js">
+<script id="mb-direct-saved-recipe-star-edit-js">
 (function(){
-  const $ = id => document.getElementById(id);
-  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const num = v => Number.isFinite(parseFloat(v)) ? parseFloat(v) : 0;
-  const r1 = v => Math.round(num(v)*10)/10;
-
-  function getRecipes(){
-    try{
-      if(typeof getCustomRecipes === 'function') return getCustomRecipes() || [];
-      return JSON.parse(localStorage.getItem('customRecipes') || localStorage.getItem('macro_custom_recipes') || '[]') || [];
-    }catch(e){ return []; }
-  }
-
-  function setRecipes(arr){
-    try{
-      if(typeof setCustomRecipes === 'function') setCustomRecipes(arr || []);
-      else localStorage.setItem('customRecipes', JSON.stringify(arr || []));
-    }catch(e){
-      try{ localStorage.setItem('customRecipes', JSON.stringify(arr || [])); }catch(_){}
-    }
-  }
-
-  function getRecipeById(id){
-    return getRecipes().find(r => String(r.id) === String(id));
-  }
-
-  function recipeItem(r){
-    return {
-      id: 'recipe_food_' + (r.id || Date.now()),
-      name: r.name || 'Custom Recipe',
-      serving: r.serving || '1 recipe',
-      cat: 'Custom Recipe',
-      cal: Math.round(num(r.cal)),
-      c: r1(r.c),
-      p: r1(r.p),
-      f: r1(r.f),
-      source: 'custom_recipe',
-      ingredients: Array.isArray(r.ingredients) ? r.ingredients : []
-    };
-  }
-
-  function favKey(item){
-    const name = String(item.name || '').trim().toLowerCase();
-    const serving = String(item.serving || '').trim().toLowerCase();
-    return name + '|' + serving;
-  }
-
-  function getFavs(){
-    try{
-      if(typeof getFavorites === 'function') return getFavorites() || [];
-      return JSON.parse(localStorage.getItem('macro_favorites') || localStorage.getItem('favorites') || '[]') || [];
-    }catch(e){ return []; }
-  }
-
-  function setFavs(arr){
-    try{
-      if(typeof setFavorites === 'function') setFavorites(arr || []);
-      else localStorage.setItem('macro_favorites', JSON.stringify(arr || []));
-    }catch(e){
-      try{ localStorage.setItem('macro_favorites', JSON.stringify(arr || [])); }catch(_){}
-    }
-  }
-
-  window.isSavedRecipeFavorite = function(id){
-    const r = getRecipeById(id);
-    if(!r) return false;
-    const key = favKey(recipeItem(r));
-    return getFavs().some(f => favKey(f) === key);
+  function byId(id){return document.getElementById(id)}
+  function num(v){const x=parseFloat(v);return Number.isFinite(x)?x:0}
+  function r1(v){return Math.round(num(v)*10)/10}
+  function getRecipesSafe(){try{return (typeof getRecipes==='function'?getRecipes():JSON.parse(localStorage.getItem('customRecipes')||'[]'))||[]}catch(e){return[]}}
+  function setRecipesSafe(arr){try{if(typeof setRecipes==='function')setRecipes(arr);else localStorage.setItem('customRecipes',JSON.stringify(arr||[]))}catch(e){}}
+  function getFavs(){try{return (typeof getFavorites==='function'?getFavorites():JSON.parse(localStorage.getItem('macro_favorites')||localStorage.getItem('favorites')||'[]'))||[]}catch(e){return[]}}
+  function setFavs(arr){try{if(typeof setFavorites==='function')setFavorites(arr||[]);else localStorage.setItem('macro_favorites',JSON.stringify(arr||[]))}catch(e){}}
+  function key(x){return String(x.name||'').trim().toLowerCase()+'|'+String(x.serving||'1 recipe').trim().toLowerCase()}
+  function recipeToFood(r){return {id:'recipe_'+(r.id||Date.now()),name:r.name||'Custom Recipe',serving:'1 recipe',cat:'Custom Recipe',cal:Math.round(num(r.cal)),c:r1(r.c),p:r1(r.p),f:r1(r.f),source:'custom_recipe',ingredients:Array.isArray(r.ingredients)?r.ingredients:[]}}
+  window.isSavedRecipeFavoriteFinal=function(id){const r=getRecipesSafe().find(x=>String(x.id)===String(id));if(!r)return false;const k=key(recipeToFood(r));return getFavs().some(x=>key(x)===k)}
+  window.toggleSavedRecipeFavoriteFinal=function(id){const r=getRecipesSafe().find(x=>String(x.id)===String(id));if(!r)return;const item=recipeToFood(r);const k=key(item);let favs=getFavs();if(favs.some(x=>key(x)===k)){favs=favs.filter(x=>key(x)!==k)}else{favs.unshift(item)}setFavs(favs.slice(0,150));if(typeof renderFavorites==='function')renderFavorites();if(typeof renderSavedRecipes==='function')renderSavedRecipes()}
+  window.editSavedRecipeFinal=function(id){
+    const r=getRecipesSafe().find(x=>String(x.id)===String(id));
+    if(!r){alert('Could not find this saved recipe.');return}
+    if(byId('recipeName'))byId('recipeName').value=r.name||'';
+    if(byId('recipeMeal'))byId('recipeMeal').value=r.meal||'Breakfast';
+    const arr=(Array.isArray(r.ingredients)?r.ingredients:[]).map(x=>Object.assign({},x));
+    window.recipeIngredients=arr;
+    window._mbRecipeIngredients=arr;
+    try{recipeIngredients=arr}catch(e){}
+    try{_mbRecipeIngredients=arr}catch(e){}
+    window.__editingSavedRecipeIdFinal=id;
+    try{if(typeof renderRecipeBuilder==='function')renderRecipeBuilder()}catch(e){}
+    try{if(typeof renderRecipe==='function')renderRecipe()}catch(e){}
+    try{if(typeof renderRecipeIngredients==='function')renderRecipeIngredients()}catch(e){}
+    try{if(typeof updateRecipeTotals==='function')updateRecipeTotals()}catch(e){}
+    const btn=document.querySelector('#customRecipeCard .recipe-action-row .purple');
+    if(btn)btn.textContent='Update Custom Recipe';
+    byId('customRecipeCard')?.scrollIntoView({behavior:'smooth',block:'start'});
   };
-
-  window.toggleSavedRecipeFavorite = function(id){
-    const r = getRecipeById(id);
-    if(!r) return;
-    const item = recipeItem(r);
-    const key = favKey(item);
-    let favs = getFavs();
-    if(favs.some(f => favKey(f) === key)){
-      favs = favs.filter(f => favKey(f) !== key);
-    }else{
-      favs.unshift(item);
-    }
-    setFavs(favs.slice(0,150));
-    if(typeof renderFavorites === 'function') renderFavorites();
-    renderSavedRecipes();
-  };
-
-  function setIngredientArrays(arr){
-    const copy = (arr || []).map(x => Object.assign({}, x));
-    window.recipeIngredients = copy;
-    window._mbRecipeIngredients = copy;
-    try{ recipeIngredients = copy; }catch(e){}
-    try{ _mbRecipeIngredients = copy; }catch(e){}
-  }
-
-  window.editSavedRecipeFinal = function(id){
-    const r = getRecipeById(id);
-    if(!r){ alert('Could not find this saved recipe.'); return; }
-
-    if($('recipeName')) $('recipeName').value = r.name || '';
-    if($('recipeMeal')) $('recipeMeal').value = r.meal || 'Breakfast';
-
-    setIngredientArrays(Array.isArray(r.ingredients) ? r.ingredients : []);
-
-    try{ if(typeof renderRecipeBuilder === 'function') renderRecipeBuilder(); }catch(e){}
-    try{ if(typeof renderRecipe === 'function') renderRecipe(); }catch(e){}
-    try{ if(typeof renderRecipeIngredients === 'function') renderRecipeIngredients(); }catch(e){}
-    try{ if(typeof updateRecipeTotals === 'function') updateRecipeTotals(); }catch(e){}
-
-    window.__editingSavedRecipeId = id;
-    const saveBtn = document.querySelector('#customRecipeCard .recipe-action-row .purple');
-    if(saveBtn) saveBtn.textContent = 'Update Custom Recipe';
-
-    const card = $('customRecipeCard');
-    if(card) card.scrollIntoView({behavior:'smooth', block:'start'});
-  };
-
-  window.renderSavedRecipes = function(){
-    const box = $('savedRecipesList');
-    if(!box) return;
-    const recipes = getRecipes();
-
-    box.innerHTML = recipes.length ? recipes.map(r => {
-      const fav = window.isSavedRecipeFavorite(r.id) ? 'active' : '';
-      return `<div class="recipe-row">
-        <div>
-          <b>${esc(r.name || 'Custom Recipe')}</b>
-          <div class="meta">${Math.round(num(r.cal))} cal • C ${r1(r.c)}g • P ${r1(r.p)}g • F ${r1(r.f)}g</div>
-        </div>
-        <div class="food-actions saved-recipe-actions-final">
-          <button class="recipe-fav-btn ${fav}" type="button" onclick="toggleSavedRecipeFavorite('${esc(r.id)}')" aria-label="Favorite recipe">★</button>
-          <button class="small-btn light" type="button" onclick="editSavedRecipeFinal('${esc(r.id)}')">Edit</button>
-          <button class="small-btn danger" type="button" onclick="deleteSavedRecipe('${esc(r.id)}')">Delete</button>
-        </div>
-      </div>`;
-    }).join('') : "<p class='note'>Saved recipes appear here.</p>";
-  };
-
-  const oldSave = window.saveCustomRecipe;
-  window.saveCustomRecipe = function(){
-    if(window.__editingSavedRecipeId !== undefined && window.__editingSavedRecipeId !== null){
-      const recipes = getRecipes();
-      const id = window.__editingSavedRecipeId;
-      const idx = recipes.findIndex(r => String(r.id) === String(id));
-      if(idx < 0){
-        window.__editingSavedRecipeId = null;
-        if(typeof oldSave === 'function') return oldSave.apply(this, arguments);
-        return;
-      }
-
-      const arr = (window.recipeIngredients && window.recipeIngredients.length) ? window.recipeIngredients : (window._mbRecipeIngredients || []);
-      if(!arr.length){ alert('Add at least one ingredient.'); return; }
-
-      const total = arr.reduce((a,x)=>{
-        a.cal += num(x.cal); a.c += num(x.c); a.p += num(x.p); a.f += num(x.f); return a;
-      }, {cal:0,c:0,p:0,f:0});
-
-      recipes[idx] = Object.assign({}, recipes[idx], {
-        name: ($('recipeName')?.value || '').trim() || 'Custom Recipe',
-        meal: $('recipeMeal')?.value || recipes[idx].meal || 'Breakfast',
-        serving: '1 recipe',
-        cat: 'Custom Recipe',
-        ingredients: arr.map(x => Object.assign({}, x)),
-        cal: Math.round(total.cal),
-        c: r1(total.c),
-        p: r1(total.p),
-        f: r1(total.f),
-        source: 'custom_recipe'
-      });
-
-      setRecipes(recipes);
-      window.__editingSavedRecipeId = null;
-
-      const saveBtn = document.querySelector('#customRecipeCard .recipe-action-row .purple');
-      if(saveBtn) saveBtn.textContent = 'Save Custom Recipe';
-
-      renderSavedRecipes();
-      if(typeof showMbCleanToast === 'function') showMbCleanToast('Custom recipe updated');
-      else if(typeof mbToast === 'function') mbToast('Custom recipe updated');
-      else alert('Custom recipe updated');
+  const oldSave=window.saveCustomRecipe;
+  window.saveCustomRecipe=function(){
+    if(window.__editingSavedRecipeIdFinal!==undefined&&window.__editingSavedRecipeIdFinal!==null){
+      const id=window.__editingSavedRecipeIdFinal;
+      const recipes=getRecipesSafe();
+      const idx=recipes.findIndex(x=>String(x.id)===String(id));
+      if(idx<0){window.__editingSavedRecipeIdFinal=null;return oldSave&&oldSave.apply(this,arguments)}
+      const arr=(window.recipeIngredients&&window.recipeIngredients.length?window.recipeIngredients:window._mbRecipeIngredients)||[];
+      if(!arr.length){alert('Add at least one ingredient.');return}
+      const t=arr.reduce((a,x)=>{a.cal+=num(x.cal);a.c+=num(x.c);a.p+=num(x.p);a.f+=num(x.f);return a},{cal:0,c:0,p:0,f:0});
+      recipes[idx]=Object.assign({},recipes[idx],{name:(byId('recipeName')?.value||'').trim()||'Custom Recipe',meal:byId('recipeMeal')?.value||'Breakfast',serving:'1 recipe',cat:'Custom Recipe',ingredients:arr.map(x=>Object.assign({},x)),cal:Math.round(t.cal),c:r1(t.c),p:r1(t.p),f:r1(t.f),source:'custom_recipe'});
+      setRecipesSafe(recipes);
+      window.__editingSavedRecipeIdFinal=null;
+      const btn=document.querySelector('#customRecipeCard .recipe-action-row .purple');
+      if(btn)btn.textContent='Save Custom Recipe';
+      if(typeof renderSavedRecipes==='function')renderSavedRecipes();
+      if(typeof showMbCleanToast==='function')showMbCleanToast('Custom recipe updated');else alert('Custom recipe updated');
       return;
     }
-
-    if(typeof oldSave === 'function') return oldSave.apply(this, arguments);
+    return oldSave&&oldSave.apply(this,arguments);
   };
-
-  setTimeout(renderSavedRecipes, 50);
+  setTimeout(function(){if(typeof renderSavedRecipes==='function')renderSavedRecipes()},100);
 })();
 </script>
 
