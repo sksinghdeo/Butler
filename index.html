@@ -5742,5 +5742,103 @@ if(typeof r==='function'){window.render=function(){const x=r.apply(this,argument
 })();
 </script>
 
+
+<style id="mb-force-horizontal-use-ingredient-buttons-final">
+/* Final override: older global CSS was forcing the last button to full width.
+   These two popups must keep both buttons in one horizontal row. */
+
+#portionMealModal .mb-modal-actions{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+  gap:12px !important;
+  align-items:stretch !important;
+}
+
+#portionMealModal .mb-modal-actions button{
+  width:100% !important;
+  min-width:0 !important;
+  margin:0 !important;
+  grid-row:1 !important;
+}
+
+#portionMealModal .mb-modal-actions button:first-child{
+  grid-column:1 !important;
+}
+
+#portionMealModal .mb-modal-actions button:last-child{
+  grid-column:2 !important;
+}
+
+/* Actual ingredient popup id is ingredientAmountModal */
+#ingredientAmountModal .mb-modal-actions{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+  gap:12px !important;
+  align-items:stretch !important;
+}
+
+#ingredientAmountModal .mb-modal-actions button{
+  width:100% !important;
+  min-width:0 !important;
+  margin:0 !important;
+  grid-row:1 !important;
+}
+
+#ingredientAmountModal .mb-modal-actions button:first-child{
+  grid-column:1 !important;
+}
+
+#ingredientAmountModal .mb-modal-actions button:last-child{
+  grid-column:2 !important;
+}
+
+@media(max-width:430px){
+  #portionMealModal .mb-modal-actions,
+  #ingredientAmountModal .mb-modal-actions{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+    gap:10px !important;
+  }
+
+  #portionMealModal .mb-modal-actions button,
+  #ingredientAmountModal .mb-modal-actions button{
+    font-size:13px !important;
+    padding:13px 6px !important;
+  }
+}
+</style>
+
+<script id="mb-force-horizontal-use-ingredient-buttons-final-js">
+(function(){
+  function forceRows(){
+    ['portionMealModal','ingredientAmountModal'].forEach(id=>{
+      const modal = document.getElementById(id);
+      if(!modal) return;
+      const actions = modal.querySelector('.mb-modal-actions');
+      if(!actions) return;
+
+      actions.style.setProperty('display','grid','important');
+      actions.style.setProperty('grid-template-columns','minmax(0,1fr) minmax(0,1fr)','important');
+      actions.style.setProperty('gap','12px','important');
+
+      const buttons = actions.querySelectorAll('button');
+      buttons.forEach((btn,i)=>{
+        btn.style.setProperty('width','100%','important');
+        btn.style.setProperty('min-width','0','important');
+        btn.style.setProperty('margin','0','important');
+        btn.style.setProperty('grid-row','1','important');
+        btn.style.setProperty('grid-column',String(i+1),'important');
+      });
+    });
+  }
+
+  const observer = new MutationObserver(forceRows);
+  observer.observe(document.body,{childList:true,subtree:true});
+
+  document.addEventListener('DOMContentLoaded',forceRows);
+  setInterval(forceRows,500);
+  setTimeout(forceRows,100);
+})();
+</script>
+
 </body>
 </html>
