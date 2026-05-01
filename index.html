@@ -5036,5 +5036,184 @@ body.light-mode button[onclick*="toggleCustomIngredientFavoriteStar"]{
 })();
 </script>
 
+
+<style id="mb-home-target-icons-calendar-tapfix">
+/* HOME TARGET ICONS ONLY */
+#screenToday .home-targets-grid .calc-box{
+  position:relative !important;
+  padding-top:38px !important;
+  min-height:92px !important;
+}
+
+#screenToday .home-targets-grid .calc-box::before{
+  content:"" !important;
+  position:absolute !important;
+  top:9px !important;
+  left:50% !important;
+  transform:translateX(-50%) !important;
+  width:26px !important;
+  height:26px !important;
+  background:currentColor !important;
+  opacity:1 !important;
+  filter:drop-shadow(0 0 8px currentColor) !important;
+  -webkit-mask-repeat:no-repeat !important;
+  mask-repeat:no-repeat !important;
+  -webkit-mask-position:center !important;
+  mask-position:center !important;
+  -webkit-mask-size:contain !important;
+  mask-size:contain !important;
+}
+
+/* Calories flame */
+#screenToday .home-targets-grid .calc-box:nth-child(1){
+  color:#38bdf8 !important;
+}
+#screenToday .home-targets-grid .calc-box:nth-child(1)::before{
+  -webkit-mask-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M35 4c2 12-7 15-5 27 3-5 8-8 13-11 0 8 11 13 11 25 0 11-9 18-22 18S10 56 10 44c0-10 7-17 15-25 5-5 8-9 10-15zM30 57c7 0 12-4 12-10 0-5-3-9-8-13-1 5-6 8-6 14-2-3-2-6-1-10-5 4-8 7-8 12 0 4 4 7 11 7z'/%3E%3C/svg%3E");
+  mask-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M35 4c2 12-7 15-5 27 3-5 8-8 13-11 0 8 11 13 11 25 0 11-9 18-22 18S10 56 10 44c0-10 7-17 15-25 5-5 8-9 10-15zM30 57c7 0 12-4 12-10 0-5-3-9-8-13-1 5-6 8-6 14-2-3-2-6-1-10-5 4-8 7-8 12 0 4 4 7 11 7z'/%3E%3C/svg%3E");
+}
+
+/* Protein arm */
+#screenToday .home-targets-grid .calc-box:nth-child(2){
+  color:#22f26b !important;
+}
+#screenToday .home-targets-grid .calc-box:nth-child(2)::before{
+  -webkit-mask-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M45 18c3 0 6 3 6 6v8c0 13-10 23-23 23H14c-4 0-7-3-7-7s3-7 7-7h13c4 0 7-3 7-7v-5l-5 6c-2 3-7 3-10 1-3-3-3-7-1-10L31 10c2-3 6-4 9-2 3 2 4 6 2 9l-3 5c2-2 4-4 6-4zm-6 19c-2 6-7 10-14 10H14c-1 0-2 0-2 1s1 2 2 2h14c10 0 17-8 17-18v-8h-1c-2 0-5 3-5 7v6z'/%3E%3C/svg%3E");
+  mask-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M45 18c3 0 6 3 6 6v8c0 13-10 23-23 23H14c-4 0-7-3-7-7s3-7 7-7h13c4 0 7-3 7-7v-5l-5 6c-2 3-7 3-10 1-3-3-3-7-1-10L31 10c2-3 6-4 9-2 3 2 4 6 2 9l-3 5c2-2 4-4 6-4zm-6 19c-2 6-7 10-14 10H14c-1 0-2 0-2 1s1 2 2 2h14c10 0 17-8 17-18v-8h-1c-2 0-5 3-5 7v6z'/%3E%3C/svg%3E");
+}
+
+/* Carbs leaf/branch */
+#screenToday .home-targets-grid .calc-box:nth-child(3){
+  color:#8b5cf6 !important;
+}
+#screenToday .home-targets-grid .calc-box:nth-child(3)::before{
+  -webkit-mask-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M45 4c-9 2-17 8-22 17-5 9-5 19 2 26-3 4-6 8-8 13h7c2-4 4-7 7-10 9 3 19-1 25-10 6-9 7-22 4-34-5 6-10 9-15 11 1-4 1-8 0-13zM33 44c4-8 10-14 20-22-4 11-10 19-20 22zM13 9c7 1 12 4 16 9-3 2-5 5-7 8-5-3-9-8-9-17z'/%3E%3C/svg%3E");
+  mask-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M45 4c-9 2-17 8-22 17-5 9-5 19 2 26-3 4-6 8-8 13h7c2-4 4-7 7-10 9 3 19-1 25-10 6-9 7-22 4-34-5 6-10 9-15 11 1-4 1-8 0-13zM33 44c4-8 10-14 20-22-4 11-10 19-20 22zM13 9c7 1 12 4 16 9-3 2-5 5-7 8-5-3-9-8-9-17z'/%3E%3C/svg%3E");
+}
+
+/* Fat oil drop */
+#screenToday .home-targets-grid .calc-box:nth-child(4){
+  color:#ffb020 !important;
+}
+#screenToday .home-targets-grid .calc-box:nth-child(4)::before{
+  -webkit-mask-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M32 3c10 14 22 27 22 40 0 11-9 20-22 20S10 54 10 43C10 30 22 17 32 3zm0 13C24 27 17 36 17 43c0 8 6 13 15 13s15-5 15-13c0-7-7-16-15-27zm-8 26c1 6 5 9 11 9-9 3-16-2-16-10 0-5 3-10 8-17-2 7-4 12-3 18z'/%3E%3C/svg%3E");
+  mask-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M32 3c10 14 22 27 22 40 0 11-9 20-22 20S10 54 10 43C10 30 22 17 32 3zm0 13C24 27 17 36 17 43c0 8 6 13 15 13s15-5 15-13c0-7-7-16-15-27zm-8 26c1 6 5 9 11 9-9 3-16-2-16-10 0-5 3-10 8-17-2 7-4 12-3 18z'/%3E%3C/svg%3E");
+}
+
+#screenToday .home-targets-grid .calc-box b,
+#screenToday .home-targets-grid .calc-box span{
+  color:var(--bc-text) !important;
+}
+
+/* CALENDAR THEME SUPPORT: native pickers are OS-controlled, but this themes the trigger/input area. */
+#screenToday .date-box{
+  border-radius:20px !important;
+  background:linear-gradient(145deg,rgba(6,13,28,.96),rgba(10,20,42,.92)) !important;
+  box-shadow:0 0 18px rgba(37,99,235,.18), inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+
+#screenToday .date-display{
+  background:rgba(2,6,23,.72) !important;
+  border:1.5px solid rgba(59,130,246,.42) !important;
+  color:#f8fafc !important;
+  text-shadow:0 0 10px rgba(96,165,250,.30) !important;
+}
+
+#screenToday input[type="date"]{
+  color-scheme:dark !important;
+  accent-color:#38bdf8 !important;
+}
+
+body.light-mode #screenToday input[type="date"]{
+  color-scheme:light !important;
+}
+
+@media(max-width:430px){
+  #screenToday .home-targets-grid .calc-box{
+    padding-top:34px !important;
+    min-height:86px !important;
+  }
+  #screenToday .home-targets-grid .calc-box::before{
+    width:23px !important;
+    height:23px !important;
+  }
+}
+</style>
+
+<script id="mb-ring-tap-revert-final">
+(function(){
+  const RING_IDS = ['ringCal','ringC','ringP','ringF','ringMeals','ringStreak'];
+
+  function attachRingTap(){
+    RING_IDS.forEach(id => {
+      const ring = document.getElementById(id);
+      if(!ring || ring.dataset.mbTapFinal === '1') return;
+
+      ring.dataset.mbTapFinal = '1';
+
+      ring.addEventListener('click', function(){
+        const b = ring.querySelector('.ring-inner b');
+        const s = ring.querySelector('.ring-inner span');
+        if(!b || !s) return;
+
+        const displayValue = ring.dataset.mbDisplayValue || b.textContent;
+        const displayLabel = ring.dataset.mbDisplayLabel || s.textContent;
+        const percent = ring.dataset.percent || ring.dataset.mbPercent || '';
+
+        if(!ring.dataset.mbDisplayValue){
+          ring.dataset.mbDisplayValue = displayValue;
+          ring.dataset.mbDisplayLabel = displayLabel;
+        }
+
+        b.textContent = percent || '0%';
+        s.textContent = 'Target';
+        ring.classList.add('showing-percent');
+
+        clearTimeout(ring._mbTapTimer);
+        ring._mbTapTimer = setTimeout(function(){
+          b.textContent = ring.dataset.mbDisplayValue || displayValue;
+          s.textContent = ring.dataset.mbDisplayLabel || displayLabel;
+          ring.classList.remove('showing-percent');
+          delete ring.dataset.mbDisplayValue;
+          delete ring.dataset.mbDisplayLabel;
+        }, 1400);
+      }, true);
+    });
+  }
+
+  function preserveRingDisplayValues(){
+    RING_IDS.forEach(id => {
+      const ring = document.getElementById(id);
+      if(!ring || ring.classList.contains('showing-percent')) return;
+      const b = ring.querySelector('.ring-inner b');
+      const s = ring.querySelector('.ring-inner span');
+      if(b) ring.dataset.mbDisplayValue = b.textContent;
+      if(s) ring.dataset.mbDisplayLabel = s.textContent;
+      if(ring.dataset.percent) ring.dataset.mbPercent = ring.dataset.percent;
+    });
+  }
+
+  const oldRender = window.render;
+  if(typeof oldRender === 'function'){
+    window.render = function(){
+      const result = oldRender.apply(this, arguments);
+      preserveRingDisplayValues();
+      attachRingTap();
+      return result;
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    preserveRingDisplayValues();
+    attachRingTap();
+  });
+
+  setTimeout(function(){
+    preserveRingDisplayValues();
+    attachRingTap();
+  }, 200);
+})();
+</script>
+
 </body>
 </html>
