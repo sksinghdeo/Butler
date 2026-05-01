@@ -1379,6 +1379,75 @@ body.light-mode .scan-method-card span{color:#64748b}
   grid-column:1 / -1 !important;
 }
 
+
+/* POPUP LAYOUT FIXES ONLY */
+
+/* Add Custom Food popup:
+   Add to Log + Save to Database horizontal, Cancel full width below */
+#customFoodModal .mb-modal-actions{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:10px !important;
+  margin-top:14px !important;
+}
+
+#customFoodModal .mb-modal-actions button{
+  width:100% !important;
+  margin:0 !important;
+  padding:14px 8px !important;
+  border-radius:16px !important;
+  font-size:15px !important;
+  font-weight:900 !important;
+}
+
+#customFoodModal .mb-modal-actions button:last-child{
+  grid-column:1 / -1 !important;
+}
+
+/* New Ingredient popup:
+   keep the layout clean and evenly spaced */
+#customIngredientModal .mb-modal-actions{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:10px !important;
+  margin-top:16px !important;
+  align-items:stretch !important;
+}
+
+#customIngredientModal .mb-modal-actions button{
+  width:100% !important;
+  margin:0 !important;
+  padding:14px 8px !important;
+  border-radius:16px !important;
+  font-size:14px !important;
+  font-weight:900 !important;
+  white-space:normal !important;
+  line-height:1.15 !important;
+}
+
+#customIngredientModal .mb-modal-actions button:last-child{
+  grid-column:1 / -1 !important;
+}
+
+@media(max-width:430px){
+  #customFoodModal .mb-modal-actions,
+  #customIngredientModal .mb-modal-actions{
+    grid-template-columns:1fr 1fr !important;
+    gap:9px !important;
+  }
+
+  #customFoodModal .mb-modal-actions button,
+  #customIngredientModal .mb-modal-actions button{
+    font-size:13px !important;
+    padding:13px 6px !important;
+  }
+
+  #customFoodModal .mb-modal-actions button:last-child,
+  #customIngredientModal .mb-modal-actions button:last-child{
+    grid-column:1 / -1 !important;
+  }
+}
+
 </style>
 
 <style id="v12-scan-cleanup">
