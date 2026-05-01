@@ -5039,409 +5039,11 @@ body.light-mode button[onclick*="toggleCustomIngredientFavoriteStar"]{
 
 
 
-<style id="mb-home-fixes-v3">
-/* Force custom calendar trigger; hide native iOS date input completely */
-#screenToday #date{
-  display:none !important;
-  pointer-events:none !important;
-}
 
+<style id="mb-ios-calendar-user-icons-final">
+/* Restore native iOS calendar behavior */
 #screenToday .date-box{
   position:relative !important;
-}
-
-#screenToday #dateDisplay{
-  position:relative !important;
-  z-index:20 !important;
-  cursor:pointer !important;
-}
-
-/* Custom dark calendar */
-#mbCalendarBackdrop{
-  position:fixed;
-  inset:0;
-  z-index:99999;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-  background:rgba(2,6,23,.68);
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
-}
-
-#mbCalendarBackdrop.active{display:flex}
-
-.mb-calendar{
-  width:min(420px,92vw);
-  border-radius:28px;
-  padding:18px;
-  background:
-    radial-gradient(circle at top right,rgba(37,99,235,.28),transparent 42%),
-    linear-gradient(145deg,#050b18,#0b1629);
-  border:1px solid rgba(56,189,248,.38);
-  box-shadow:0 28px 80px rgba(0,0,0,.70),0 0 38px rgba(37,99,235,.28),inset 0 1px 0 rgba(255,255,255,.08);
-  color:#f8fafc;
-}
-
-.mb-calendar-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:14px;
-}
-
-.mb-calendar-title{
-  font-size:21px;
-  font-weight:950;
-}
-
-.mb-calendar-nav{
-  width:44px !important;
-  height:44px !important;
-  margin:0 !important;
-  padding:0 !important;
-  border-radius:15px !important;
-  background:rgba(15,23,42,.82) !important;
-  color:#60a5fa !important;
-  border:1px solid rgba(96,165,250,.25) !important;
-  box-shadow:0 0 14px rgba(37,99,235,.18) !important;
-  font-size:24px !important;
-}
-
-.mb-calendar-week,
-.mb-calendar-grid{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:8px;
-}
-
-.mb-calendar-week div{
-  text-align:center;
-  color:#94a3b8;
-  font-size:12px;
-  font-weight:900;
-  padding:6px 0;
-}
-
-.mb-day{
-  height:42px;
-  border-radius:14px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:16px;
-  font-weight:850;
-  color:#e5e7eb;
-  background:rgba(15,23,42,.42);
-  border:1px solid rgba(96,165,250,.12);
-}
-
-.mb-day.empty{opacity:0;pointer-events:none}
-.mb-day.selected{
-  color:white;
-  background:linear-gradient(135deg,#2563eb,#7c3aed);
-  box-shadow:0 0 16px rgba(37,99,235,.48);
-  border-color:rgba(125,211,252,.55);
-}
-.mb-day.today:not(.selected){
-  border-color:rgba(34,211,238,.65);
-  color:#7dd3fc;
-}
-
-.mb-calendar-actions{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-top:16px;
-}
-.mb-calendar-actions button{margin:0 !important}
-
-/* Target icons: respective colors, lower glow */
-#screenToday .home-targets-grid .calc-box{
-  position:relative !important;
-  min-height:94px !important;
-  padding-top:40px !important;
-}
-
-#screenToday .home-targets-grid .calc-box::before{
-  display:none !important;
-  content:none !important;
-}
-
-#screenToday .target-macro-icon{
-  position:absolute !important;
-  top:9px !important;
-  left:50% !important;
-  transform:translateX(-50%) !important;
-  width:28px !important;
-  height:28px !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  filter:drop-shadow(0 0 4px currentColor) !important;
-  opacity:.98 !important;
-}
-
-#screenToday .target-macro-icon svg{
-  width:100% !important;
-  height:100% !important;
-  stroke:currentColor !important;
-  fill:none !important;
-  stroke-width:2.4 !important;
-  stroke-linecap:round !important;
-  stroke-linejoin:round !important;
-}
-
-#screenToday .home-targets-grid .calc-box:nth-child(1) .target-macro-icon{color:#38bdf8 !important}
-#screenToday .home-targets-grid .calc-box:nth-child(2) .target-macro-icon{color:#22f26b !important}
-#screenToday .home-targets-grid .calc-box:nth-child(3) .target-macro-icon{color:#8b5cf6 !important}
-#screenToday .home-targets-grid .calc-box:nth-child(4) .target-macro-icon{color:#ffb020 !important}
-
-#screenToday .home-targets-grid .calc-box b,
-#screenToday .home-targets-grid .calc-box span{
-  color:var(--bc-text) !important;
-}
-
-@media(max-width:430px){
-  #screenToday .target-macro-icon{width:24px !important;height:24px !important}
-  #screenToday .home-targets-grid .calc-box{padding-top:36px !important;min-height:88px !important}
-}
-</style>
-
-<script id="mb-home-fixes-v3-js">
-(function(){
-  const RING_IDS = ['ringCal','ringC','ringP','ringF','ringMeals','ringStreak'];
-  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  let calViewDate = new Date();
-
-  function $(id){ return document.getElementById(id); }
-
-  function installTargetIcons(){
-    const boxes = document.querySelectorAll('#screenToday .home-targets-grid .calc-box');
-    const icons = [
-      // flame
-      `<svg viewBox="0 0 24 24"><path d="M12 2.5c1.4 4.2-1.8 5.7-.8 9.5 1-2 2.8-3.5 5.1-4.7.2 2.7 3.7 4.7 3.7 8.5A8 8 0 0 1 4 15.8c0-3.6 2.7-6.1 5.1-8.7 1.3-1.3 2.2-2.7 2.9-4.6Z"/><path d="M11.8 20.5c2.4 0 4.2-1.5 4.2-3.7 0-1.8-1-3.2-2.8-4.7-.3 2.2-2.3 3.2-3 5.2-.7-1.2-.8-2.3-.4-3.7-1.7 1.3-2.7 2.7-2.7 4.1 0 1.7 1.8 2.8 4.7 2.8Z"/></svg>`,
-      // muscle
-      `<svg viewBox="0 0 24 24"><path d="M14.5 4.2c1 .5 1.5 1.7 1 2.7l-.9 1.8c.9-.9 1.9-1.4 3-1.4 1.6 0 2.9 1.3 2.9 2.9v2.3c0 4.6-3.7 8.3-8.3 8.3H6.5a3 3 0 0 1 0-6h4c1.6 0 2.9-1.3 2.9-2.9V10l-1.6 2.1a2.4 2.4 0 0 1-3.4.5 2.4 2.4 0 0 1-.5-3.4l3.5-4.3c.8-1 2.1-1.3 3.1-.7Z"/><path d="M17.5 11v1.6c0 2.7-2.2 4.9-4.9 4.9H6.5"/></svg>`,
-      // branch
-      `<svg viewBox="0 0 24 24"><path d="M4 20c5.5-7.2 10.4-11.3 16-15"/><path d="M15 8c1.6-2.7 3.8-3.9 6-4-1 3.3-3.1 5-6 5"/><path d="M11 12c-3.5.5-5.9-.9-7-4 3.6-.3 6 .9 7 4Z"/><path d="M8 16c2.5-.4 4.5.5 5.8 2.8-2.8.4-4.8-.5-5.8-2.8Z"/></svg>`,
-      // oil drop
-      `<svg viewBox="0 0 24 24"><path d="M12 2.5c4 5 7.5 9.4 7.5 13.2A7.5 7.5 0 0 1 4.5 15.7C4.5 11.9 8 7.5 12 2.5Z"/><path d="M8.5 16.3c.3 2.2 2.1 3.6 4.5 3.6-3.8.8-6.6-1.1-6.6-4.2 0-1.9 1-3.8 2.8-6.2-.6 2.7-1 4.9-.7 6.8Z"/></svg>`
-    ];
-
-    boxes.forEach((box, i) => {
-      let span = box.querySelector('.target-macro-icon');
-      if(!span){
-        span = document.createElement('span');
-        span.className = 'target-macro-icon';
-        box.prepend(span);
-      }
-      span.innerHTML = icons[i] || '';
-    });
-  }
-
-  function setupRingTap(){
-    RING_IDS.forEach(id => {
-      const ring = $(id);
-      if(!ring || ring.dataset.tapV3 === '1') return;
-      ring.dataset.tapV3 = '1';
-
-      ring.addEventListener('click', function(e){
-        e.preventDefault();
-        e.stopImmediatePropagation();
-
-        const b = ring.querySelector('.ring-inner b');
-        const s = ring.querySelector('.ring-inner span');
-        if(!b || !s) return;
-
-        const realValue = ring.dataset.realValue || b.textContent;
-        const realLabel = ring.dataset.realLabel || s.textContent;
-        const pct = ring.dataset.percent || ring.dataset.mbPercent || '0%';
-
-        b.textContent = pct;
-        s.textContent = 'Target';
-        ring.classList.add('showing-percent');
-
-        clearTimeout(ring._tapV3);
-        ring._tapV3 = setTimeout(() => {
-          b.textContent = realValue;
-          s.textContent = realLabel;
-          ring.classList.remove('showing-percent');
-        }, 900);
-      }, true);
-    });
-  }
-
-  function storeRingValues(){
-    RING_IDS.forEach(id => {
-      const ring = $(id);
-      if(!ring || ring.classList.contains('showing-percent')) return;
-      const b = ring.querySelector('.ring-inner b');
-      const s = ring.querySelector('.ring-inner span');
-      if(b) ring.dataset.realValue = b.textContent;
-      if(s) ring.dataset.realLabel = s.textContent;
-      if(ring.dataset.percent) ring.dataset.mbPercent = ring.dataset.percent;
-    });
-  }
-
-  function buildCalendar(){
-    if($('mbCalendarBackdrop')) return;
-
-    const wrap = document.createElement('div');
-    wrap.id = 'mbCalendarBackdrop';
-    wrap.innerHTML = `
-      <div class="mb-calendar">
-        <div class="mb-calendar-head">
-          <button type="button" class="mb-calendar-nav" id="mbCalPrev">‹</button>
-          <div class="mb-calendar-title" id="mbCalTitle">Month Year</div>
-          <button type="button" class="mb-calendar-nav" id="mbCalNext">›</button>
-        </div>
-        <div class="mb-calendar-week"><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div><div>SUN</div></div>
-        <div class="mb-calendar-grid" id="mbCalGrid"></div>
-        <div class="mb-calendar-actions">
-          <button type="button" class="light" id="mbCalToday">Today</button>
-          <button type="button" class="good" id="mbCalClose">Done</button>
-        </div>
-      </div>`;
-    document.body.appendChild(wrap);
-
-    $('mbCalPrev').onclick = () => { calViewDate.setMonth(calViewDate.getMonth()-1); renderCalendar(); };
-    $('mbCalNext').onclick = () => { calViewDate.setMonth(calViewDate.getMonth()+1); renderCalendar(); };
-    $('mbCalToday').onclick = () => selectDate(new Date());
-    $('mbCalClose').onclick = closeCalendar;
-    wrap.addEventListener('click', e => { if(e.target === wrap) closeCalendar(); });
-  }
-
-  function iso(d){
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  }
-
-  function parseISO(v){
-    const p = String(v || iso(new Date())).split('-').map(Number);
-    return new Date(p[0], (p[1] || 1)-1, p[2] || 1);
-  }
-
-  function same(a,b){
-    return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
-  }
-
-  function renderCalendar(){
-    const grid = $('mbCalGrid'), title = $('mbCalTitle');
-    if(!grid || !title) return;
-
-    const input = $('date');
-    const selected = parseISO(input?.value);
-    const today = new Date();
-
-    title.textContent = `${monthNames[calViewDate.getMonth()]} ${calViewDate.getFullYear()}`;
-    grid.innerHTML = '';
-
-    const first = new Date(calViewDate.getFullYear(), calViewDate.getMonth(), 1);
-    const offset = (first.getDay()+6)%7;
-    const days = new Date(calViewDate.getFullYear(), calViewDate.getMonth()+1, 0).getDate();
-
-    for(let i=0;i<offset;i++){
-      const cell = document.createElement('div');
-      cell.className = 'mb-day empty';
-      grid.appendChild(cell);
-    }
-
-    for(let d=1; d<=days; d++){
-      const date = new Date(calViewDate.getFullYear(), calViewDate.getMonth(), d);
-      const cell = document.createElement('div');
-      cell.className = 'mb-day';
-      if(same(date, selected)) cell.classList.add('selected');
-      if(same(date, today)) cell.classList.add('today');
-      cell.textContent = d;
-      cell.onclick = () => selectDate(date);
-      grid.appendChild(cell);
-    }
-  }
-
-  function selectDate(d){
-    const input = $('date');
-    if(input){
-      input.value = iso(d);
-      input.dispatchEvent(new Event('change', {bubbles:true}));
-    }
-    if(typeof updateDateDisplay === 'function') updateDateDisplay();
-    if(typeof render === 'function') render();
-
-    calViewDate = new Date(d.getFullYear(), d.getMonth(), 1);
-    renderCalendar();
-  }
-
-  function openCalendar(){
-    buildCalendar();
-    const input = $('date');
-    const selected = parseISO(input?.value);
-    calViewDate = new Date(selected.getFullYear(), selected.getMonth(), 1);
-    renderCalendar();
-    $('mbCalendarBackdrop').classList.add('active');
-  }
-
-  function closeCalendar(){
-    const modal = $('mbCalendarBackdrop');
-    if(modal) modal.classList.remove('active');
-  }
-
-  function installCalendar(){
-    const display = $('dateDisplay');
-    const native = $('date');
-    if(native){
-      native.type = 'text';
-      native.tabIndex = -1;
-      native.style.display = 'none';
-      native.style.pointerEvents = 'none';
-    }
-
-    if(display && display.dataset.calV3 !== '1'){
-      display.dataset.calV3 = '1';
-      display.onclick = function(e){
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        openCalendar();
-        return false;
-      };
-    }
-  }
-
-  const oldRender = window.render;
-  if(typeof oldRender === 'function'){
-    window.render = function(){
-      const result = oldRender.apply(this, arguments);
-      installTargetIcons();
-      storeRingValues();
-      setupRingTap();
-      installCalendar();
-      return result;
-    };
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    installTargetIcons();
-    storeRingValues();
-    setupRingTap();
-    installCalendar();
-  });
-
-  setTimeout(() => {
-    installTargetIcons();
-    storeRingValues();
-    setupRingTap();
-    installCalendar();
-  }, 200);
-})();
-</script>
-
-
-<style id="mb-calendar-ios-icons-v4">
-/* Use native iOS calendar again */
-#mbCalendarBackdrop{
-  display:none !important;
 }
 
 #screenToday #date{
@@ -5452,103 +5054,193 @@ body.light-mode button[onclick*="toggleCustomIngredientFavoriteStar"]{
   height:58px !important;
   left:0 !important;
   top:0 !important;
-  z-index:5 !important;
-  pointer-events:none !important;
+  z-index:30 !important;
+  pointer-events:auto !important;
+  appearance:auto !important;
+  -webkit-appearance:auto !important;
 }
 
 #screenToday #dateDisplay{
   position:relative !important;
-  z-index:4 !important;
+  z-index:20 !important;
+  pointer-events:none !important;
 }
 
-/* Target icons: lower glow + cleaner color */
+/* Hide old custom calendar if it exists */
+#mbCalendarBackdrop{
+  display:none !important;
+}
+
+/* Target icons using provided SVGs */
+#screenToday .home-targets-grid .calc-box{
+  position:relative !important;
+  min-height:94px !important;
+  padding-top:42px !important;
+}
+
+#screenToday .home-targets-grid .calc-box::before{
+  content:none !important;
+  display:none !important;
+}
+
 #screenToday .target-macro-icon{
-  filter:drop-shadow(0 0 2px currentColor) !important;
-  opacity:.95 !important;
+  position:absolute !important;
+  top:8px !important;
+  left:50% !important;
+  transform:translateX(-50%) !important;
+  width:34px !important;
+  height:34px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  filter:none !important;
 }
 
 #screenToday .target-macro-icon svg{
-  stroke-width:2.2 !important;
+  width:34px !important;
+  height:34px !important;
+  display:block !important;
 }
 
-#screenToday .home-targets-grid .calc-box:nth-child(1) .target-macro-icon{color:#38bdf8 !important}
-#screenToday .home-targets-grid .calc-box:nth-child(2) .target-macro-icon{color:#22f26b !important}
-#screenToday .home-targets-grid .calc-box:nth-child(3) .target-macro-icon{color:#8b5cf6 !important}
-#screenToday .home-targets-grid .calc-box:nth-child(4) .target-macro-icon{color:#ffb020 !important}
+#screenToday .home-targets-grid .calc-box b,
+#screenToday .home-targets-grid .calc-box span{
+  color:var(--bc-text) !important;
+}
+
+@media(max-width:430px){
+  #screenToday .target-macro-icon,
+  #screenToday .target-macro-icon svg{
+    width:30px !important;
+    height:30px !important;
+  }
+
+  #screenToday .home-targets-grid .calc-box{
+    padding-top:39px !important;
+    min-height:88px !important;
+  }
+}
 </style>
 
-<script id="mb-calendar-ios-icons-v4-js">
+<script id="mb-ios-calendar-user-icons-final-js">
 (function(){
-  function $(id){return document.getElementById(id);}
+  function $(id){ return document.getElementById(id); }
 
-  function restoreIOSCalendar(){
-    const oldDisplay = $('dateDisplay');
-    const dateInput = $('date');
-    if(!oldDisplay || !dateInput || oldDisplay.dataset.iosCalendarRestored === '1') return;
+  const svgIcons = [
+    // CALORIES
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="34" height="34" fill="none">
+      <defs>
+        <linearGradient id="mbCalGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#53d8ff"/>
+          <stop offset="100%" stop-color="#008cff"/>
+        </linearGradient>
+        <filter id="mbCalGlow">
+          <feDropShadow dx="0" dy="0" stdDeviation="1.25" flood-color="#32c5ff"/>
+        </filter>
+      </defs>
+      <path filter="url(#mbCalGlow)" d="M34 6C45 18 50 26 50 36C50 47 42 56 32 56S14 47 14 36C14 25 21 16 34 6Z" fill="url(#mbCalGrad)"/>
+      <path d="M31 26C37 31 39 35 39 40C39 45 35 49 30 49S21 45 21 40C21 35 24 31 31 26Z" fill="#ffffff22"/>
+    </svg>`,
+    // PROTEIN
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="34" height="34" fill="none">
+      <defs>
+        <linearGradient id="mbProGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#59ff7d"/>
+          <stop offset="100%" stop-color="#00d45a"/>
+        </linearGradient>
+        <filter id="mbProGlow">
+          <feDropShadow dx="0" dy="0" stdDeviation="1.25" flood-color="#39ff72"/>
+        </filter>
+      </defs>
+      <path filter="url(#mbProGlow)" d="M18 18C27 9 44 11 49 23C54 35 45 51 31 51C19 51 11 42 11 32C11 26 13 22 18 18Z" fill="url(#mbProGrad)"/>
+      <circle cx="42" cy="23" r="4" fill="#062b12"/>
+      <path d="M22 34C28 28 36 28 42 34" stroke="#0b5f28" stroke-width="3" stroke-linecap="round"/>
+    </svg>`,
+    // CARBS
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="34" height="34" fill="none">
+      <defs>
+        <linearGradient id="mbCarbGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#d18cff"/>
+          <stop offset="100%" stop-color="#8c38ff"/>
+        </linearGradient>
+        <filter id="mbCarbGlow">
+          <feDropShadow dx="0" dy="0" stdDeviation="1.25" flood-color="#b15dff"/>
+        </filter>
+      </defs>
+      <path filter="url(#mbCarbGlow)" d="M22 52L40 12" stroke="url(#mbCarbGrad)" stroke-width="4" stroke-linecap="round"/>
+      <ellipse cx="19" cy="39" rx="6" ry="10" fill="url(#mbCarbGrad)"/>
+      <ellipse cx="27" cy="28" rx="6" ry="10" fill="url(#mbCarbGrad)"/>
+      <ellipse cx="36" cy="21" rx="6" ry="10" fill="url(#mbCarbGrad)"/>
+      <ellipse cx="43" cy="33" rx="6" ry="10" fill="url(#mbCarbGrad)"/>
+      <ellipse cx="33" cy="42" rx="6" ry="10" fill="url(#mbCarbGrad)"/>
+    </svg>`,
+    // FAT
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="34" height="34" fill="none">
+      <defs>
+        <linearGradient id="mbFatGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#ffd54a"/>
+          <stop offset="100%" stop-color="#ff9900"/>
+        </linearGradient>
+        <filter id="mbFatGlow">
+          <feDropShadow dx="0" dy="0" stdDeviation="1.25" flood-color="#ffbf00"/>
+        </filter>
+      </defs>
+      <path filter="url(#mbFatGlow)" d="M32 8C43 20 48 28 48 38C48 48 41 56 32 56S16 48 16 38C16 28 21 20 32 8Z" fill="url(#mbFatGrad)"/>
+      <path d="M34 28C38 31 39 36 36 40C34 43 29 44 27 41C24 37 27 31 34 28Z" fill="#5a3200aa"/>
+    </svg>`
+  ];
 
-    /* Clone removes the custom calendar click handler from the previous build */
-    const display = oldDisplay.cloneNode(true);
-    display.dataset.iosCalendarRestored = '1';
-    oldDisplay.replaceWith(display);
-
-    dateInput.type = 'date';
-    dateInput.style.display = 'block';
-    dateInput.style.opacity = '0';
-    dateInput.style.pointerEvents = 'none';
-
-    display.addEventListener('click', function(e){
-      e.preventDefault();
-      if(typeof dateInput.showPicker === 'function'){
-        dateInput.showPicker();
-      }else{
-        dateInput.click();
-        dateInput.focus();
+  function installUserIcons(){
+    const boxes = document.querySelectorAll('#screenToday .home-targets-grid .calc-box');
+    boxes.forEach((box, i) => {
+      let holder = box.querySelector('.target-macro-icon');
+      if(!holder){
+        holder = document.createElement('span');
+        holder.className = 'target-macro-icon';
+        box.prepend(holder);
       }
+      holder.innerHTML = svgIcons[i] || '';
     });
   }
 
-  function improveTargetIcons(){
-    const boxes = document.querySelectorAll('#screenToday .home-targets-grid .calc-box');
-    const icons = [
-      // flame
-      `<svg viewBox="0 0 24 24"><path d="M12.2 2.6c1.2 4.5-2.2 5.9-1 9.7 1-2 2.8-3.6 5.1-4.9.3 2.7 3.9 4.9 3.9 8.6a8.2 8.2 0 0 1-16.4 0c0-3.7 2.8-6.2 5.3-8.9 1.4-1.5 2.4-2.9 3.1-4.5z"/><path d="M12 20.7c2.5 0 4.4-1.5 4.4-3.8 0-1.9-1.1-3.3-2.9-4.8-.3 2.2-2.4 3.3-3.1 5.4-.7-1.2-.8-2.5-.4-3.9-1.8 1.4-2.8 2.8-2.8 4.3 0 1.7 1.8 2.8 4.8 2.8z"/></svg>`,
-      // muscle arm
-      `<svg viewBox="0 0 24 24"><path d="M14.6 4.1c1.1.6 1.5 1.9.9 3l-.8 1.5c.9-.8 1.9-1.2 3-1.2 1.8 0 3.2 1.4 3.2 3.2v2.1c0 4.7-3.8 8.5-8.5 8.5H6.2a3 3 0 1 1 0-6h4.1c1.5 0 2.8-1.2 2.8-2.8v-2.1l-1.5 2a2.4 2.4 0 0 1-3.4.5 2.4 2.4 0 0 1-.5-3.4l3.7-4.5c.8-1 2.1-1.3 3.2-.8z"/><path d="M17.7 11.1v1.7c0 2.8-2.3 5.1-5.1 5.1H6.3"/><path d="M13.1 10.3c.6-.8 1.1-1.4 1.7-1.7"/></svg>`,
-      // leaf branch
-      `<svg viewBox="0 0 24 24"><path d="M4 20c5.4-7.4 10.2-11.7 16-15.7"/><path d="M15.1 8.2c1.7-2.8 3.8-4.1 6.1-4.2-.8 3.4-3.1 5.2-6.1 5.3"/><path d="M11.1 12.2c-3.6.4-6.1-1-7.1-4.2 3.8-.2 6.2 1.2 7.1 4.2z"/><path d="M8 16.3c2.7-.4 4.8.6 6 3-3 .4-5.1-.6-6-3z"/></svg>`,
-      // oil drop
-      `<svg viewBox="0 0 24 24"><path d="M12 2.4c4.1 5.2 7.7 9.8 7.7 13.6a7.7 7.7 0 0 1-15.4 0c0-3.8 3.6-8.4 7.7-13.6z"/><path d="M8.5 16.4c.3 2.2 2.1 3.6 4.6 3.6-3.9.8-6.8-1.1-6.8-4.3 0-1.9 1.1-3.9 2.9-6.4-.7 2.8-1.1 5-.7 7.1z"/></svg>`
-    ];
+  function restoreNativeCalendar(){
+    const input = $('date');
+    const display = $('dateDisplay');
+    const backdrop = $('mbCalendarBackdrop');
 
-    boxes.forEach((box,i)=>{
-      let span = box.querySelector('.target-macro-icon');
-      if(!span){
-        span = document.createElement('span');
-        span.className = 'target-macro-icon';
-        box.prepend(span);
-      }
-      span.innerHTML = icons[i] || '';
-    });
+    if(backdrop) backdrop.classList.remove('active');
+
+    if(input){
+      input.type = 'date';
+      input.style.display = 'block';
+      input.style.opacity = '0';
+      input.style.pointerEvents = 'auto';
+      input.style.position = 'absolute';
+      input.style.zIndex = '30';
+    }
+
+    if(display){
+      display.style.pointerEvents = 'none';
+    }
   }
 
   const oldRender = window.render;
   if(typeof oldRender === 'function'){
     window.render = function(){
       const result = oldRender.apply(this, arguments);
-      restoreIOSCalendar();
-      improveTargetIcons();
+      installUserIcons();
+      restoreNativeCalendar();
       return result;
     };
   }
 
   document.addEventListener('DOMContentLoaded', function(){
-    restoreIOSCalendar();
-    improveTargetIcons();
+    installUserIcons();
+    restoreNativeCalendar();
   });
 
   setTimeout(function(){
-    restoreIOSCalendar();
-    improveTargetIcons();
+    installUserIcons();
+    restoreNativeCalendar();
   }, 200);
 })();
 </script>
