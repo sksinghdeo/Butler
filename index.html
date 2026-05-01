@@ -2934,5 +2934,45 @@ function init(){setupAdd();renderIngredientResults();if(typeof renderSavedRecipe
 })();
 </script>
 
+
+<style id="recipe-builder-search-plus-fix">
+#customRecipeCard .recipe-ingredient-search-block{margin:14px 0 12px!important}
+#customRecipeCard .recipe-ingredient-search-row{display:grid!important;grid-template-columns:minmax(0,1fr) 62px!important;gap:10px!important;align-items:stretch!important}
+#customRecipeCard .recipe-ingredient-search-row input{margin:0!important;height:62px!important}
+#recipeIngredientPlusBtn{width:62px!important;height:62px!important;min-width:62px!important;margin:0!important;padding:0!important;border-radius:22px!important;font-size:38px!important;line-height:1!important;display:flex!important;align-items:center!important;justify-content:center!important;background:linear-gradient(135deg,#2563eb,#7c3aed)!important;box-shadow:0 0 20px rgba(37,99,235,.50),inset 0 1px 0 rgba(255,255,255,.18)!important}
+#customRecipeCard .recipe-global-fields-hidden{display:none!important}
+#customIngredientModal .custom-food-star-toggle.active{color:#ffd43b!important;border-color:rgba(255,212,59,.85)!important;box-shadow:0 0 22px rgba(255,212,59,.45)!important}
+@media(max-width:430px){#customRecipeCard .recipe-ingredient-search-row{grid-template-columns:minmax(0,1fr) 56px!important;gap:8px!important}#customRecipeCard .recipe-ingredient-search-row input,#recipeIngredientPlusBtn{height:56px!important}#recipeIngredientPlusBtn{width:56px!important;min-width:56px!important;font-size:34px!important}}
+</style>
+<script id="recipe-builder-search-plus-fix-script">
+(function(){
+function byId(id){return document.getElementById(id)}
+function readJSON(key){try{return JSON.parse(localStorage.getItem(key)||'[]')}catch(e){return []}}
+function writeJSON(key,val){localStorage.setItem(key,JSON.stringify(val||[]))}
+function clean(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}
+function keyOf(i){return clean(i&&i.name)+'|'+clean(i&&i.serving)}
+function dedupe(list){const seen=new Set(),out=[];(list||[]).forEach(i=>{if(!i||!i.name)return;const k=keyOf(i);if(seen.has(k))return;seen.add(k);out.push(i)});return out}
+function num(v){const n=parseFloat(v);return Number.isFinite(n)?n:0}
+function r1(v){return Math.round(num(v)*10)/10}
+function safe(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function msg(t){if(typeof window.showToast==='function')return window.showToast(t);if(typeof window.toast==='function')return window.toast(t);const d=document.createElement('div');d.className='mb-toast show';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),1600)}
+function favs(){return readJSON('favorite_foods_v3')}
+function customs(){return readJSON('macro_custom_foods_v3')}
+function saveFav(item){writeJSON('favorite_foods_v3',dedupe([item,...favs()]).slice(0,500))}
+function saveCustom(item){writeJSON('macro_custom_foods_v3',dedupe([item,...customs()]).slice(0,500))}
+function recipes(){return readJSON('macro_custom_recipes_v3').map(r=>({id:r.id||('recipe_'+Date.now()),name:r.name,serving:r.serving||'1 recipe',cat:r.cat||'Custom Recipe',cal:r.cal,c:r.c,p:r.p,f:r.f,source:'custom_recipe',ingredients:r.ingredients||[]}))}
+function allSources(){return dedupe([...(window._ingredients||[]),...(window.foodDatabase||[]),...customs(),...favs(),...readJSON('recent_foods_v3'),...recipes()])}
+function score(item,q){const qq=clean(q);if(!qq)return 1;const t=clean([item.name,item.cat,item.serving,item.source,item.search,(item.aliases||[]).join(' ')].join(' '));if(t.includes(qq))return 100;return qq.split(' ').reduce((s,w)=>s+(t.includes(w)?20:-8),0)}
+function itemJSON(item){return JSON.stringify(item).replace(/'/g,'&apos;')}
+window.renderIngredientResults=function(){const box=byId('ingredientResults');if(!box)return;const q=(byId('ingredientSearch')?.value||'').trim();const results=allSources().map(item=>({item,score:score(item,q)})).filter(x=>!q||x.score>0).sort((a,b)=>b.score-a.score).slice(0,8).map(x=>x.item);box.innerHTML=results.length?results.map(item=>{const j=itemJSON(item);return `<div class="ingredient-row"><div><b>${safe(item.name)}</b><div class="meta">${safe(item.serving||'1 serving')} • ${Math.round(num(item.cal))} cal • C ${r1(item.c)}g • P ${r1(item.p)}g • F ${r1(item.f)}g</div><span class="source-chip">${safe(item.cat||item.source||'Food')}</span></div><button class="small-btn good" type="button" onclick='openIngredientAmountModal(${j})'>Add</button></div>`}).join(''):`<p class="note">Search ingredients, foods, saved custom foods, favourites, recent foods, or recipes.</p>`;if(typeof window.mbRefreshStageHeight==='function')setTimeout(window.mbRefreshStageHeight,40)};
+function repairRecipeSearchRow(){const card=byId('customRecipeCard'),input=byId('ingredientSearch');if(!card||!input)return;const oldRow=byId('ingredientAmount')?.closest('.row');if(oldRow)oldRow.style.display='none';const oldTool=byId('addCustomIngredientBtn')?.closest('.add-ingredient-tools');if(oldTool)oldTool.remove();let block=byId('recipeIngredientSearchBlock');if(!block){block=document.createElement('div');block.id='recipeIngredientSearchBlock';block.className='recipe-ingredient-search-block';block.innerHTML='<label>Ingredient Search</label><div class="recipe-ingredient-search-row" id="recipeIngredientSearchRow"></div>';const before=oldRow||card.querySelector('.section-titlebar');if(before)card.insertBefore(block,before);else card.appendChild(block)}const row=byId('recipeIngredientSearchRow');if(row&&input.parentElement!==row){row.appendChild(input)}if(row&&!byId('recipeIngredientPlusBtn')){const btn=document.createElement('button');btn.id='recipeIngredientPlusBtn';btn.type='button';btn.textContent='+';btn.setAttribute('aria-label','Add custom ingredient');btn.onclick=function(){window.openCustomIngredientModal()};row.appendChild(btn)}input.placeholder='Search all foods and ingredients...';input.oninput=window.renderIngredientResults;window.renderIngredientResults()}
+window.toggleCustomIngredientFavoriteStar=function(){byId('ciFav')?.classList.toggle('active')};
+window.openCustomIngredientModal=function(){let m=byId('customIngredientModal');if(!m){document.body.insertAdjacentHTML('beforeend',`<div id="customIngredientModal" class="mb-modal"><div class="mb-modal-card"><h3>New Ingredient</h3><p class="note">Save an ingredient once, then use it inside recipes anytime.</p><label>Name</label><input id="ciName" placeholder="Example: homemade sauce"><div class="mb-unit-grid"><div><label>Serving</label><input id="ciServing" placeholder="100 g / 1 tbsp"></div><div><label>Category</label><input id="ciCat" placeholder="Custom Ingredient"></div></div><div class="mb-unit-grid"><div><label>Calories</label><input id="ciCal" type="number"></div><div><label>Carbs (g)</label><input id="ciC" type="number" step="0.1"></div><div><label>Protein (g)</label><input id="ciP" type="number" step="0.1"></div><div><label>Fat (g)</label><input id="ciF" type="number" step="0.1"></div></div><div class="custom-food-star-row"><button id="ciFav" class="custom-food-star-toggle" type="button" onclick="toggleCustomIngredientFavoriteStar()">★</button><span>Mark as favourite</span></div><div class="mb-modal-actions"><button class="good" type="button" onclick="saveCustomIngredientModal()">Save Ingredient</button><button class="light" type="button" onclick="closeMbModal('customIngredientModal')">Cancel</button></div></div></div>`);m=byId('customIngredientModal')}['ciName','ciServing','ciCat','ciCal','ciC','ciP','ciF'].forEach(id=>{const el=byId(id);if(el)el.value=''});byId('ciFav')?.classList.remove('active');m.classList.add('active')};
+window.saveCustomIngredientModal=function(){const name=(byId('ciName')?.value||'').trim();if(!name){msg('Enter ingredient name');return}const item={id:'custom_ing_'+Date.now(),name,serving:(byId('ciServing')?.value||'100 g').trim(),cat:(byId('ciCat')?.value||'Custom Ingredient').trim(),cal:Math.round(num(byId('ciCal')?.value)),c:r1(byId('ciC')?.value),p:r1(byId('ciP')?.value),f:r1(byId('ciF')?.value),source:'custom_ingredient'};saveCustom(item);const fav=byId('ciFav')?.classList.contains('active');if(fav)saveFav(item);if(typeof window.closeMbModal==='function')window.closeMbModal('customIngredientModal');else byId('customIngredientModal')?.classList.remove('active');msg(fav?'Ingredient Saved + Added to Favourites':'Ingredient Saved');if(typeof window.loadFoodDatabase==='function')window.loadFoodDatabase();window.renderIngredientResults()};
+const oldShow=window.showScreen;window.showScreen=function(name){if(typeof oldShow==='function')oldShow.apply(this,arguments);if(name==='Add')setTimeout(repairRecipeSearchRow,80)};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(repairRecipeSearchRow,120));else setTimeout(repairRecipeSearchRow,120);setTimeout(repairRecipeSearchRow,900);
+})();
+</script>
+
 </body>
 </html>
