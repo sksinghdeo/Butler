@@ -5840,5 +5840,367 @@ if(typeof r==='function'){window.render=function(){const x=r.apply(this,argument
 })();
 </script>
 
+
+<style id="mb-recipe-category-ingredient-confirm-v1">
+/* Recipe Builder category pills */
+#recipeCategoryPills{
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  padding:8px 0 12px;
+  margin-top:8px;
+  -webkit-overflow-scrolling:touch;
+}
+#recipeCategoryPills .pill{
+  flex:0 0 auto;
+  margin:0 !important;
+  white-space:nowrap;
+}
+
+/* Ingredient confirmation */
+#customIngredientModal .ci-confirm{
+  display:none;
+  margin-top:12px;
+  padding:12px 14px;
+  border-radius:16px;
+  font-size:14px;
+  font-weight:900;
+  line-height:1.35;
+  color:#bbf7d0;
+  background:rgba(20,83,45,.52);
+  border:1px solid rgba(34,197,94,.35);
+}
+#customIngredientModal.confirmed .ci-confirm{display:block}
+#customIngredientModal.confirmed .mb-modal-actions button:last-child{
+  color:#60a5fa !important;
+  font-weight:950 !important;
+}
+#customIngredientModal select#ciCat{
+  width:100%;
+  height:58px;
+  border-radius:18px;
+  border:1.5px solid rgba(59,130,246,.38);
+  background:rgba(2,6,23,.70);
+  color:#fff;
+  padding:0 18px;
+  font-size:17px;
+  font-weight:750;
+  outline:none;
+}
+
+/* Theme modal for ingredient category */
+#mbIngCategoryModal{
+  position:fixed;
+  inset:0;
+  z-index:100001;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  background:rgba(2,6,23,.68);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+#mbIngCategoryModal.active{display:flex}
+#mbIngCategoryModal .mb-cat-card{
+  width:min(430px,92vw);
+  border-radius:28px;
+  padding:22px;
+  background:radial-gradient(circle at top right,rgba(37,99,235,.25),transparent 42%),linear-gradient(145deg,rgba(6,13,28,.98),rgba(10,20,42,.96));
+  border:1.5px solid rgba(56,189,248,.35);
+  box-shadow:0 28px 80px rgba(0,0,0,.65),0 0 34px rgba(37,99,235,.24),inset 0 1px 0 rgba(255,255,255,.08);
+  color:#f8fafc;
+}
+#mbIngCategoryModal h3{margin:0 0 8px;font-size:28px;font-weight:950}
+#mbIngCategoryModal p{margin:0 0 16px;color:#94a3b8;font-size:15px;line-height:1.4}
+#mbIngCategoryModal input{
+  width:100%;
+  height:58px;
+  border-radius:18px;
+  border:1.5px solid rgba(59,130,246,.45);
+  background:rgba(2,6,23,.75);
+  color:#fff;
+  padding:0 18px;
+  font-size:18px;
+  font-weight:750;
+  outline:none;
+}
+#mbIngCategoryModal input:focus{
+  border-color:#38bdf8;
+  box-shadow:0 0 0 4px rgba(56,189,248,.16);
+}
+#mbIngCategoryModal .mb-cat-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:16px;
+}
+#mbIngCategoryModal .mb-cat-actions button{margin:0 !important}
+</style>
+
+<script id="mb-recipe-category-ingredient-confirm-v1-js">
+(function(){
+  const CAT_KEY='macro_ingredient_categories_v1';
+  const DEFAULT_CATS=['All','Condiments','Vegetables','Fruits','Protein','Carbs','Dairy','Oils','Spices','Custom Ingredient'];
+  let currentRecipeCat='';
+
+  function q(id){return document.getElementById(id)}
+  function read(k){try{return JSON.parse(localStorage.getItem(k)||'[]')}catch(e){return[]}}
+  function write(k,v){localStorage.setItem(k,JSON.stringify(v||[]))}
+  function clean(s){return String(s||'').trim()}
+  function norm(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}
+  function n(v){const x=parseFloat(v);return Number.isFinite(x)?x:0}
+  function r1(v){return Math.round(n(v)*10)/10}
+  function keyOf(i){return norm(i&&i.name)+'|'+norm(i&&i.serving)}
+  function cats(){
+    const extra=read(CAT_KEY);
+    return [...new Set([...DEFAULT_CATS,...extra].filter(Boolean))];
+  }
+  function saveCat(cat){
+    cat=clean(cat);
+    if(!cat || cat==='All')return;
+    const extra=read(CAT_KEY);
+    if(![...DEFAULT_CATS,...extra].some(x=>x.toLowerCase()===cat.toLowerCase())){
+      extra.push(cat);write(CAT_KEY,extra);
+    }
+    renderRecipeCategoryPills();
+  }
+
+  function makePill(cat,active){
+    const b=document.createElement('button');
+    b.type='button';
+    b.className='pill'+(active?' active':'');
+    b.textContent=cat;
+    b.onclick=function(){
+      currentRecipeCat=cat==='All'?'':cat;
+      renderRecipeCategoryPills();
+      if(typeof window.renderIngredientResults==='function')window.renderIngredientResults();
+    };
+    return b;
+  }
+
+  function ensureRecipeCategoryPills(){
+    if(q('recipeCategoryPills'))return q('recipeCategoryPills');
+    const input=q('ingredientSearch');
+    if(!input)return null;
+    const holder=document.createElement('div');
+    holder.id='recipeCategoryPills';
+    // put below search block but above results
+    const results=q('ingredientResults');
+    if(results && results.parentNode) results.parentNode.insertBefore(holder,results);
+    return holder;
+  }
+
+  function renderRecipeCategoryPills(){
+    const holder=ensureRecipeCategoryPills();
+    if(!holder)return;
+    holder.innerHTML='';
+    cats().forEach(cat=>holder.appendChild(makePill(cat, (cat==='All'&&!currentRecipeCat)||cat===currentRecipeCat)));
+  }
+
+  const oldRenderIngredient=window.renderIngredientResults;
+  if(typeof oldRenderIngredient==='function'){
+    window.renderIngredientResults=function(){
+      oldRenderIngredient.apply(this,arguments);
+      const box=q('ingredientResults');
+      if(!box || !currentRecipeCat)return;
+      box.querySelectorAll('.ingredient-row').forEach(row=>{
+        const cat=(row.querySelector('.source-chip')?.textContent||'').toLowerCase();
+        const text=(row.textContent||'').toLowerCase();
+        const needle=currentRecipeCat.toLowerCase();
+        row.style.display=(cat.includes(needle)||text.includes(needle))?'':'none';
+      });
+      const visible=[...box.querySelectorAll('.ingredient-row')].some(r=>r.style.display!=='none');
+      if(!visible && box.querySelector('.ingredient-row')){
+        box.insertAdjacentHTML('beforeend',"<p class='note recipe-cat-empty'>No ingredients in this category. Try All or search by name.</p>");
+      }
+    };
+  }
+
+  function ensureIngCategoryModal(){
+    let m=q('mbIngCategoryModal');
+    if(m)return m;
+    const div=document.createElement('div');
+    div.id='mbIngCategoryModal';
+    div.innerHTML=`<div class="mb-cat-card"><h3>New Ingredient Category</h3><p>Add a category for recipe ingredient search and custom ingredients.</p><input id="mbIngNewCategoryInput" placeholder="Example: Sauces"><div class="mb-cat-actions"><button type="button" class="light" id="mbIngCatCancel">Cancel</button><button type="button" class="good" id="mbIngCatSave">Add Category</button></div></div>`;
+    document.body.appendChild(div);
+    q('mbIngCatCancel').onclick=()=>closeIngCat(false);
+    q('mbIngCatSave').onclick=()=>closeIngCat(true);
+    div.addEventListener('click',e=>{if(e.target===div)closeIngCat(false)});
+    q('mbIngNewCategoryInput').addEventListener('keydown',e=>{if(e.key==='Enter')closeIngCat(true); if(e.key==='Escape')closeIngCat(false)});
+    return div;
+  }
+
+  function openIngCat(){
+    const m=ensureIngCategoryModal();
+    const input=q('mbIngNewCategoryInput');
+    if(input)input.value='';
+    m.classList.add('active');
+    setTimeout(()=>input?.focus(),80);
+  }
+  function closeIngCat(save){
+    const m=q('mbIngCategoryModal');
+    const input=q('mbIngNewCategoryInput');
+    const val=clean(input?.value);
+    const select=q('ciCat');
+    if(save && val){
+      saveCat(val);
+      if(select){
+        const opt=document.createElement('option');
+        opt.value=val; opt.textContent=val;
+        select.insertBefore(opt,select.lastElementChild);
+        select.value=val;
+      }
+    }else if(select && select.value==='__new__'){
+      select.value='Custom Ingredient';
+    }
+    m?.classList.remove('active');
+  }
+
+  function patchIngredientModal(){
+    const m=q('customIngredientModal');
+    if(!m)return;
+
+    let cat=q('ciCat');
+    if(cat && cat.tagName!=='SELECT'){
+      const old=cat.value||'Custom Ingredient';
+      const sel=document.createElement('select');
+      sel.id='ciCat';
+      sel.innerHTML=cats().filter(c=>c!=='All').map(c=>`<option value="${c}">${c}</option>`).join('')+`<option value="__new__">+ Add New Category</option>`;
+      cat.replaceWith(sel);
+      sel.value=cats().includes(old)?old:'Custom Ingredient';
+      cat=sel;
+    }
+    if(cat && cat.dataset.ingCatReady!=='1'){
+      cat.dataset.ingCatReady='1';
+      cat.addEventListener('change',function(){
+        if(cat.value==='__new__')openIngCat();
+      });
+    }
+
+    if(!m.querySelector('.ci-confirm')){
+      const actions=m.querySelector('.mb-modal-actions');
+      if(actions){
+        const msg=document.createElement('div');
+        msg.className='ci-confirm';
+        msg.id='ciConfirm';
+        actions.parentNode.insertBefore(msg,actions);
+      }
+    }
+  }
+
+  function getItem(){
+    const name=clean(q('ciName')?.value);
+    if(!name){alert('Enter ingredient name');return null}
+    const cat=q('ciCat')?.value || 'Custom Ingredient';
+    if(cat && cat!=='__new__')saveCat(cat);
+    return {
+      id:'custom_ing_'+Date.now(),
+      name,
+      serving:clean(q('ciServing')?.value)||'1 serving',
+      cat:cat==='__new__'?'Custom Ingredient':cat,
+      cal:Math.round(n(q('ciCal')?.value)),
+      c:r1(q('ciC')?.value),
+      p:r1(q('ciP')?.value),
+      f:r1(q('ciF')?.value),
+      source:'custom_ingredient',
+      aliases:[name,cat]
+    };
+  }
+
+  function saveItem(item){
+    const key='macro_custom_foods_v3';
+    let list=read(key);
+    list=[item,...list.filter(x=>keyOf(x)!==keyOf(item))].slice(0,500);
+    write(key,list);
+    if(typeof window.loadFoodDatabase==='function')window.loadFoodDatabase();
+  }
+
+  function addToRecipe(item){
+    window._mbRecipeIngredients=window._mbRecipeIngredients||[];
+    window._mbRecipeIngredients.push({base:item,amount:1,unit:'serving',name:item.name,cal:Math.round(n(item.cal)),c:r1(item.c),p:r1(item.p),f:r1(item.f)});
+    if(typeof window.renderRecipe==='function')window.renderRecipe();
+    else{
+      const box=q('recipeIngredientList');
+      if(box)box.innerHTML=window._mbRecipeIngredients.map((x,i)=>`<div class="recipe-row"><div><b>${x.name}</b><div class="meta">${x.amount||1} ${x.unit||'serving'} • ${Math.round(n(x.cal))} cal • C ${r1(x.c)}g • P ${r1(x.p)}g • F ${r1(x.f)}g</div></div><button class="small-btn danger" type="button" onclick="removeRecipeIngredient(${i})">Remove</button></div>`).join('');
+      const t=window._mbRecipeIngredients.reduce((a,x)=>({cal:a.cal+n(x.cal),c:a.c+n(x.c),p:a.p+n(x.p),f:a.f+n(x.f)}),{cal:0,c:0,p:0,f:0});
+      if(q('recipeCal'))q('recipeCal').textContent=Math.round(t.cal);
+      if(q('recipeC'))q('recipeC').textContent=r1(t.c)+'g';
+      if(q('recipeP'))q('recipeP').textContent=r1(t.p)+'g';
+      if(q('recipeF'))q('recipeF').textContent=r1(t.f)+'g';
+    }
+  }
+
+  function showConfirm(msg){
+    const m=q('customIngredientModal');
+    if(!m)return;
+    m.classList.add('active','confirmed');
+    const c=q('ciConfirm');
+    if(c)c.textContent=msg;
+    const close=m.querySelector('.mb-modal-actions button:last-child');
+    if(close)close.textContent='Close';
+  }
+
+  function resetConfirm(){
+    const m=q('customIngredientModal');
+    if(!m)return;
+    m.classList.remove('confirmed');
+    const c=q('ciConfirm');
+    if(c)c.textContent='';
+    const close=m.querySelector('.mb-modal-actions button:last-child');
+    if(close)close.textContent='Cancel';
+  }
+
+  const oldOpen=window.openCustomIngredientModal;
+  window.openCustomIngredientModal=function(){
+    if(typeof oldOpen==='function')oldOpen.apply(this,arguments);
+    setTimeout(()=>{patchIngredientModal();resetConfirm();},50);
+  };
+
+  window.saveCustomIngredientModal=function(){
+    patchIngredientModal();
+    const item=getItem(); if(!item)return;
+    saveItem(item);
+    showConfirm('Ingredient saved.');
+    if(typeof window.renderIngredientResults==='function')window.renderIngredientResults();
+  };
+
+  window.addCustomIngredientToRecipe=function(){
+    patchIngredientModal();
+    const item=getItem(); if(!item)return;
+    saveItem(item);
+    addToRecipe(item);
+    showConfirm('Ingredient added to recipe.');
+    if(typeof window.renderIngredientResults==='function')window.renderIngredientResults();
+  };
+
+  const oldClose=window.closeMbModal;
+  window.closeMbModal=function(id){
+    if(id==='customIngredientModal')resetConfirm();
+    if(typeof oldClose==='function')oldClose.apply(this,arguments);
+    else q(id)?.classList.remove('active');
+  };
+
+  const oldShow=window.showScreen;
+  if(typeof oldShow==='function'){
+    window.showScreen=function(){
+      oldShow.apply(this,arguments);
+      setTimeout(()=>{renderRecipeCategoryPills();patchIngredientModal();},80);
+    };
+  }
+  const oldRender=window.render;
+  if(typeof oldRender==='function'){
+    window.render=function(){
+      const result=oldRender.apply(this,arguments);
+      setTimeout(()=>{renderRecipeCategoryPills();patchIngredientModal();},0);
+      return result;
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{renderRecipeCategoryPills();patchIngredientModal();},300));
+  setTimeout(()=>{renderRecipeCategoryPills();patchIngredientModal();},800);
+})();
+</script>
+
 </body>
 </html>
