@@ -2805,10 +2805,10 @@ function init(){setupAdd();renderIngredientResults();if(typeof renderSavedRecipe
   function val(id){return (q(id)?.value||'').trim()}
   function numVal(id){const v=parseFloat(q(id)?.value||'0');return isNaN(v)?0:v}
   function round1(x){return Math.round((Number(x)||0)*10)/10}
-  function showToast(msg){ if(typeof toast==='function') toast(msg); else alert(msg); }
+  function showToast(msg){ if(typeof window.showMbCleanToast==='function') window.showMbCleanToast(msg); else if(typeof window.mbToast==='function') window.mbToast(msg); else if(typeof toast==='function') toast(msg); }
   function ensureCustomFoodModal(){
     let m=q('customFoodModal'); if(m) return m;
-    document.body.insertAdjacentHTML('beforeend',`<div id="customFoodModal" class="mb-modal"><div class="mb-modal-card"><h3>Add Custom Food</h3><p class="note">Enter macros once. Then add it to your log, save it to the database, or mark it as favourite.</p><label>Food Name</label><input id="cfName" placeholder="Example: Homemade milkshake"><div class="mb-unit-grid"><div><label>Serving Note</label><input id="cfServing" placeholder="1 cup / 100 g / 1 plate"></div><div><label>Servings</label><input id="cfServings" type="number" step="0.1" value="1"></div></div><div class="mb-unit-grid"><div><label>Meal</label><select id="cfMeal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select></div><div><label>Category</label><input id="cfCat" placeholder="Custom Food"></div></div><div class="mb-unit-grid"><div><label>Calories</label><input id="cfCal" type="number" step="1"></div><div><label>Carbs (g)</label><input id="cfC" type="number" step="0.1"></div><div><label>Protein (g)</label><input id="cfP" type="number" step="0.1"></div><div><label>Fat (g)</label><input id="cfF" type="number" step="0.1"></div></div><div class="custom-food-star-row"><button id="cfFav" class="custom-food-star-toggle" type="button" onclick="toggleCustomFoodFavoriteStar()">★</button><span>Mark as favourite</span></div><div class="mb-modal-actions three"><button class="good" type="button" onclick="addCustomFoodToLog()">Add to Log</button><button class="purple" type="button" onclick="saveCustomFoodToDatabase()">Save Database</button><button class="light" type="button" onclick="closeCustomFoodModal()">Cancel</button></div></div></div>`);
+    document.body.insertAdjacentHTML('beforeend',`<div id="customFoodModal" class="mb-modal"><div class="mb-modal-card"><h3>Add Custom Food</h3><p class="note">Enter macros once. Then add it to your log, save it to the database, or mark it as favourite.</p><label>Food Name</label><input id="cfName" placeholder="Example: Homemade milkshake"><div class="mb-unit-grid"><div><label>Serving Note</label><input id="cfServing" placeholder="1 cup / 100 g / 1 plate"></div><div><label>Servings</label><input id="cfServings" type="number" step="0.1" value="1"></div></div><div class="mb-unit-grid"><div><label>Meal</label><select id="cfMeal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select></div><div><label>Category</label><input id="cfCat" placeholder="Custom Food"></div></div><div class="mb-unit-grid"><div><label>Calories</label><input id="cfCal" type="number" step="1"></div><div><label>Carbs (g)</label><input id="cfC" type="number" step="0.1"></div><div><label>Protein (g)</label><input id="cfP" type="number" step="0.1"></div><div><label>Fat (g)</label><input id="cfF" type="number" step="0.1"></div></div><div class="custom-food-star-row"><button id="cfFav" class="custom-food-star-toggle" type="button" onclick="toggleCustomFoodFavoriteStar()">★</button><span>Mark as favourite</span></div><div class="mb-modal-actions three"><button class="good" type="button" onclick="addCustomFoodToLog()">Add to Log</button><button class="purple" type="button" onclick="saveCustomFoodToDatabase()">Save to Database</button><button class="light" type="button" onclick="closeCustomFoodModal()">Cancel</button></div></div></div>`);
     return q('customFoodModal');
   }
   function customFoodItem(){const name=val('cfName'); if(!name){alert('Enter food name');return null;} return {id:'custom_food_'+Date.now(),name:name,serving:val('cfServing')||'1 serving',cat:val('cfCat')||'Custom Food',cal:Math.round(numVal('cfCal')),c:round1(numVal('cfC')),p:round1(numVal('cfP')),f:round1(numVal('cfF')),source:'custom',aliases:[]};}
@@ -2818,13 +2818,119 @@ function init(){setupAdd();renderIngredientResults();if(typeof renderSavedRecipe
   window.openCustomFoodModal=function(){const m=ensureCustomFoodModal();const meal=q('mealType')?.value || 'Breakfast';if(q('cfMeal')) q('cfMeal').value=meal;m.classList.add('active');setTimeout(()=>q('cfName')?.focus(),80);};
   window.closeCustomFoodModal=function(){q('customFoodModal')?.classList.remove('active')};
   window.toggleCustomFoodFavoriteStar=function(){q('cfFav')?.classList.toggle('active')};
-  window.saveCustomFoodToDatabase=function(){const item=customFoodItem(); if(!item) return;saveToDb(item); saveFav(item);showToast(q('cfFav')?.classList.contains('active')?'Saved to database and favourites':'Saved to database');resetCustomFoodModal(); closeCustomFoodModal();if(typeof renderFoodDatabase==='function') renderFoodDatabase();};
-  window.addCustomFoodToLog=function(){const item=customFoodItem(); if(!item) return;const mult=numVal('cfServings')||1;const logItem={name:item.name+(item.serving?' ('+item.serving+')':''),meal:q('cfMeal')?.value||'Breakfast',cal:Math.round(item.cal*mult),c:round1(item.c*mult),p:round1(item.p*mult),f:round1(item.f*mult)};if(typeof getLog==='function' && typeof saveLog==='function'){const log=getLog(); log.push(logItem); saveLog(log);}if(typeof addRecent==='function') addRecent(item);saveToDb(item); saveFav(item);showToast('Added to log');resetCustomFoodModal(); closeCustomFoodModal();if(typeof showScreen==='function') showScreen('Log');};
+  window.saveCustomFoodToDatabase=function(){const item=customFoodItem(); if(!item) return;saveToDb(item); saveFav(item);showToast(q('cfFav')?.classList.contains('active')?'Saved to Database + Added to Favourites':'Saved to Database');resetCustomFoodModal(); closeCustomFoodModal();if(typeof renderFoodDatabase==='function') renderFoodDatabase();};
+  window.addCustomFoodToLog=function(){const item=customFoodItem(); if(!item) return;const mult=numVal('cfServings')||1;const logItem={name:item.name+(item.serving?' ('+item.serving+')':''),meal:q('cfMeal')?.value||'Breakfast',cal:Math.round(item.cal*mult),c:round1(item.c*mult),p:round1(item.p*mult),f:round1(item.f*mult)};if(typeof getLog==='function' && typeof saveLog==='function'){const log=getLog(); log.push(logItem); saveLog(log);}if(typeof addRecent==='function') addRecent(item);saveToDb(item); saveFav(item);showToast('Added to Log');resetCustomFoodModal(); closeCustomFoodModal();if(typeof showScreen==='function') showScreen('Log');};
   function finalCleanAddPage(){const firstCard=document.querySelector('#screenAdd > .card:first-of-type');if(firstCard){const row=firstCard.querySelector('.card-title-row');if(row){row.querySelector('.quick-links')?.remove();const h2=row.querySelector('h2');if(h2) h2.innerHTML='<span class="bc-icon">＋</span><span>Add Food</span>';}}document.querySelectorAll('#screenAdd > .card').forEach(card=>{if(/Manual\s*\/\s*Selected Food|New Food\s*\/\s*Ingredient/i.test(card.textContent||'')) card.remove();});const db=q('dbSearch');if(db && !db.closest('.db-search-plus-row')){const wrap=document.createElement('div');wrap.className='db-search-plus-row';db.parentNode.insertBefore(wrap,db);wrap.appendChild(db);wrap.insertAdjacentHTML('beforeend','<button id="openCustomFoodBtn" class="add-custom-plus-btn" type="button" onclick="openCustomFoodModal()" aria-label="Add custom food">+</button>');}}
   const oldSetup=window.setupAdd; window.setupAdd=function(){ if(typeof oldSetup==='function') oldSetup.apply(this,arguments); finalCleanAddPage(); };
   const oldShow=window.showScreen; if(typeof oldShow==='function') window.showScreen=function(){ oldShow.apply(this,arguments); setTimeout(finalCleanAddPage,0); };
   const oldRender=window.render; if(typeof oldRender==='function') window.render=function(){ oldRender.apply(this,arguments); finalCleanAddPage(); };
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>{finalCleanAddPage();setTimeout(finalCleanAddPage,100);setTimeout(finalCleanAddPage,800);}); else {finalCleanAddPage();setTimeout(finalCleanAddPage,100);setTimeout(finalCleanAddPage,800);}
+})();
+</script>
+
+<!-- PATCH: Add page header left align + visible icon + yellow favourite star + copy fix -->
+<style id="mb-add-page-visual-fixes">
+  #screenAdd > .card:first-of-type .card-title-row{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-start !important;
+    text-align:left !important;
+    gap:12px !important;
+    margin-bottom:18px !important;
+  }
+  #screenAdd > .card:first-of-type .card-title-row h2{
+    width:100% !important;
+    justify-content:flex-start !important;
+    text-align:left !important;
+    margin:0 !important;
+  }
+  #screenAdd > .card:first-of-type .card-title-row h2 .bc-icon{
+    color:transparent !important;
+    position:relative !important;
+  }
+  #screenAdd > .card:first-of-type .card-title-row h2 .bc-icon::before{
+    content:"+";
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#7dd3fc !important;
+    font-size:28px !important;
+    line-height:1 !important;
+    text-shadow:0 0 12px rgba(56,189,248,.85) !important;
+  }
+  .custom-food-star-toggle{color:#94a3b8 !important;}
+  .custom-food-star-toggle.active{
+    color:#facc15 !important;
+    background:rgba(250,204,21,.16) !important;
+    border-color:rgba(250,204,21,.45) !important;
+    box-shadow:0 0 18px rgba(250,204,21,.38) !important;
+  }
+</style>
+
+
+
+<!-- PATCH: clean custom food confirmation toast, no browser alert -->
+<style id="mb-custom-food-confirmation-toast-fix">
+  .mb-clean-toast{
+    position:fixed !important;
+    left:50% !important;
+    bottom:calc(22px + env(safe-area-inset-bottom)) !important;
+    transform:translateX(-50%) translateY(18px) scale(.96) !important;
+    z-index:30000 !important;
+    min-width:min(360px,calc(100vw - 42px)) !important;
+    max-width:calc(100vw - 42px) !important;
+    padding:14px 18px !important;
+    border-radius:18px !important;
+    color:#ffffff !important;
+    font-size:16px !important;
+    font-weight:950 !important;
+    text-align:center !important;
+    letter-spacing:.2px !important;
+    background:linear-gradient(135deg,rgba(2,6,23,.96),rgba(15,23,42,.96)) !important;
+    border:1px solid rgba(125,211,252,.38) !important;
+    box-shadow:0 18px 46px rgba(0,0,0,.48),0 0 24px rgba(37,99,235,.32),inset 0 1px 0 rgba(255,255,255,.10) !important;
+    opacity:0 !important;
+    pointer-events:none !important;
+    transition:opacity .18s ease, transform .18s ease !important;
+  }
+  .mb-clean-toast.show{
+    opacity:1 !important;
+    transform:translateX(-50%) translateY(0) scale(1) !important;
+  }
+  .mb-clean-toast::before{
+    content:"✓";
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:22px;
+    height:22px;
+    margin-right:8px;
+    border-radius:50%;
+    color:#020617;
+    background:#22c55e;
+    box-shadow:0 0 16px rgba(34,197,94,.55);
+  }
+  .mb-clean-toast.fav::before{content:"★";background:#facc15;color:#111827;box-shadow:0 0 16px rgba(250,204,21,.55);}
+  body.light-mode .mb-clean-toast{background:#ffffff !important;color:#0f172a !important;border-color:#bfdbfe !important;box-shadow:0 18px 38px rgba(15,23,42,.18),0 0 20px rgba(37,99,235,.18) !important;}
+</style>
+<script id="mb-custom-food-confirmation-toast-fix-script">
+(function(){
+  window.showMbCleanToast=function(message){
+    let t=document.getElementById('mbCleanToast');
+    if(!t){
+      t=document.createElement('div');
+      t.id='mbCleanToast';
+      t.className='mb-clean-toast';
+      document.body.appendChild(t);
+    }
+    t.classList.toggle('fav',/Favourite|Favourites/.test(message||''));
+    t.textContent=message || 'Done';
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer=setTimeout(function(){t.classList.remove('show');},1800);
+  };
 })();
 </script>
 
