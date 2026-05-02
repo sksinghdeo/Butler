@@ -7629,5 +7629,330 @@ body.mb-clean-modal-open{
 })();
 </script>
 
+
+<style id="mb-progress-bars-weight-edit-theme-v3">
+/* 7-day macro tabs should show as real horizontal bars */
+#weeklyBars{
+  display:grid !important;
+  gap:16px !important;
+  margin-top:12px !important;
+}
+
+#weeklyBars .bar-row{
+  display:grid !important;
+  gap:8px !important;
+}
+
+#weeklyBars .bar-row .meta{
+  color:#94a3b8 !important;
+  font-size:16px !important;
+  font-weight:800 !important;
+}
+
+#weeklyBars .bar{
+  height:11px !important;
+  width:100% !important;
+  border-radius:999px !important;
+  background:rgba(226,232,240,.92) !important;
+  overflow:hidden !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25) !important;
+}
+
+#weeklyBars .bar span{
+  display:block !important;
+  height:100% !important;
+  min-width:0 !important;
+  border-radius:999px !important;
+  transition:width .25s ease !important;
+}
+
+/* Weight entries: make Edit and Delete uniform */
+#weightTrend .weight-actions{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:8px !important;
+  width:150px !important;
+}
+
+#weightTrend .weight-actions button{
+  width:100% !important;
+  height:42px !important;
+  min-height:42px !important;
+  padding:0 !important;
+  margin:0 !important;
+  border-radius:14px !important;
+  font-size:13px !important;
+  font-weight:950 !important;
+}
+
+#weightTrend .weight-entry{
+  grid-template-columns:minmax(0,1fr) 150px !important;
+}
+
+#weightTrend .weight-entry > div:first-child{
+  min-width:0 !important;
+}
+
+#weightTrend .weight-entry b{
+  white-space:normal !important;
+}
+
+/* Themed weight edit modal */
+#mbWeightEditModal{
+  position:fixed !important;
+  inset:0 !important;
+  z-index:2147483647 !important;
+  display:none;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:22px !important;
+  background:rgba(2,6,23,.72) !important;
+  backdrop-filter:blur(12px) !important;
+  -webkit-backdrop-filter:blur(12px) !important;
+}
+
+#mbWeightEditModal.active{
+  display:flex !important;
+}
+
+#mbWeightEditModal .mb-weight-card{
+  width:min(430px,92vw);
+  border-radius:28px;
+  padding:22px;
+  background:
+    radial-gradient(circle at top right,rgba(37,99,235,.20),transparent 42%),
+    linear-gradient(145deg,rgba(6,13,28,.98),rgba(10,20,42,.96));
+  border:1.5px solid rgba(56,189,248,.35);
+  box-shadow:0 28px 80px rgba(0,0,0,.65),0 0 34px rgba(37,99,235,.22),inset 0 1px 0 rgba(255,255,255,.08);
+  color:#f8fafc;
+}
+
+#mbWeightEditModal h3{
+  margin:0 0 16px;
+  font-size:28px;
+  font-weight:950;
+}
+
+#mbWeightEditModal label{
+  display:block;
+  margin:12px 0 7px;
+  color:#f8fafc;
+  font-size:14px;
+  font-weight:900;
+}
+
+#mbWeightEditModal input,
+#mbWeightEditModal select{
+  width:100%;
+  height:56px;
+  border-radius:17px;
+  border:1.5px solid rgba(59,130,246,.38);
+  background:rgba(2,6,23,.72);
+  color:#fff;
+  padding:0 16px;
+  font-size:17px;
+  font-weight:750;
+  outline:none;
+}
+
+#mbWeightEditModal input:focus,
+#mbWeightEditModal select:focus{
+  border-color:#38bdf8;
+  box-shadow:0 0 0 4px rgba(56,189,248,.16);
+}
+
+#mbWeightEditModal .grid2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+#mbWeightEditModal .actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:18px;
+}
+
+#mbWeightEditModal .actions button{
+  margin:0 !important;
+}
+
+@media(max-width:430px){
+  #weightTrend .weight-entry{
+    grid-template-columns:1fr !important;
+  }
+
+  #weightTrend .weight-actions{
+    width:100% !important;
+  }
+}
+</style>
+
+<script id="mb-progress-bars-weight-edit-theme-v3-js">
+(function(){
+  function q(id){return document.getElementById(id)}
+  function N(v){const x=parseFloat(v);return Number.isFinite(x)?x:0}
+  function R(v){return Math.round(N(v)*10)/10}
+  function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+  function dateKey(d){return d.toISOString().slice(0,10)}
+  function getLogForDate(k){try{return JSON.parse(localStorage.getItem('macro_log_'+k)||'[]')}catch(e){return[]}}
+  function totals(log){return log.reduce((a,x)=>({cal:a.cal+N(x.cal),c:a.c+N(x.c),p:a.p+N(x.p),f:a.f+N(x.f)}),{cal:0,c:0,p:0,f:0})}
+
+  function currentMetric(){
+    return localStorage.getItem('macro_weekly_active_metric') || 'cal';
+  }
+
+  function weekData(){
+    const days=[];
+    const today=new Date();
+    for(let i=6;i>=0;i--){
+      const d=new Date(today);
+      d.setDate(today.getDate()-i);
+      const k=dateKey(d);
+      days.push({date:k,label:d.toLocaleDateString('en-US',{weekday:'short'}),...totals(getLogForDate(k))});
+    }
+    return days;
+  }
+
+  function renderWeeklyBarsAsBars(){
+    const box=q('weeklyBars');
+    if(!box) return;
+
+    const metric=currentMetric();
+    const info={
+      cal:{label:'Calories',unit:'cal',value:d=>d.cal,color:'linear-gradient(90deg,#22c55e,#38bdf8)'},
+      p:{label:'Protein',unit:'g',value:d=>d.p,color:'linear-gradient(90deg,#16a34a,#86efac)'},
+      c:{label:'Carbs',unit:'g',value:d=>d.c,color:'linear-gradient(90deg,#7c3aed,#c084fc)'},
+      f:{label:'Fat',unit:'g',value:d=>d.f,color:'linear-gradient(90deg,#f59e0b,#fbbf24)'}
+    }[metric] || {label:'Calories',unit:'cal',value:d=>d.cal,color:'linear-gradient(90deg,#22c55e,#38bdf8)'};
+
+    const data=weekData();
+    const max=Math.max(...data.map(info.value),1);
+    const title=box.previousElementSibling;
+    if(title && title.classList.contains('macro-heading')){
+      title.innerHTML=`🍴 7-Day ${info.label}`;
+    }
+
+    const tabs=q('weeklyMacroTabs');
+    if(tabs){
+      tabs.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.metric===metric));
+    }
+
+    box.innerHTML=data.map(d=>{
+      const val=info.value(d);
+      const pct=val<=0 ? 0 : Math.max(3,Math.min(100,(val/max)*100));
+      const shown=metric==='cal'?Math.round(val):R(val);
+      return `<div class="bar-row">
+        <div class="meta">${d.label} • ${shown} ${info.unit}</div>
+        <div class="bar"><span style="width:${pct}%;background:${info.color}"></span></div>
+      </div>`;
+    }).join('');
+  }
+
+  function ensureModal(){
+    let m=q('mbWeightEditModal');
+    if(!m){
+      m=document.createElement('div');
+      m.id='mbWeightEditModal';
+      document.body.appendChild(m);
+      m.addEventListener('click',e=>{if(e.target===m)closeWeightModal()});
+    }
+    return m;
+  }
+
+  function closeWeightModal(){
+    const m=q('mbWeightEditModal');
+    if(m){m.classList.remove('active');m.innerHTML='';}
+  }
+  window.closeWeightModal=closeWeightModal;
+
+  window.editWeightEntry=function(date){
+    let entries=[]; try{entries=JSON.parse(localStorage.getItem('macro_weight_entries')||'[]')}catch(e){}
+    const idx=entries.findIndex(x=>x.date===date);
+    if(idx<0) return;
+    const e=entries[idx];
+
+    const m=ensureModal();
+    m.innerHTML=`<div class="mb-weight-card">
+      <h3>Edit Weight</h3>
+      <div class="grid2">
+        <div>
+          <label>Date</label>
+          <input id="mbEditWeightDate" type="date" value="${esc(e.date)}">
+        </div>
+        <div>
+          <label>Unit</label>
+          <select id="mbEditWeightUnit">
+            <option value="lb" ${e.unit==='lb'?'selected':''}>lb</option>
+            <option value="kg" ${e.unit==='kg'?'selected':''}>kg</option>
+          </select>
+        </div>
+      </div>
+      <label>Weight</label>
+      <input id="mbEditWeightValue" type="number" step="0.1" inputmode="decimal" value="${esc(e.weight)}">
+      <div class="actions">
+        <button class="good" id="mbSaveWeightEdit" type="button">Save Changes</button>
+        <button class="light" type="button" onclick="closeWeightModal()">Cancel</button>
+      </div>
+    </div>`;
+    m.classList.add('active');
+
+    q('mbSaveWeightEdit').onclick=function(){
+      entries[idx]={
+        ...e,
+        date:(q('mbEditWeightDate').value||e.date),
+        weight:N(q('mbEditWeightValue').value)||e.weight,
+        unit:q('mbEditWeightUnit').value||e.unit||'lb'
+      };
+      entries.sort((a,b)=>a.date.localeCompare(b.date));
+      localStorage.setItem('macro_weight_entries',JSON.stringify(entries));
+      closeWeightModal();
+      if(typeof renderWeightTrend==='function')renderWeightTrend();
+      renderWeeklyBarsAsBars();
+    };
+  };
+
+  // keep delete function but refresh chart
+  const oldDelete=window.deleteWeightEntry;
+  window.deleteWeightEntry=function(date){
+    if(typeof oldDelete==='function') oldDelete(date);
+    else{
+      let entries=[]; try{entries=JSON.parse(localStorage.getItem('macro_weight_entries')||'[]')}catch(e){}
+      entries=entries.filter(x=>x.date!==date);
+      localStorage.setItem('macro_weight_entries',JSON.stringify(entries));
+    }
+    if(typeof renderWeightTrend==='function')renderWeightTrend();
+  };
+
+  // Re-wire tab buttons so they always redraw bars.
+  function wireTabs(){
+    const tabs=q('weeklyMacroTabs');
+    if(!tabs) return;
+    tabs.querySelectorAll('button').forEach(btn=>{
+      if(btn.dataset.barsFixed==='1') return;
+      btn.dataset.barsFixed='1';
+      btn.addEventListener('click',function(e){
+        localStorage.setItem('macro_weekly_active_metric',btn.dataset.metric||'cal');
+        setTimeout(renderWeeklyBarsAsBars,0);
+      },true);
+    });
+  }
+
+  const oldRenderProgress=window.renderProgress;
+  if(typeof oldRenderProgress==='function'){
+    window.renderProgress=function(){
+      const result=oldRenderProgress.apply(this,arguments);
+      wireTabs();
+      renderWeeklyBarsAsBars();
+      return result;
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{wireTabs();renderWeeklyBarsAsBars();},300));
+  setTimeout(()=>{wireTabs();renderWeeklyBarsAsBars();},900);
+})();
+</script>
+
 </body>
 </html>
