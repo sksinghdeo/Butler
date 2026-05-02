@@ -8247,5 +8247,325 @@ body.mb-clean-modal-open{
 })();
 </script>
 
+
+<style id="mb-scan-save-db-v1">
+#scanReview .scan-name-note{
+  margin-top:6px;
+  font-size:12px;
+  color:#94a3b8;
+  font-weight:750;
+}
+#scanReview .scan-fav-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:12px;
+}
+#scanReview .scan-fav-row .star-btn{
+  width:58px !important;
+  height:58px !important;
+  min-width:58px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+#scanReview .scan-action-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:14px;
+}
+#scanReview .scan-action-grid button{
+  margin:0 !important;
+  width:100% !important;
+  min-height:58px !important;
+}
+#scanReview .scan-action-grid .scan-cancel{
+  grid-column:1 / -1;
+}
+#scanReview .scan-confirm{
+  display:none;
+  margin-top:12px;
+  padding:12px 14px;
+  border-radius:16px;
+  color:#bbf7d0;
+  background:rgba(20,83,45,.50);
+  border:1px solid rgba(34,197,94,.35);
+  font-weight:900;
+}
+#scanReview.scan-confirmed .scan-confirm{display:block}
+</style>
+
+<script id="mb-scan-save-db-v1-js">
+(function(){
+  const SCAN_CAT='Scanned Food';
+  const CUSTOM_KEY='macro_custom_foods_v3';
+  const EXTRA_CAT_KEY='macro_custom_categories_v1';
+
+  function q(id){return document.getElementById(id)}
+  function N(v){const x=parseFloat(v);return Number.isFinite(x)?x:0}
+  function R(v){return Math.round(N(v)*10)/10}
+  function clean(s){return String(s||'').trim()}
+  function norm(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}
+  function localKey(i){return norm(i?.name)+'|'+norm(i?.serving)}
+  function read(key, fallback=[]){try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch(e){return fallback}}
+  function write(key,val){localStorage.setItem(key,JSON.stringify(val))}
+  function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+  function dedupe(list){
+    const seen=new Set(),out=[];
+    (list||[]).forEach(i=>{
+      if(!i||!i.name)return;
+      const k=localKey(i);
+      if(seen.has(k))return;
+      seen.add(k);out.push(i);
+    });
+    return out;
+  }
+
+  function ensureScannedCategory(){
+    const cats=read(EXTRA_CAT_KEY,[]);
+    if(!cats.some(c=>norm(c)===norm(SCAN_CAT))){
+      cats.push(SCAN_CAT);
+      write(EXTRA_CAT_KEY,cats);
+    }
+
+    // Add food page pills
+    const foodPillRow=q('dbSearch')?.closest('.card')?.querySelector('.pill-row');
+    if(foodPillRow && !Array.from(foodPillRow.querySelectorAll('.pill')).some(p=>norm(p.textContent)===norm(SCAN_CAT))){
+      const b=document.createElement('button');
+      b.className='pill';
+      b.type='button';
+      b.textContent=SCAN_CAT;
+      b.onclick=function(){ if(typeof setCategory==='function')setCategory(SCAN_CAT,b); };
+      foodPillRow.appendChild(b);
+    }
+
+    // Recipe ingredient category pills get refreshed by existing renderRecipeCategoryPills if present
+    try{
+      if(typeof window.renderRecipeCategoryPills==='function') window.renderRecipeCategoryPills();
+    }catch(e){}
+  }
+
+  function getCustomFoods(){
+    return read(CUSTOM_KEY,[]);
+  }
+  function setCustomFoods(items){
+    write(CUSTOM_KEY,dedupe(items).slice(0,800));
+  }
+
+  function scannedItemFromReview(){
+    return {
+      id:'scan_'+Date.now(),
+      name:clean(q('scanFoodName')?.value)||'Scanned food',
+      serving:clean(q('scanServing')?.value)||'1 serving',
+      cat:SCAN_CAT,
+      cal:Math.round(N(q('scanCal')?.value)),
+      c:R(q('scanCarbs')?.value),
+      p:R(q('scanProtein')?.value),
+      f:R(q('scanFat')?.value),
+      source:'scan',
+      aliases:['scan','scanned','scanned food','barcode','ocr']
+    };
+  }
+
+  function saveScannedToDatabase(item){
+    ensureScannedCategory();
+    setCustomFoods([item,...getCustomFoods().filter(x=>localKey(x)!==localKey(item))]);
+
+    // Also immediately inject into current runtime arrays so search works without reload.
+    try{
+      window.foodDatabase = dedupe([...(window.foodDatabase||[]), item]);
+      if(typeof foodDatabase !== 'undefined' && Array.isArray(foodDatabase)){
+        foodDatabase = dedupe([...(foodDatabase||[]), item]);
+      }
+    }catch(e){}
+
+    try{
+      window._ingredients = dedupe([...(window._ingredients||[]), item]);
+    }catch(e){}
+
+    if(typeof renderFoodDatabase==='function')renderFoodDatabase();
+    if(typeof renderIngredientResults==='function')renderIngredientResults();
+  }
+
+  function setScanConfirmed(msg){
+    const box=q('scanReview');
+    if(!box)return;
+    box.classList.add('scan-confirmed');
+    const c=box.querySelector('.scan-confirm');
+    if(c)c.textContent=msg;
+    const cancel=box.querySelector('.scan-cancel');
+    if(cancel)cancel.textContent='Close';
+  }
+
+  function resetScanConfirmed(){
+    const box=q('scanReview');
+    if(!box)return;
+    box.classList.remove('scan-confirmed');
+    const cancel=box.querySelector('.scan-cancel');
+    if(cancel)cancel.textContent='Cancel';
+  }
+
+  function ensureScanReviewControls(){
+    const box=q('scanReview');
+    if(!box || box.dataset.mbScanUpgraded==='1')return;
+    box.dataset.mbScanUpgraded='1';
+
+    // Keep existing Food Name input, add helper text.
+    const nameInput=q('scanFoodName');
+    if(nameInput && !box.querySelector('.scan-name-note')){
+      nameInput.insertAdjacentHTML('afterend','<div class="scan-name-note">OCR may not detect the food name. Enter or correct the name before adding or saving.</div>');
+    }
+
+    // Replace old single button with requested layout.
+    const oldBtn=Array.from(box.querySelectorAll('button')).find(b=>/Use These Values|Add Food/i.test(b.textContent));
+    if(oldBtn) oldBtn.remove();
+
+    if(!box.querySelector('.scan-fav-row')){
+      box.insertAdjacentHTML('beforeend',`
+        <div class="scan-fav-row">
+          <button id="scanFavBtn" class="star-btn" type="button" aria-label="Favorite scanned food">★</button>
+          <b>Mark as favourite</b>
+        </div>
+        <div class="scan-action-grid">
+          <button class="good" type="button" onclick="addScannedFoodToLog()">Add Food to Log</button>
+          <button class="purple" type="button" onclick="saveScannedFoodToDatabaseOnly()">Save to Database</button>
+          <button class="light scan-cancel" type="button" onclick="closeScanReview()">Cancel</button>
+        </div>
+        <div class="scan-confirm"></div>
+      `);
+    }
+
+    const fav=q('scanFavBtn');
+    if(fav && !fav.dataset.bound){
+      fav.dataset.bound='1';
+      fav.onclick=function(){
+        fav.classList.toggle('active');
+      };
+    }
+  }
+
+  window.closeScanReview=function(){
+    const box=q('scanReview');
+    if(box)box.style.display='none';
+    resetScanConfirmed();
+  };
+
+  window.addScannedFoodToLog=function(){
+    const item=scannedItemFromReview();
+    const fav=q('scanFavBtn')?.classList.contains('active');
+
+    // Save to db also, so scanned item is available later if user added it.
+    saveScannedToDatabase(item);
+
+    if(fav && typeof toggleFavorite==='function' && !(typeof isFavorite==='function' && isFavorite(item))){
+      toggleFavorite(item);
+    }
+
+    if(typeof openPortionMealModal==='function'){
+      openPortionMealModal(item);
+    }else if(typeof setForm==='function'){
+      setForm(item);
+      if(typeof showScreen==='function')showScreen('Add');
+    }
+
+    setScanConfirmed('Added to log flow and saved under Scanned Food.');
+  };
+
+  window.saveScannedFoodToDatabaseOnly=function(){
+    const item=scannedItemFromReview();
+    const fav=q('scanFavBtn')?.classList.contains('active');
+
+    saveScannedToDatabase(item);
+
+    if(fav && typeof toggleFavorite==='function' && !(typeof isFavorite==='function' && isFavorite(item))){
+      toggleFavorite(item);
+    }
+
+    setScanConfirmed('Saved to database under Scanned Food. It will appear in Food Database and Ingredient Search.');
+  };
+
+  // Override review fill for both OCR and barcode.
+  const oldFill=window.fillScanReview;
+  window.fillScanReview=function(item){
+    if(typeof oldFill==='function') oldFill(item);
+    else{
+      if(q('scanReview'))q('scanReview').style.display='block';
+      if(q('scanSource'))q('scanSource').textContent=item?.source||'Review';
+      if(q('scanFoodName'))q('scanFoodName').value=item?.name||'Scanned food';
+      if(q('scanServing'))q('scanServing').value=item?.serving||'1 serving';
+      if(q('scanCal'))q('scanCal').value=item?.cal||'';
+      if(q('scanCarbs'))q('scanCarbs').value=item?.c||'';
+      if(q('scanProtein'))q('scanProtein').value=item?.p||'';
+      if(q('scanFat'))q('scanFat').value=item?.f||'';
+    }
+
+    ensureScanReviewControls();
+    resetScanConfirmed();
+
+    // OCR usually has no real product name, barcode usually does.
+    const name=q('scanFoodName');
+    if(name && (!item?.name || /scanned food/i.test(item.name))){
+      name.value='';
+      name.placeholder='Enter food name';
+    }
+
+    const fav=q('scanFavBtn');
+    if(fav)fav.classList.remove('active');
+
+    q('scanReview')?.scrollIntoView({behavior:'smooth',block:'center'});
+  };
+
+  // Override old useScannedFood so any old button/call also uses the new behavior.
+  window.useScannedFood=function(){
+    addScannedFoodToLog();
+  };
+
+  // Patch DB loader so saved scanned food appears on food database search.
+  const oldLoad=window.loadFoodDatabase;
+  window.loadFoodDatabase=async function(){
+    if(typeof oldLoad==='function') await oldLoad();
+    ensureScannedCategory();
+    try{
+      window.foodDatabase=dedupe([...(window.foodDatabase||[]),...getCustomFoods()]);
+      if(typeof foodDatabase !== 'undefined' && Array.isArray(foodDatabase)){
+        foodDatabase=dedupe([...(foodDatabase||[]),...getCustomFoods()]);
+      }
+    }catch(e){}
+    if(typeof renderFoodDatabase==='function')renderFoodDatabase();
+  };
+
+  // Wrap renderIngredientResults to include saved scanned foods if previous version misses them.
+  const oldRenderIngredient=window.renderIngredientResults;
+  window.renderIngredientResults=function(){
+    try{
+      window._ingredients=dedupe([...(window._ingredients||[]),...getCustomFoods()]);
+    }catch(e){}
+    if(typeof oldRenderIngredient==='function')return oldRenderIngredient.apply(this,arguments);
+  };
+
+  // Category matching should recognize "Scanned Food" pill.
+  const oldCategoryMatch=window.categoryMatch;
+  if(typeof oldCategoryMatch==='function'){
+    window.categoryMatch=function(item){
+      if(window.currentCategory && norm(window.currentCategory)===norm(SCAN_CAT)){
+        return norm(item?.cat).includes('scanned') || norm(item?.source).includes('scan');
+      }
+      return oldCategoryMatch(item);
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    ensureScannedCategory();
+    ensureScanReviewControls();
+  });
+  setTimeout(()=>{
+    ensureScannedCategory();
+    ensureScanReviewControls();
+  },700);
+})();
+</script>
+
 </body>
 </html>
