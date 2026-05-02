@@ -8873,127 +8873,6 @@ body.mb-clean-modal-open{
 </script>
 
 
-<style id="mb-scan-portion-confirm-final-v4">
-#portionMealModal .portion-confirm{
-  display:none;
-  margin-top:12px;
-  padding:12px 14px;
-  border-radius:16px;
-  color:#bbf7d0;
-  background:rgba(20,83,45,.52);
-  border:1px solid rgba(34,197,94,.38);
-  font-size:14px;
-  font-weight:950;
-  line-height:1.35;
-}
-#portionMealModal.confirmed .portion-confirm{
-  display:block;
-}
-#portionMealModal.confirmed .mb-modal-actions .good{
-  opacity:.65;
-  pointer-events:none;
-}
-</style>
-
-<script id="mb-scan-portion-confirm-final-v4-js">
-(function(){
-  function q(id){return document.getElementById(id)}
-  function N(v){const x=parseFloat(v);return Number.isFinite(x)?x:0}
-  function R(v){return Math.round(N(v)*10)/10}
-
-  function ensureConfirmBox(){
-    const modal=q('portionMealModal');
-    if(!modal)return;
-    const card=modal.querySelector('.mb-modal-card');
-    if(card && !modal.querySelector('.portion-confirm')){
-      card.insertAdjacentHTML('beforeend','<div class="portion-confirm"></div>');
-    }
-  }
-
-  function resetPortionConfirm(){
-    const modal=q('portionMealModal');
-    if(!modal)return;
-    modal.classList.remove('confirmed');
-    const c=modal.querySelector('.portion-confirm');
-    if(c)c.textContent='';
-    const cancel=[...modal.querySelectorAll('.mb-modal-actions button')].find(b=>/cancel|close/i.test(b.textContent));
-    if(cancel)cancel.textContent='Cancel';
-    const add=modal.querySelector('.mb-modal-actions .good');
-    if(add){
-      add.style.pointerEvents='';
-      add.style.opacity='';
-    }
-  }
-
-  function showPortionConfirm(message){
-    const modal=q('portionMealModal');
-    if(!modal)return;
-    ensureConfirmBox();
-    modal.classList.add('active','confirmed');
-    const c=modal.querySelector('.portion-confirm');
-    if(c)c.textContent=message;
-    const cancel=[...modal.querySelectorAll('.mb-modal-actions button')].find(b=>/cancel|close/i.test(b.textContent));
-    if(cancel)cancel.textContent='Close';
-  }
-
-  const oldOpen=window.openPortionMealModal;
-  if(typeof oldOpen==='function'){
-    window.openPortionMealModal=function(item){
-      const result=oldOpen.apply(this,arguments);
-      setTimeout(()=>{ensureConfirmBox();resetPortionConfirm();},0);
-      return result;
-    };
-  }
-
-  window.confirmPortionMeal=function(){
-    const item=window.selectedPortionItem || (typeof selectedPortionItem!=='undefined'?selectedPortionItem:null);
-    if(!item)return;
-
-    const meal=document.querySelector('#portionMealChoices .mb-choice.active')?.dataset.meal||'Snack';
-    const m=N(window.selectedPortionMult || (typeof selectedPortionMult!=='undefined'?selectedPortionMult:1))||1;
-    const label=m===1?'1x':(Math.abs(m-.5)<.001?'1/2':(Math.abs(m-.25)<.001?'1/4':(Math.abs(m-1/3)<.001?'1/3':m+'x')));
-
-    const entry={
-      name:item.name+(label==='1x'?'':` (${label})`),
-      meal,
-      cal:Math.round(N(item.cal)*m),
-      c:R(N(item.c)*m),
-      p:R(N(item.p)*m),
-      f:R(N(item.f)*m)
-    };
-
-    const log=typeof getLog==='function'
-      ? getLog()
-      : JSON.parse(localStorage.getItem('macro_log_'+(typeof today==='function'?today():new Date().toISOString().slice(0,10)))||'[]');
-
-    log.push(entry);
-
-    if(typeof saveLog==='function')saveLog(log);
-    else localStorage.setItem('macro_log_'+(typeof today==='function'?today():new Date().toISOString().slice(0,10)),JSON.stringify(log));
-
-    if(typeof addRecent==='function')addRecent(item);
-    if(typeof toast==='function')toast('Added to '+meal);
-    if(typeof render==='function')render();
-
-    setTimeout(()=>{
-      showPortionConfirm(`${entry.name} added to ${meal}.`);
-    },0);
-  };
-
-  const oldClose=window.closeMbModal;
-  window.closeMbModal=function(id){
-    if(id==='portionMealModal'){
-      resetPortionConfirm();
-    }
-    if(typeof oldClose==='function')return oldClose.apply(this,arguments);
-    q(id)?.classList.remove('active');
-  };
-
-  document.addEventListener('DOMContentLoaded',()=>setTimeout(ensureConfirmBox,400));
-})();
-</script>
-
-
 <style id="mb-remove-scan-fav-v1">
 #scanReview .scan-fav-row,
 #scanFavBtn{
@@ -9050,6 +8929,172 @@ body.mb-clean-modal-open{
 
   document.addEventListener('DOMContentLoaded', ()=>setTimeout(removeScanFavorite, 300));
   setTimeout(removeScanFavorite, 700);
+})();
+</script>
+
+
+<style id="mb-scan-log-confirm-final-v5">
+#portionMealModal .portion-confirm{
+  display:none;
+  margin-top:12px;
+  padding:12px 14px;
+  border-radius:16px;
+  color:#bbf7d0;
+  background:rgba(20,83,45,.52);
+  border:1px solid rgba(34,197,94,.38);
+  font-size:14px;
+  font-weight:950;
+  line-height:1.35;
+}
+#portionMealModal.confirmed .portion-confirm{
+  display:block;
+}
+#portionMealModal.confirmed .mb-modal-actions .good{
+  opacity:.65;
+  pointer-events:none;
+}
+</style>
+
+<script id="mb-scan-log-confirm-final-v5-js">
+(function(){
+  function q(id){return document.getElementById(id)}
+  function N(v){const x=parseFloat(v);return Number.isFinite(x)?x:0}
+  function R(v){return Math.round(N(v)*10)/10}
+  function todayKey(){
+    try{
+      if(typeof today === 'function') return today();
+    }catch(e){}
+    return new Date().toISOString().slice(0,10);
+  }
+
+  function getLogSafe(){
+    try{
+      if(typeof getLog === 'function') return getLog() || [];
+    }catch(e){}
+    try{return JSON.parse(localStorage.getItem('macro_log_'+todayKey()) || '[]') || []}catch(e){return[]}
+  }
+
+  function saveLogSafe(log){
+    try{
+      if(typeof saveLog === 'function'){ saveLog(log); return; }
+    }catch(e){}
+    localStorage.setItem('macro_log_'+todayKey(), JSON.stringify(log || []));
+  }
+
+  function ensureConfirmBox(){
+    const modal=q('portionMealModal');
+    if(!modal)return;
+    const card=modal.querySelector('.mb-modal-card');
+    if(card && !modal.querySelector('.portion-confirm')){
+      card.insertAdjacentHTML('beforeend','<div class="portion-confirm"></div>');
+    }
+  }
+
+  function resetConfirm(){
+    const modal=q('portionMealModal');
+    if(!modal)return;
+    modal.classList.remove('confirmed');
+    const c=modal.querySelector('.portion-confirm');
+    if(c)c.textContent='';
+    const cancel=[...modal.querySelectorAll('.mb-modal-actions button')].find(b=>/cancel|close/i.test(b.textContent||''));
+    if(cancel)cancel.textContent='Cancel';
+    const add=modal.querySelector('.mb-modal-actions .good');
+    if(add){
+      add.style.pointerEvents='';
+      add.style.opacity='';
+    }
+  }
+
+  function showConfirm(msg){
+    const modal=q('portionMealModal');
+    if(!modal)return;
+    ensureConfirmBox();
+    modal.classList.add('active','confirmed');
+    const c=modal.querySelector('.portion-confirm');
+    if(c)c.textContent=msg;
+    const cancel=[...modal.querySelectorAll('.mb-modal-actions button')].find(b=>/cancel|close/i.test(b.textContent||''));
+    if(cancel)cancel.textContent='Close';
+  }
+
+  function currentSelectedItem(){
+    return window.selectedPortionItem || (typeof selectedPortionItem !== 'undefined' ? selectedPortionItem : null);
+  }
+
+  function currentMultiplier(){
+    return N(window.selectedPortionMult || (typeof selectedPortionMult !== 'undefined' ? selectedPortionMult : 1)) || 1;
+  }
+
+  function currentMeal(){
+    const active=document.querySelector('#portionMealChoices .mb-choice.active');
+    return active?.dataset?.meal || active?.textContent?.trim() || 'Snack';
+  }
+
+  function labelFor(m){
+    if(Math.abs(m-1)<.001)return '1x';
+    if(Math.abs(m-.5)<.001)return '1/2';
+    if(Math.abs(m-.25)<.001)return '1/4';
+    if(Math.abs(m-(1/3))<.01)return '1/3';
+    if(Math.abs(m-2)<.001)return '2x';
+    return R(m)+'x';
+  }
+
+  function logPortionItem(){
+    const item=currentSelectedItem();
+    if(!item)return false;
+
+    const meal=currentMeal();
+    const m=currentMultiplier();
+    const lab=labelFor(m);
+
+    const entry={
+      name:(item.name || 'Food') + (lab==='1x' ? '' : ' ('+lab+')'),
+      meal,
+      cal:Math.round(N(item.cal)*m),
+      c:R(N(item.c)*m),
+      p:R(N(item.p)*m),
+      f:R(N(item.f)*m),
+      source:item.source || 'scan',
+      serving:item.serving || '1 serving'
+    };
+
+    const log=getLogSafe();
+    log.push(entry);
+    saveLogSafe(log);
+
+    try{ if(typeof addRecent === 'function') addRecent(item); }catch(e){}
+    try{ if(typeof render === 'function') render(); }catch(e){}
+    try{ if(typeof toast === 'function') toast('Added to '+meal); }catch(e){}
+
+    showConfirm(entry.name+' added to '+meal+'.');
+    return true;
+  }
+
+  const oldOpen=window.openPortionMealModal;
+  if(typeof oldOpen==='function'){
+    window.openPortionMealModal=function(item){
+      window.__scanPendingLogItem = item || null;
+      const result=oldOpen.apply(this,arguments);
+      setTimeout(()=>{ensureConfirmBox();resetConfirm();},0);
+      return result;
+    };
+  }
+
+  // Replace confirmation function entirely so it logs reliably and does not close before confirmation.
+  window.confirmPortionMeal=function(){
+    logPortionItem();
+  };
+
+  const oldClose=window.closeMbModal;
+  window.closeMbModal=function(id){
+    if(id==='portionMealModal'){
+      resetConfirm();
+      window.__scanPendingLogItem = null;
+    }
+    if(typeof oldClose === 'function') return oldClose.apply(this,arguments);
+    q(id)?.classList.remove('active');
+  };
+
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(ensureConfirmBox,300));
 })();
 </script>
 
