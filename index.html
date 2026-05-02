@@ -7316,24 +7316,29 @@ body.mb-clean-modal-open{
 </script>
 
 
-<style id="mb-progress-icons-weight-chart-v1">
-/* Weekly analytics stat cards with macro icons */
+
+<style id="mb-progress-v2-tabs-averages-weight-edit">
+#screenProgress .weekly-stat-grid{
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:12px !important;
+}
 #screenProgress .weekly-stat-grid .calc-box{
   position:relative;
-  min-height:96px;
-  padding-top:42px;
+  min-height:98px;
+  padding-top:44px !important;
 }
 #screenProgress .weekly-stat-icon{
   position:absolute;
   top:10px;
   left:50%;
   transform:translateX(-50%);
-  width:28px;
-  height:28px;
+  width:30px;
+  height:30px;
 }
 #screenProgress .weekly-stat-icon svg{
-  width:28px;
-  height:28px;
+  width:30px;
+  height:30px;
   fill:none;
   stroke-width:4.5;
   stroke-linecap:round;
@@ -7342,8 +7347,30 @@ body.mb-clean-modal-open{
 }
 #screenProgress .weekly-stat-icon.cal svg{stroke:#24c8ff;filter:drop-shadow(0 0 5px #24c8ff)}
 #screenProgress .weekly-stat-icon.pro svg{stroke:#22f26f;filter:drop-shadow(0 0 5px #22f26f)}
-#screenProgress .weekly-stat-icon.target svg{stroke:#a855ff;filter:drop-shadow(0 0 5px #a855ff)}
-#screenProgress .weekly-stat-icon.days svg{stroke:#ffb31a;filter:drop-shadow(0 0 5px #ffb31a)}
+#screenProgress .weekly-stat-icon.carb svg{stroke:#a855ff;filter:drop-shadow(0 0 5px #a855ff)}
+#screenProgress .weekly-stat-icon.fat svg{stroke:#ffb31a;filter:drop-shadow(0 0 5px #ffb31a)}
+
+#weeklyMacroTabs{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  margin:18px 0 12px;
+}
+#weeklyMacroTabs button{
+  margin:0 !important;
+  min-height:46px;
+  border-radius:15px;
+  font-size:13px;
+  padding:8px 4px;
+}
+#weeklyMacroTabs button.active{
+  background:linear-gradient(135deg,#2563eb,#7c3aed) !important;
+  color:#fff !important;
+  box-shadow:0 0 20px rgba(59,130,246,.28);
+}
+.weekly-macro-title{
+  margin-top:12px;
+}
 
 #weightTrend .weight-chart-card{
   margin-top:16px;
@@ -7369,8 +7396,8 @@ body.mb-clean-modal-open{
   -webkit-overflow-scrolling:touch;
 }
 #weightTrend .weight-entry{
-  display:flex;
-  justify-content:space-between;
+  display:grid;
+  grid-template-columns:1fr auto;
   align-items:center;
   gap:10px;
   padding:11px 12px;
@@ -7386,6 +7413,17 @@ body.mb-clean-modal-open{
   color:#94a3b8;
   font-weight:850;
 }
+#weightTrend .weight-actions{
+  display:flex;
+  gap:8px;
+}
+#weightTrend .weight-actions button{
+  min-height:38px !important;
+  padding:8px 12px !important;
+  margin:0 !important;
+  border-radius:13px !important;
+  font-size:13px !important;
+}
 #weightTrend .chart-note{
   margin-top:10px;
   color:#94a3b8;
@@ -7394,12 +7432,23 @@ body.mb-clean-modal-open{
 }
 </style>
 
-<script id="mb-progress-icons-weight-chart-v1-js">
+<script id="mb-progress-v2-tabs-averages-weight-edit-js">
 (function(){
+  let activeWeeklyMacro = localStorage.getItem('macro_weekly_active_metric') || 'cal';
+
   function q(id){return document.getElementById(id)}
   function N(v){const x=parseFloat(v);return Number.isFinite(x)?x:0}
   function R(v){return Math.round(N(v)*10)/10}
   function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+  function dateKey(d){return d.toISOString().slice(0,10)}
+  function prettyDate(d){try{return new Date(d+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"})}catch(e){return d}}
+  function formatLongDate(d){try{return formatDatePretty(d)}catch(e){return prettyDate(d)}}
+  function getLogForDate(k){
+    try{return JSON.parse(localStorage.getItem('macro_log_'+k)||'[]')}catch(e){return[]}
+  }
+  function totals(log){
+    return log.reduce((a,x)=>({cal:a.cal+N(x.cal),c:a.c+N(x.c),p:a.p+N(x.p),f:a.f+N(x.f)}),{cal:0,c:0,p:0,f:0});
+  }
   const ICONS={
     cal:`<svg viewBox="0 0 64 64"><path d="M34 6C45 18 50 27 50 37C50 48 42 56 32 56C22 56 14 48 14 37C14 27 21 17 34 6Z"/><path d="M31 29C37 34 39 38 39 43C39 48 35 52 30 52C25 52 21 48 21 43C21 37 25 33 31 29Z"/></svg>`,
     pro:`<svg viewBox="0 0 64 64"><path d="M17 22C25 11 43 10 50 23C57 36 46 53 31 53C19 53 10 44 10 33C10 29 12 25 17 22Z"/><circle cx="43" cy="24" r="5"/><path d="M22 38C29 32 37 32 43 38"/></svg>`,
@@ -7407,152 +7456,176 @@ body.mb-clean-modal-open{
     fat:`<svg viewBox="0 0 64 64"><path d="M32 7C44 21 49 30 49 40C49 50 42 57 32 57C22 57 15 50 15 40C15 30 20 21 32 7Z"/><path d="M36 29C40 34 40 40 36 44C33 47 28 47 25 44C22 40 25 33 36 29Z"/></svg>`
   };
 
-  function addWeeklyIcons(){
+  function weekData(){
+    const days=[];
+    const today = new Date();
+    for(let i=6;i>=0;i--){
+      const d=new Date(today);
+      d.setDate(today.getDate()-i);
+      const k=dateKey(d);
+      const log=getLogForDate(k);
+      days.push({date:k,label:d.toLocaleDateString('en-US',{weekday:'short'}),...totals(log),logged:log.length>0});
+    }
+    return days;
+  }
+
+  function ensureWeeklyUI(){
     const grid = q('weekAvgCal')?.closest('.calc-grid');
     if(!grid) return;
     grid.classList.add('weekly-stat-grid');
-    const cards = Array.from(grid.querySelectorAll('.calc-box'));
-    const cls = ['cal','pro','target','days'];
-    const svg = [ICONS.cal, ICONS.pro, ICONS.carb, ICONS.fat];
-    cards.forEach((card,i)=>{
-      if(card.querySelector('.weekly-stat-icon')) return;
-      const holder = document.createElement('span');
-      holder.className = 'weekly-stat-icon '+cls[i];
-      holder.innerHTML = svg[i];
-      card.prepend(holder);
-    });
+    grid.innerHTML = `
+      <div class="calc-box"><span class="weekly-stat-icon cal">${ICONS.cal}</span><b id="weekAvgCal">0</b><span>Avg calories</span></div>
+      <div class="calc-box"><span class="weekly-stat-icon pro">${ICONS.pro}</span><b id="weekAvgP">0g</b><span>Avg protein</span></div>
+      <div class="calc-box"><span class="weekly-stat-icon carb">${ICONS.carb}</span><b id="weekAvgC">0g</b><span>Avg carbs</span></div>
+      <div class="calc-box"><span class="weekly-stat-icon fat">${ICONS.fat}</span><b id="weekAvgF">0g</b><span>Avg fat</span></div>
+    `;
+
+    let tabs = q('weeklyMacroTabs');
+    const bars = q('weeklyBars');
+    if(!tabs && bars){
+      tabs=document.createElement('div');
+      tabs.id='weeklyMacroTabs';
+      tabs.innerHTML = `
+        <button type="button" data-metric="cal">Calories</button>
+        <button type="button" data-metric="p">Protein</button>
+        <button type="button" data-metric="c">Carbs</button>
+        <button type="button" data-metric="f">Fat</button>
+      `;
+      bars.parentNode.insertBefore(tabs,bars);
+      tabs.querySelectorAll('button').forEach(btn=>{
+        btn.onclick=()=>{
+          activeWeeklyMacro=btn.dataset.metric;
+          localStorage.setItem('macro_weekly_active_metric',activeWeeklyMacro);
+          renderWeeklyBars();
+        };
+      });
+    }
+    const heading = bars?.previousElementSibling;
+    if(heading && heading.classList.contains('macro-heading')) heading.classList.add('weekly-macro-title');
   }
 
-  function toLb(entry){
-    const w=N(entry.weight);
-    return entry.unit === 'kg' ? w*2.2046226218 : w;
-  }
-  function fromLb(lb,unit){
-    return unit === 'kg' ? lb/2.2046226218 : lb;
-  }
-
-  function prettyDate(d){
-    try{
-      return new Date(d+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"});
-    }catch(e){return d}
+  function renderWeeklyAverages(){
+    const data = weekData();
+    const logged = data.filter(d=>d.logged);
+    const divisor = logged.length || 1;
+    const sum = data.reduce((a,x)=>({cal:a.cal+x.cal,p:a.p+x.p,c:a.c+x.c,f:a.f+x.f}),{cal:0,p:0,c:0,f:0});
+    if(q('weekAvgCal')) q('weekAvgCal').textContent = Math.round(sum.cal/divisor);
+    if(q('weekAvgP')) q('weekAvgP').textContent = R(sum.p/divisor)+'g';
+    if(q('weekAvgC')) q('weekAvgC').textContent = R(sum.c/divisor)+'g';
+    if(q('weekAvgF')) q('weekAvgF').textContent = R(sum.f/divisor)+'g';
   }
 
-  function getGoal(){
-    try{return JSON.parse(localStorage.getItem('macro_weight_goal_plan')||'{}')}catch(e){return{}}
+  function renderWeeklyBars(){
+    const box=q('weeklyBars');
+    if(!box) return;
+    const metricInfo={
+      cal:{label:'Calories',unit:'cal',color:'linear-gradient(90deg,#22c55e,#38bdf8)',value:d=>d.cal},
+      p:{label:'Protein',unit:'g',color:'linear-gradient(90deg,#22c55e,#86efac)',value:d=>d.p},
+      c:{label:'Carbs',unit:'g',color:'linear-gradient(90deg,#8b5cf6,#c084fc)',value:d=>d.c},
+      f:{label:'Fat',unit:'g',color:'linear-gradient(90deg,#f59e0b,#fbbf24)',value:d=>d.f}
+    };
+    const info=metricInfo[activeWeeklyMacro] || metricInfo.cal;
+    const data=weekData();
+    const max=Math.max(...data.map(info.value),1);
+    const heading=box.previousElementSibling;
+    if(heading && heading.classList.contains('macro-heading')) heading.innerHTML = `🍴 7-Day ${info.label}`;
+    const tabs=q('weeklyMacroTabs');
+    if(tabs) tabs.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.metric===activeWeeklyMacro));
+    box.innerHTML=data.map(d=>{
+      const val=info.value(d);
+      const pct=Math.max(2,Math.min(100,(val/max)*100));
+      const display=activeWeeklyMacro==='cal'?Math.round(val):R(val);
+      return `<div class="bar-row"><div class="meta">${d.label} • ${display} ${info.unit}</div><div class="bar"><span style="width:${pct}%;background:${info.color}"></span></div></div>`;
+    }).join('');
   }
+
+  function toLb(entry){const w=N(entry.weight);return entry.unit==='kg'?w*2.2046226218:w}
+  function fromLb(lb,unit){return unit==='kg'?lb/2.2046226218:lb}
+  function getGoal(){try{return JSON.parse(localStorage.getItem('macro_weight_goal_plan')||'{}')}catch(e){return{}}}
 
   function renderWeightTrendBetter(){
-    const box = q('weightTrend');
-    if(!box) return;
-    let entries=[];
-    try{entries=JSON.parse(localStorage.getItem('macro_weight_entries')||'[]')}catch(e){}
-    entries = entries.filter(x=>x && x.date && N(x.weight)).sort((a,b)=>a.date.localeCompare(b.date));
-
-    if(!entries.length){
-      box.innerHTML = "<p class='note'>No weight entries yet.</p>";
-      return;
-    }
-
-    const displayUnit = entries[entries.length-1].unit || 'lb';
-    const goal = getGoal();
-    const target = N(goal.target);
-    const targetUnit = goal.unit || displayUnit;
-    const targetLb = target ? (targetUnit === 'kg' ? target*2.2046226218 : target) : null;
-
-    const valsLb = entries.map(toLb);
-    let minLb = Math.min(...valsLb);
-    let maxLb = Math.max(...valsLb);
+    const box=q('weightTrend'); if(!box) return;
+    let entries=[]; try{entries=JSON.parse(localStorage.getItem('macro_weight_entries')||'[]')}catch(e){}
+    entries=entries.filter(x=>x&&x.date&&N(x.weight)).sort((a,b)=>a.date.localeCompare(b.date));
+    if(!entries.length){box.innerHTML="<p class='note'>No weight entries yet.</p>";return}
+    const unit=entries[entries.length-1].unit||'lb';
+    const goal=getGoal(), target=N(goal.target), targetUnit=goal.unit||unit;
+    const targetLb=target?(targetUnit==='kg'?target*2.2046226218:target):null;
+    const valsLb=entries.map(toLb);
+    let minLb=Math.min(...valsLb), maxLb=Math.max(...valsLb);
+    if(targetLb){minLb=Math.min(minLb,targetLb);maxLb=Math.max(maxLb,targetLb)}
+    if(minLb===maxLb){minLb-=2;maxLb+=2}
+    const pad=Math.max((maxLb-minLb)*0.15,1); minLb-=pad; maxLb+=pad;
+    const W=360,H=230,L=48,Rg=18,T=18,B=42,plotW=W-L-Rg,plotH=H-T-B;
+    const xFor=i=>entries.length===1?L+plotW/2:L+(i/(entries.length-1))*plotW;
+    const yForLb=lb=>T+(maxLb-lb)/(maxLb-minLb)*plotH;
+    const pts=valsLb.map((v,i)=>`${xFor(i)},${yForLb(v)}`).join(' ');
+    let targetLine='';
     if(targetLb){
-      minLb = Math.min(minLb,targetLb);
-      maxLb = Math.max(maxLb,targetLb);
+      const ty=yForLb(targetLb);
+      targetLine=`<line x1="${L}" y1="${ty}" x2="${W-Rg}" y2="${ty}" stroke="#ef4444" stroke-width="2.2" stroke-dasharray="7 6"/><text x="${W-Rg}" y="${ty-6}" text-anchor="end" fill="#f87171" font-size="11" font-weight="800">Target ${R(fromLb(targetLb,unit))} ${unit}</text>`;
     }
-    if(minLb === maxLb){minLb-=2;maxLb+=2;}
-    const pad = Math.max((maxLb-minLb)*0.15, 1);
-    minLb -= pad;
-    maxLb += pad;
-
-    const W=360,H=230,L=48,Rg=18,T=18,B=42;
-    const plotW=W-L-Rg, plotH=H-T-B;
-    const xFor = i => entries.length===1 ? L+plotW/2 : L + (i/(entries.length-1))*plotW;
-    const yForLb = lb => T + (maxLb-lb)/(maxLb-minLb)*plotH;
-
-    const pts = valsLb.map((v,i)=>`${xFor(i)},${yForLb(v)}`).join(' ');
-    const yMin = fromLb(minLb,displayUnit);
-    const yMax = fromLb(maxLb,displayUnit);
-    const yMid = (yMin+yMax)/2;
-
-    let targetLine = '';
-    if(targetLb){
-      const ty = yForLb(targetLb);
-      targetLine = `<line x1="${L}" y1="${ty}" x2="${W-Rg}" y2="${ty}" stroke="#ef4444" stroke-width="2.2" stroke-dasharray="7 6"/>
-      <text x="${W-Rg}" y="${ty-6}" text-anchor="end" fill="#f87171" font-size="11" font-weight="800">Target ${R(fromLb(targetLb,displayUnit))} ${displayUnit}</text>`;
-    }
-
-    const labels = entries.map((e,i)=>{
-      const x=xFor(i);
-      return `<text x="${x}" y="${H-16}" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="700">${prettyDate(e.date)}</text>`;
-    }).join('');
-
-    const circles = valsLb.map((v,i)=>`<circle cx="${xFor(i)}" cy="${yForLb(v)}" r="4.3" fill="#22c55e" stroke="#dbeafe" stroke-width="1.4"/>`).join('');
-
-    const svg = `<div class="weight-chart-card">
-      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Weight trend chart">
-        <rect x="0" y="0" width="${W}" height="${H}" rx="18" fill="rgba(2,6,23,.35)" stroke="rgba(59,130,246,.18)"/>
-        <line x1="${L}" y1="${T}" x2="${L}" y2="${H-B}" stroke="rgba(148,163,184,.45)" stroke-width="1"/>
-        <line x1="${L}" y1="${H-B}" x2="${W-Rg}" y2="${H-B}" stroke="rgba(148,163,184,.45)" stroke-width="1"/>
-        <line x1="${L}" y1="${T}" x2="${W-Rg}" y2="${T}" stroke="rgba(148,163,184,.14)" stroke-width="1"/>
-        <line x1="${L}" y1="${T+plotH/2}" x2="${W-Rg}" y2="${T+plotH/2}" stroke="rgba(148,163,184,.14)" stroke-width="1"/>
-        ${targetLine}
-        <polyline points="${pts}" fill="none" stroke="#38bdf8" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
-        ${circles}
-        <text x="${L-8}" y="${T+4}" text-anchor="end" fill="#cbd5e1" font-size="10" font-weight="800">${R(yMax)} ${displayUnit}</text>
-        <text x="${L-8}" y="${T+plotH/2+4}" text-anchor="end" fill="#94a3b8" font-size="10" font-weight="700">${R(yMid)}</text>
-        <text x="${L-8}" y="${H-B+4}" text-anchor="end" fill="#cbd5e1" font-size="10" font-weight="800">${R(yMin)} ${displayUnit}</text>
-        ${labels}
-      </svg>
-      <div class="chart-note">${entries.length} entr${entries.length===1?'y':'ies'}. Chart is always shown. ${targetLb?'Red dashed line marks target weight.':''}</div>
-    </div>`;
-
-    const list = `<div class="weight-entry-list ${entries.length>4?'scroll':''}">
-      ${entries.slice().reverse().map(e=>`<div class="weight-entry"><div><b>${formatDatePretty(e.date)}</b><div class="meta">${prettyDate(e.date)}</div></div><span>${R(e.weight)} ${esc(e.unit||displayUnit)}</span></div>`).join('')}
-    </div>`;
-
-    box.innerHTML = svg + list;
+    const labels=entries.map((e,i)=>`<text x="${xFor(i)}" y="${H-16}" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="700">${prettyDate(e.date)}</text>`).join('');
+    const circles=valsLb.map((v,i)=>`<circle cx="${xFor(i)}" cy="${yForLb(v)}" r="4.3" fill="#22c55e" stroke="#dbeafe" stroke-width="1.4"/>`).join('');
+    const yMin=fromLb(minLb,unit), yMax=fromLb(maxLb,unit), yMid=(yMin+yMax)/2;
+    const chart=`<div class="weight-chart-card"><svg viewBox="0 0 ${W} ${H}" role="img"><rect x="0" y="0" width="${W}" height="${H}" rx="18" fill="rgba(2,6,23,.35)" stroke="rgba(59,130,246,.18)"/><line x1="${L}" y1="${T}" x2="${L}" y2="${H-B}" stroke="rgba(148,163,184,.45)" stroke-width="1"/><line x1="${L}" y1="${H-B}" x2="${W-Rg}" y2="${H-B}" stroke="rgba(148,163,184,.45)" stroke-width="1"/><line x1="${L}" y1="${T}" x2="${W-Rg}" y2="${T}" stroke="rgba(148,163,184,.14)" stroke-width="1"/><line x1="${L}" y1="${T+plotH/2}" x2="${W-Rg}" y2="${T+plotH/2}" stroke="rgba(148,163,184,.14)" stroke-width="1"/>${targetLine}<polyline points="${pts}" fill="none" stroke="#38bdf8" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>${circles}<text x="${L-8}" y="${T+4}" text-anchor="end" fill="#cbd5e1" font-size="10" font-weight="800">${R(yMax)} ${unit}</text><text x="${L-8}" y="${T+plotH/2+4}" text-anchor="end" fill="#94a3b8" font-size="10" font-weight="700">${R(yMid)}</text><text x="${L-8}" y="${H-B+4}" text-anchor="end" fill="#cbd5e1" font-size="10" font-weight="800">${R(yMin)} ${unit}</text>${labels}</svg><div class="chart-note">${entries.length} entr${entries.length===1?'y':'ies'}. Chart is always shown. ${targetLb?'Red dashed line marks target weight.':''}</div></div>`;
+    const list=`<div class="weight-entry-list ${entries.length>4?'scroll':''}">${entries.slice().reverse().map(e=>`<div class="weight-entry"><div><b>${formatLongDate(e.date)}</b><span>${R(e.weight)} ${esc(e.unit||unit)}</span></div><div class="weight-actions"><button class="light" type="button" onclick="editWeightEntry('${esc(e.date)}')">Edit</button><button class="danger" type="button" onclick="deleteWeightEntry('${esc(e.date)}')">Delete</button></div></div>`).join('')}</div>`;
+    box.innerHTML=chart+list;
   }
 
-  // Replace/override existing renderWeightTrend
-  window.renderWeightTrend = renderWeightTrendBetter;
+  window.renderWeightTrend=renderWeightTrendBetter;
 
-  const oldRenderProgress = window.renderProgress;
-  if(typeof oldRenderProgress === 'function'){
-    window.renderProgress = function(){
-      const result = oldRenderProgress.apply(this, arguments);
-      addWeeklyIcons();
+  window.editWeightEntry=function(date){
+    let entries=[]; try{entries=JSON.parse(localStorage.getItem('macro_weight_entries')||'[]')}catch(e){}
+    const e=entries.find(x=>x.date===date); if(!e) return;
+    const nd=prompt('Edit date', e.date); if(nd===null) return;
+    const nw=prompt('Edit weight', e.weight); if(nw===null) return;
+    const cleanDate=(nd||e.date).trim();
+    e.date=cleanDate;
+    e.weight=N(nw)||e.weight;
+    localStorage.setItem('macro_weight_entries',JSON.stringify(entries));
+    renderWeightTrendBetter();
+  };
+
+  window.deleteWeightEntry=function(date){
+    let entries=[]; try{entries=JSON.parse(localStorage.getItem('macro_weight_entries')||'[]')}catch(e){}
+    entries=entries.filter(x=>x.date!==date);
+    localStorage.setItem('macro_weight_entries',JSON.stringify(entries));
+    renderWeightTrendBetter();
+  };
+
+  const oldRenderProgress=window.renderProgress;
+  if(typeof oldRenderProgress==='function'){
+    window.renderProgress=function(){
+      const result=oldRenderProgress.apply(this,arguments);
+      ensureWeeklyUI();
+      renderWeeklyAverages();
+      renderWeeklyBars();
       renderWeightTrendBetter();
       return result;
     };
   }
 
-  const oldSaveWeightGoal = window.saveWeightGoal;
-  if(typeof oldSaveWeightGoal === 'function'){
-    window.saveWeightGoal = function(){
-      const result = oldSaveWeightGoal.apply(this, arguments);
+  const oldSaveWeightGoal=window.saveWeightGoal;
+  if(typeof oldSaveWeightGoal==='function'){
+    window.saveWeightGoal=function(){
+      const result=oldSaveWeightGoal.apply(this,arguments);
       renderWeightTrendBetter();
       return result;
     };
   }
 
-  const oldCalc = window.calculateWeightGoal;
-  if(typeof oldCalc === 'function'){
-    window.calculateWeightGoal = function(){
-      const result = oldCalc.apply(this, arguments);
+  const oldCalc=window.calculateWeightGoal;
+  if(typeof oldCalc==='function'){
+    window.calculateWeightGoal=function(){
+      const result=oldCalc.apply(this,arguments);
       renderWeightTrendBetter();
       return result;
     };
   }
 
-  document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{addWeeklyIcons();renderWeightTrendBetter();},300));
-  setTimeout(()=>{addWeeklyIcons();renderWeightTrendBetter();},900);
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{ensureWeeklyUI();renderWeeklyAverages();renderWeeklyBars();renderWeightTrendBetter();},300));
+  setTimeout(()=>{ensureWeeklyUI();renderWeeklyAverages();renderWeeklyBars();renderWeightTrendBetter();},900);
 })();
 </script>
 
