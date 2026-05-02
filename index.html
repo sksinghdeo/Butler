@@ -8872,5 +8872,186 @@ body.mb-clean-modal-open{
 })();
 </script>
 
+
+<style id="mb-scan-portion-confirm-final-v4">
+#portionMealModal .portion-confirm{
+  display:none;
+  margin-top:12px;
+  padding:12px 14px;
+  border-radius:16px;
+  color:#bbf7d0;
+  background:rgba(20,83,45,.52);
+  border:1px solid rgba(34,197,94,.38);
+  font-size:14px;
+  font-weight:950;
+  line-height:1.35;
+}
+#portionMealModal.confirmed .portion-confirm{
+  display:block;
+}
+#portionMealModal.confirmed .mb-modal-actions .good{
+  opacity:.65;
+  pointer-events:none;
+}
+</style>
+
+<script id="mb-scan-portion-confirm-final-v4-js">
+(function(){
+  function q(id){return document.getElementById(id)}
+  function N(v){const x=parseFloat(v);return Number.isFinite(x)?x:0}
+  function R(v){return Math.round(N(v)*10)/10}
+
+  function ensureConfirmBox(){
+    const modal=q('portionMealModal');
+    if(!modal)return;
+    const card=modal.querySelector('.mb-modal-card');
+    if(card && !modal.querySelector('.portion-confirm')){
+      card.insertAdjacentHTML('beforeend','<div class="portion-confirm"></div>');
+    }
+  }
+
+  function resetPortionConfirm(){
+    const modal=q('portionMealModal');
+    if(!modal)return;
+    modal.classList.remove('confirmed');
+    const c=modal.querySelector('.portion-confirm');
+    if(c)c.textContent='';
+    const cancel=[...modal.querySelectorAll('.mb-modal-actions button')].find(b=>/cancel|close/i.test(b.textContent));
+    if(cancel)cancel.textContent='Cancel';
+    const add=modal.querySelector('.mb-modal-actions .good');
+    if(add){
+      add.style.pointerEvents='';
+      add.style.opacity='';
+    }
+  }
+
+  function showPortionConfirm(message){
+    const modal=q('portionMealModal');
+    if(!modal)return;
+    ensureConfirmBox();
+    modal.classList.add('active','confirmed');
+    const c=modal.querySelector('.portion-confirm');
+    if(c)c.textContent=message;
+    const cancel=[...modal.querySelectorAll('.mb-modal-actions button')].find(b=>/cancel|close/i.test(b.textContent));
+    if(cancel)cancel.textContent='Close';
+  }
+
+  const oldOpen=window.openPortionMealModal;
+  if(typeof oldOpen==='function'){
+    window.openPortionMealModal=function(item){
+      const result=oldOpen.apply(this,arguments);
+      setTimeout(()=>{ensureConfirmBox();resetPortionConfirm();},0);
+      return result;
+    };
+  }
+
+  window.confirmPortionMeal=function(){
+    const item=window.selectedPortionItem || (typeof selectedPortionItem!=='undefined'?selectedPortionItem:null);
+    if(!item)return;
+
+    const meal=document.querySelector('#portionMealChoices .mb-choice.active')?.dataset.meal||'Snack';
+    const m=N(window.selectedPortionMult || (typeof selectedPortionMult!=='undefined'?selectedPortionMult:1))||1;
+    const label=m===1?'1x':(Math.abs(m-.5)<.001?'1/2':(Math.abs(m-.25)<.001?'1/4':(Math.abs(m-1/3)<.001?'1/3':m+'x')));
+
+    const entry={
+      name:item.name+(label==='1x'?'':` (${label})`),
+      meal,
+      cal:Math.round(N(item.cal)*m),
+      c:R(N(item.c)*m),
+      p:R(N(item.p)*m),
+      f:R(N(item.f)*m)
+    };
+
+    const log=typeof getLog==='function'
+      ? getLog()
+      : JSON.parse(localStorage.getItem('macro_log_'+(typeof today==='function'?today():new Date().toISOString().slice(0,10)))||'[]');
+
+    log.push(entry);
+
+    if(typeof saveLog==='function')saveLog(log);
+    else localStorage.setItem('macro_log_'+(typeof today==='function'?today():new Date().toISOString().slice(0,10)),JSON.stringify(log));
+
+    if(typeof addRecent==='function')addRecent(item);
+    if(typeof toast==='function')toast('Added to '+meal);
+    if(typeof render==='function')render();
+
+    setTimeout(()=>{
+      showPortionConfirm(`${entry.name} added to ${meal}.`);
+    },0);
+  };
+
+  const oldClose=window.closeMbModal;
+  window.closeMbModal=function(id){
+    if(id==='portionMealModal'){
+      resetPortionConfirm();
+    }
+    if(typeof oldClose==='function')return oldClose.apply(this,arguments);
+    q(id)?.classList.remove('active');
+  };
+
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(ensureConfirmBox,400));
+})();
+</script>
+
+
+<style id="mb-remove-scan-fav-v1">
+#scanReview .scan-fav-row,
+#scanFavBtn{
+  display:none !important;
+}
+</style>
+
+<script id="mb-remove-scan-fav-v1-js">
+(function(){
+  function removeScanFavorite(){
+    const row = document.querySelector('#scanReview .scan-fav-row');
+    if(row) row.remove();
+
+    const fav = document.getElementById('scanFavBtn');
+    if(fav) fav.remove();
+
+    // Remove any orphan "Mark as favourite" text if it remains.
+    document.querySelectorAll('#scanReview b').forEach(b=>{
+      if(/mark as favou?rite/i.test(b.textContent || '')){
+        const parent = b.closest('.scan-fav-row');
+        if(parent) parent.remove();
+        else b.remove();
+      }
+    });
+  }
+
+  const oldFill = window.fillScanReview;
+  if(typeof oldFill === 'function'){
+    window.fillScanReview = function(){
+      const result = oldFill.apply(this, arguments);
+      setTimeout(removeScanFavorite, 0);
+      return result;
+    };
+  }
+
+  // Ensure scan actions do not try to save favorite state from the review popup.
+  const oldSave = window.saveScannedFoodToDatabaseOnly;
+  if(typeof oldSave === 'function'){
+    window.saveScannedFoodToDatabaseOnly = function(){
+      const result = oldSave.apply(this, arguments);
+      setTimeout(removeScanFavorite, 0);
+      return result;
+    };
+  }
+
+  const oldAdd = window.addScannedFoodToLog;
+  if(typeof oldAdd === 'function'){
+    window.addScannedFoodToLog = function(){
+      const result = oldAdd.apply(this, arguments);
+      setTimeout(removeScanFavorite, 0);
+      return result;
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>setTimeout(removeScanFavorite, 300));
+  setTimeout(removeScanFavorite, 700);
+})();
+</script>
+
 </body>
 </html>
