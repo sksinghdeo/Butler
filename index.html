@@ -7038,5 +7038,216 @@ if(typeof r==='function'){window.render=function(){const x=r.apply(this,argument
 })();
 </script>
 
+
+<style id="mb-foodlog-bigger-totals-real-modal-fix">
+/* Bigger Food Log meal totals */
+#screenLog .meal-head-v2{
+  grid-template-columns: minmax(0,1fr) auto !important;
+  gap:14px !important;
+}
+
+#screenLog .meal-mini-totals{
+  grid-template-columns:repeat(4,54px) !important;
+  gap:8px !important;
+}
+
+#screenLog .meal-mini{
+  width:54px !important;
+  height:64px !important;
+  border-radius:16px !important;
+}
+
+#screenLog .meal-mini svg{
+  width:21px !important;
+  height:21px !important;
+}
+
+#screenLog .meal-mini b{
+  font-size:13px !important;
+  max-width:50px !important;
+  line-height:1.05 !important;
+}
+
+/* Real modal host outside the app/slider scroll container */
+#mbBodyModalHost{
+  position:fixed !important;
+  inset:0 !important;
+  z-index:2147483647 !important;
+  display:none !important;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:20px !important;
+  background:rgba(2,6,23,.68) !important;
+  backdrop-filter:blur(12px) !important;
+  -webkit-backdrop-filter:blur(12px) !important;
+  overflow:hidden !important;
+}
+
+#mbBodyModalHost.active{
+  display:flex !important;
+}
+
+#mbBodyModalHost > .mb-modal{
+  position:static !important;
+  inset:auto !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:100% !important;
+  height:auto !important;
+  min-height:0 !important;
+  padding:0 !important;
+  background:transparent !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  overflow:visible !important;
+}
+
+#mbBodyModalHost .mb-modal-card{
+  width:min(440px,92vw) !important;
+  max-height:84dvh !important;
+  overflow-y:auto !important;
+  margin:0 !important;
+}
+
+body.mb-body-modal-open{
+  overflow:hidden !important;
+  height:100dvh !important;
+}
+
+body.mb-body-modal-open .ml-stage-v26,
+body.mb-body-modal-open .app,
+body.mb-body-modal-open main{
+  overflow:hidden !important;
+}
+
+@media(max-width:430px){
+  #screenLog .meal-head-v2{
+    grid-template-columns:1fr !important;
+    gap:10px !important;
+  }
+
+  #screenLog .meal-mini-totals{
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:8px !important;
+    width:100% !important;
+  }
+
+  #screenLog .meal-mini{
+    width:auto !important;
+    height:58px !important;
+  }
+
+  #screenLog .meal-mini svg{
+    width:19px !important;
+    height:19px !important;
+  }
+
+  #screenLog .meal-mini b{
+    font-size:13px !important;
+    max-width:100% !important;
+  }
+}
+</style>
+
+<script id="mb-foodlog-real-modal-host-fix">
+(function(){
+  const TARGET_IDS = new Set(['editFoodModal','moveFoodModal']);
+
+  function ensureHost(){
+    let host = document.getElementById('mbBodyModalHost');
+    if(!host){
+      host = document.createElement('div');
+      host.id = 'mbBodyModalHost';
+      document.body.appendChild(host);
+    }
+    return host;
+  }
+
+  function isTargetModal(el){
+    return el && TARGET_IDS.has(el.id) && el.classList && el.classList.contains('mb-modal');
+  }
+
+  function moveActiveModalToBody(){
+    const host = ensureHost();
+    const active = Array.from(document.querySelectorAll('.mb-modal.active')).find(isTargetModal);
+
+    if(active){
+      if(!active.dataset.originalParentMarker){
+        const marker = document.createComment('mb original modal position '+active.id);
+        active.parentNode.insertBefore(marker, active);
+        active.dataset.originalParentMarker = active.id;
+        window._mbModalMarkers = window._mbModalMarkers || {};
+        window._mbModalMarkers[active.id] = marker;
+      }
+
+      if(active.parentNode !== host){
+        host.appendChild(active);
+      }
+
+      host.classList.add('active');
+      document.body.classList.add('mb-body-modal-open');
+    }else{
+      host.classList.remove('active');
+      document.body.classList.remove('mb-body-modal-open');
+    }
+  }
+
+  function restoreModalIfClosed(id){
+    const host = document.getElementById('mbBodyModalHost');
+    const modal = document.getElementById(id);
+    const marker = window._mbModalMarkers && window._mbModalMarkers[id];
+
+    if(modal && marker && !modal.classList.contains('active')){
+      marker.parentNode.insertBefore(modal, marker.nextSibling);
+    }
+
+    if(host && !host.querySelector('.mb-modal.active')){
+      host.classList.remove('active');
+      document.body.classList.remove('mb-body-modal-open');
+    }
+  }
+
+  const oldClose = window.closeMbModal;
+  window.closeMbModal = function(id){
+    if(typeof oldClose === 'function') oldClose.apply(this, arguments);
+    else document.getElementById(id)?.classList.remove('active');
+
+    if(TARGET_IDS.has(id)){
+      setTimeout(()=>restoreModalIfClosed(id), 0);
+    }
+    setTimeout(moveActiveModalToBody, 0);
+  };
+
+  ['editFood','moveFoodMeal'].forEach(fn=>{
+    const old = window[fn];
+    if(typeof old === 'function'){
+      window[fn] = function(){
+        const result = old.apply(this, arguments);
+        setTimeout(moveActiveModalToBody, 0);
+        setTimeout(moveActiveModalToBody, 80);
+        return result;
+      };
+    }
+  });
+
+  ensureHost().addEventListener('click', function(e){
+    if(e.target === this){
+      const modal = this.querySelector('.mb-modal.active');
+      if(modal && typeof window.closeMbModal === 'function'){
+        window.closeMbModal(modal.id);
+      }
+    }
+  });
+
+  new MutationObserver(function(){
+    setTimeout(moveActiveModalToBody,0);
+  }).observe(document.body, {subtree:true, childList:true, attributes:true, attributeFilter:['class']});
+
+  document.addEventListener('click',()=>setTimeout(moveActiveModalToBody,30),true);
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(moveActiveModalToBody,100));
+})();
+</script>
+
 </body>
 </html>
