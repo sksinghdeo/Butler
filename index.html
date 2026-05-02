@@ -7039,86 +7039,139 @@ if(typeof r==='function'){window.render=function(){const x=r.apply(this,argument
 </script>
 
 
-<style id="mb-foodlog-bigger-totals-real-modal-fix">
-/* Bigger Food Log meal totals */
+
+<style id="mb-clean-log-modal-functions-v1">
+/* Keep bigger Food Log totals */
 #screenLog .meal-head-v2{
-  grid-template-columns: minmax(0,1fr) auto !important;
+  grid-template-columns:minmax(0,1fr) auto !important;
   gap:14px !important;
 }
-
 #screenLog .meal-mini-totals{
   grid-template-columns:repeat(4,54px) !important;
   gap:8px !important;
 }
-
 #screenLog .meal-mini{
   width:54px !important;
   height:64px !important;
   border-radius:16px !important;
 }
-
 #screenLog .meal-mini svg{
   width:21px !important;
   height:21px !important;
 }
-
 #screenLog .meal-mini b{
   font-size:13px !important;
   max-width:50px !important;
-  line-height:1.05 !important;
 }
 
-/* Real modal host outside the app/slider scroll container */
-#mbBodyModalHost{
+/* New clean fixed modal layer */
+#mbCleanModal{
   position:fixed !important;
   inset:0 !important;
   z-index:2147483647 !important;
-  display:none !important;
+  display:none;
   align-items:center !important;
   justify-content:center !important;
-  padding:20px !important;
-  background:rgba(2,6,23,.68) !important;
+  padding:22px !important;
+  background:rgba(2,6,23,.70) !important;
   backdrop-filter:blur(12px) !important;
   -webkit-backdrop-filter:blur(12px) !important;
   overflow:hidden !important;
 }
 
-#mbBodyModalHost.active{
+#mbCleanModal.active{
   display:flex !important;
 }
 
-#mbBodyModalHost > .mb-modal{
-  position:static !important;
-  inset:auto !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  width:100% !important;
-  height:auto !important;
-  min-height:0 !important;
-  padding:0 !important;
-  background:transparent !important;
-  backdrop-filter:none !important;
-  -webkit-backdrop-filter:none !important;
-  overflow:visible !important;
+#mbCleanModal .mb-clean-card{
+  width:min(440px,92vw);
+  max-height:84dvh;
+  overflow-y:auto;
+  border-radius:28px;
+  padding:22px;
+  background:
+    radial-gradient(circle at top right,rgba(37,99,235,.18),transparent 44%),
+    linear-gradient(145deg,rgba(6,13,28,.98),rgba(10,20,42,.96));
+  border:1.5px solid rgba(56,189,248,.30);
+  box-shadow:0 28px 80px rgba(0,0,0,.65),0 0 34px rgba(37,99,235,.22),inset 0 1px 0 rgba(255,255,255,.08);
+  color:#fff;
 }
 
-#mbBodyModalHost .mb-modal-card{
-  width:min(440px,92vw) !important;
-  max-height:84dvh !important;
-  overflow-y:auto !important;
+#mbCleanModal h2{
+  margin:0 0 18px;
+  font-size:30px;
+  font-weight:950;
+  letter-spacing:-.5px;
+}
+
+#mbCleanModal label{
+  display:block;
+  margin:12px 0 7px;
+  font-size:14px;
+  font-weight:900;
+  color:#f8fafc;
+}
+
+#mbCleanModal input{
+  width:100%;
+  height:56px;
+  border-radius:17px;
+  border:1.5px solid rgba(59,130,246,.38);
+  background:rgba(2,6,23,.72);
+  color:#fff;
+  padding:0 16px;
+  font-size:18px;
+  outline:none;
+}
+
+#mbCleanModal input:focus{
+  border-color:#38bdf8;
+  box-shadow:0 0 0 4px rgba(56,189,248,.16);
+}
+
+#mbCleanModal .grid2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+#mbCleanModal .meal-choice-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:8px;
+}
+
+#mbCleanModal .meal-choice{
+  height:54px;
+  border-radius:17px;
+  border:1.5px solid rgba(59,130,246,.30);
+  background:rgba(15,23,42,.78);
+  color:#dbeafe;
+  font-size:17px;
+  font-weight:900;
+}
+
+#mbCleanModal .meal-choice.active{
+  background:linear-gradient(135deg,#2563eb,#7c3aed);
+  color:#fff;
+  box-shadow:0 0 20px rgba(59,130,246,.32);
+}
+
+#mbCleanModal .actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:18px;
+}
+
+#mbCleanModal .actions button{
   margin:0 !important;
 }
 
-body.mb-body-modal-open{
+body.mb-clean-modal-open{
   overflow:hidden !important;
   height:100dvh !important;
-}
-
-body.mb-body-modal-open .ml-stage-v26,
-body.mb-body-modal-open .app,
-body.mb-body-modal-open main{
-  overflow:hidden !important;
 }
 
 @media(max-width:430px){
@@ -7126,126 +7179,139 @@ body.mb-body-modal-open main{
     grid-template-columns:1fr !important;
     gap:10px !important;
   }
-
   #screenLog .meal-mini-totals{
     grid-template-columns:repeat(4,minmax(0,1fr)) !important;
-    gap:8px !important;
     width:100% !important;
   }
-
   #screenLog .meal-mini{
     width:auto !important;
     height:58px !important;
   }
-
-  #screenLog .meal-mini svg{
-    width:19px !important;
-    height:19px !important;
-  }
-
-  #screenLog .meal-mini b{
-    font-size:13px !important;
-    max-width:100% !important;
-  }
 }
 </style>
 
-<script id="mb-foodlog-real-modal-host-fix">
+<script id="mb-clean-log-modal-functions-v1-js">
 (function(){
-  const TARGET_IDS = new Set(['editFoodModal','moveFoodModal']);
+  const MEALS = ['Breakfast','Lunch','Dinner','Snack'];
 
-  function ensureHost(){
-    let host = document.getElementById('mbBodyModalHost');
-    if(!host){
-      host = document.createElement('div');
-      host.id = 'mbBodyModalHost';
-      document.body.appendChild(host);
+  function q(id){return document.getElementById(id)}
+  function N(v){const x=parseFloat(v);return Number.isFinite(x)?x:0}
+  function R(v){return Math.round(N(v)*10)/10}
+  function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+  function ensureModal(){
+    let m = q('mbCleanModal');
+    if(!m){
+      m = document.createElement('div');
+      m.id = 'mbCleanModal';
+      document.body.appendChild(m);
+      m.addEventListener('click', function(e){
+        if(e.target === m) closeCleanModal();
+      });
     }
-    return host;
+    return m;
   }
 
-  function isTargetModal(el){
-    return el && TARGET_IDS.has(el.id) && el.classList && el.classList.contains('mb-modal');
+  function closeCleanModal(){
+    const m = q('mbCleanModal');
+    if(m){
+      m.classList.remove('active');
+      m.innerHTML = '';
+    }
+    document.body.classList.remove('mb-clean-modal-open');
   }
 
-  function moveActiveModalToBody(){
-    const host = ensureHost();
-    const active = Array.from(document.querySelectorAll('.mb-modal.active')).find(isTargetModal);
+  window.closeCleanModal = closeCleanModal;
 
-    if(active){
-      if(!active.dataset.originalParentMarker){
-        const marker = document.createComment('mb original modal position '+active.id);
-        active.parentNode.insertBefore(marker, active);
-        active.dataset.originalParentMarker = active.id;
-        window._mbModalMarkers = window._mbModalMarkers || {};
-        window._mbModalMarkers[active.id] = marker;
-      }
-
-      if(active.parentNode !== host){
-        host.appendChild(active);
-      }
-
-      host.classList.add('active');
-      document.body.classList.add('mb-body-modal-open');
-    }else{
-      host.classList.remove('active');
-      document.body.classList.remove('mb-body-modal-open');
-    }
+  function openCleanModal(html){
+    const m = ensureModal();
+    m.innerHTML = `<div class="mb-clean-card">${html}</div>`;
+    m.classList.add('active');
+    document.body.classList.add('mb-clean-modal-open');
   }
 
-  function restoreModalIfClosed(id){
-    const host = document.getElementById('mbBodyModalHost');
-    const modal = document.getElementById(id);
-    const marker = window._mbModalMarkers && window._mbModalMarkers[id];
-
-    if(modal && marker && !modal.classList.contains('active')){
-      marker.parentNode.insertBefore(modal, marker.nextSibling);
-    }
-
-    if(host && !host.querySelector('.mb-modal.active')){
-      host.classList.remove('active');
-      document.body.classList.remove('mb-body-modal-open');
-    }
+  function saveAndRefresh(log){
+    if(typeof saveLog === 'function') saveLog(log);
+    else localStorage.setItem('macro_log_v3', JSON.stringify(log));
+    if(typeof render === 'function') render();
   }
 
-  const oldClose = window.closeMbModal;
-  window.closeMbModal = function(id){
-    if(typeof oldClose === 'function') oldClose.apply(this, arguments);
-    else document.getElementById(id)?.classList.remove('active');
+  window.editFood = function(i){
+    const log = typeof getLog === 'function' ? getLog() : [];
+    const x = log[i];
+    if(!x) return;
 
-    if(TARGET_IDS.has(id)){
-      setTimeout(()=>restoreModalIfClosed(id), 0);
-    }
-    setTimeout(moveActiveModalToBody, 0);
+    openCleanModal(`
+      <h2>Edit Food</h2>
+      <label>Food Name</label>
+      <input id="mbEditName" value="${esc(x.name)}">
+      <label>Meal</label>
+      <input id="mbEditMeal" value="${esc(x.meal || 'Snack')}">
+      <div class="grid2">
+        <div><label>Calories</label><input id="mbEditCal" type="number" inputmode="decimal" value="${esc(x.cal)}"></div>
+        <div><label>Carbs (g)</label><input id="mbEditC" type="number" inputmode="decimal" value="${esc(x.c)}"></div>
+        <div><label>Protein (g)</label><input id="mbEditP" type="number" inputmode="decimal" value="${esc(x.p)}"></div>
+        <div><label>Fat (g)</label><input id="mbEditF" type="number" inputmode="decimal" value="${esc(x.f)}"></div>
+      </div>
+      <div class="actions">
+        <button class="good" id="mbSaveEditBtn" type="button">Save Changes</button>
+        <button class="danger" type="button" onclick="closeCleanModal()">Cancel</button>
+      </div>
+    `);
+
+    q('mbSaveEditBtn').onclick = function(){
+      const mealRaw = (q('mbEditMeal').value || x.meal || 'Snack').trim();
+      const meal = MEALS.find(m => m.toLowerCase() === mealRaw.toLowerCase()) || mealRaw || 'Snack';
+      log[i] = {
+        ...x,
+        name:(q('mbEditName').value || x.name).trim(),
+        meal,
+        cal:Math.round(N(q('mbEditCal').value)),
+        c:R(q('mbEditC').value),
+        p:R(q('mbEditP').value),
+        f:R(q('mbEditF').value)
+      };
+      saveAndRefresh(log);
+      closeCleanModal();
+    };
   };
 
-  ['editFood','moveFoodMeal'].forEach(fn=>{
-    const old = window[fn];
-    if(typeof old === 'function'){
-      window[fn] = function(){
-        const result = old.apply(this, arguments);
-        setTimeout(moveActiveModalToBody, 0);
-        setTimeout(moveActiveModalToBody, 80);
-        return result;
+  window.moveFoodMeal = function(i){
+    const log = typeof getLog === 'function' ? getLog() : [];
+    const x = log[i];
+    if(!x) return;
+
+    let selected = x.meal || 'Snack';
+    openCleanModal(`
+      <h2>Move Food</h2>
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;border:1.5px solid rgba(56,189,248,.28);background:rgba(8,47,73,.38);border-radius:18px;padding:14px 16px;margin-bottom:16px">
+        <b style="color:#94a3b8">Current meal</b>
+        <b id="mbMoveCurrent">${esc(selected)}</b>
+      </div>
+      <label>Select New Meal</label>
+      <div class="meal-choice-grid">
+        ${MEALS.map(m=>`<button type="button" class="meal-choice ${m===selected?'active':''}" data-meal="${m}">${m}</button>`).join('')}
+      </div>
+      <div class="actions">
+        <button class="good" id="mbMoveSaveBtn" type="button">Move Food</button>
+        <button class="light" type="button" onclick="closeCleanModal()">Cancel</button>
+      </div>
+    `);
+
+    document.querySelectorAll('#mbCleanModal .meal-choice').forEach(btn=>{
+      btn.onclick = function(){
+        selected = btn.dataset.meal;
+        document.querySelectorAll('#mbCleanModal .meal-choice').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
       };
-    }
-  });
+    });
 
-  ensureHost().addEventListener('click', function(e){
-    if(e.target === this){
-      const modal = this.querySelector('.mb-modal.active');
-      if(modal && typeof window.closeMbModal === 'function'){
-        window.closeMbModal(modal.id);
-      }
-    }
-  });
-
-  new MutationObserver(function(){
-    setTimeout(moveActiveModalToBody,0);
-  }).observe(document.body, {subtree:true, childList:true, attributes:true, attributeFilter:['class']});
-
-  document.addEventListener('click',()=>setTimeout(moveActiveModalToBody,30),true);
-  document.addEventListener('DOMContentLoaded',()=>setTimeout(moveActiveModalToBody,100));
+    q('mbMoveSaveBtn').onclick = function(){
+      log[i] = {...x, meal:selected};
+      saveAndRefresh(log);
+      closeCleanModal();
+    };
+  };
 })();
 </script>
 
