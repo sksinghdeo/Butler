@@ -6974,5 +6974,251 @@ if(typeof r==='function'){window.render=function(){const x=r.apply(this,argument
 })();
 </script>
 
+
+<style id="mb-log-scroll-modal-height-fix-v1">
+/* Food Log: keep each meal compact. If a meal has more than 5 entries,
+   only the entries inside that meal scroll. */
+#screenLog .meal-block{
+  overflow:hidden !important;
+}
+
+#screenLog .meal-items-scroll{
+  max-height:520px;
+  overflow-y:auto;
+  padding-right:4px;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+}
+
+#screenLog .meal-items-scroll::-webkit-scrollbar{
+  width:4px;
+}
+
+#screenLog .meal-items-scroll::-webkit-scrollbar-thumb{
+  background:rgba(96,165,250,.45);
+  border-radius:999px;
+}
+
+/* Edit / Move popup: modal layer must not inherit the long page scroll height. */
+body.mb-modal-open{
+  overflow:hidden !important;
+}
+
+body.mb-modal-open .ml-stage-v26{
+  overflow:hidden !important;
+}
+
+.mb-modal.active{
+  position:fixed !important;
+  inset:0 !important;
+  z-index:99999 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:22px !important;
+  overflow:hidden !important;
+  min-height:100dvh !important;
+  height:100dvh !important;
+}
+
+.mb-modal.active .mb-modal-card{
+  max-height:min(86dvh,760px) !important;
+  overflow-y:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+  overscroll-behavior:contain !important;
+}
+
+@media(max-width:430px){
+  #screenLog .meal-items-scroll{
+    max-height:500px;
+  }
+
+  .mb-modal.active{
+    padding:18px !important;
+    align-items:center !important;
+  }
+
+  .mb-modal.active .mb-modal-card{
+    max-height:84dvh !important;
+  }
+}
+</style>
+
+<script id="mb-log-scroll-modal-height-fix-v1-js">
+(function(){
+  function q(id){return document.getElementById(id)}
+  function n(v){const x=parseFloat(v);return Number.isFinite(x)?x:0}
+  function r(v){return Math.round(n(v)*10)/10}
+
+  function totalsForItems(items){
+    return items.reduce((a,x)=>({
+      cal:a.cal+n(x.cal),
+      c:a.c+n(x.c),
+      p:a.p+n(x.p),
+      f:a.f+n(x.f)
+    }),{cal:0,c:0,p:0,f:0});
+  }
+
+  function esc(s){
+    return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  }
+
+  function renderMealLogFixed(log){
+    const box = q('mealLog');
+    if(!box) return;
+
+    const meals = ["Breakfast","Lunch","Dinner","Snack"];
+
+    if(!log.length){
+      box.innerHTML = "<p class='note'>No food added yet.</p>";
+      return;
+    }
+
+    box.innerHTML = meals.map(meal => {
+      const items = log.map((x,i)=>({...x,index:i})).filter(x => (x.meal || "Snack") === meal);
+      const t = totalsForItems(items);
+      const itemHtml = items.length ? items.map(x => `
+        <div class="meal-item">
+          <div>
+            <b>${esc(x.name)}</b>
+            <div class="meta">${Math.round(n(x.cal))} cal • C ${r(x.c)}g • P ${r(x.p)}g • F ${r(x.f)}g</div>
+          </div>
+          <div class="edit-actions">
+            <button class="small-btn light" onclick="editFood(${x.index})">Edit</button>
+            <button class="small-btn purple" onclick="duplicateFood(${x.index})">Copy</button>
+            <button class="small-btn light" onclick="moveFoodMeal(${x.index})">Move</button>
+            <button class="small-btn danger" onclick="deleteFood(${x.index})">Remove</button>
+          </div>
+        </div>
+      `).join("") : "<p class='note'>No items.</p>";
+
+      const wrapped = items.length > 5
+        ? `<div class="meal-items-scroll">${itemHtml}</div>`
+        : itemHtml;
+
+      return `
+        <div class="meal-block">
+          <div class="meal-head">${meal}<span>${Math.round(t.cal)} cal • P ${r(t.p)}g</span></div>
+          ${wrapped}
+        </div>
+      `;
+    }).join("");
+  }
+
+  /* Override renderMealLog only. Everything else in render() remains unchanged. */
+  window.renderMealLog = renderMealLogFixed;
+
+  /* Some older render() functions close over their own renderMealLog, so patch after render too. */
+  const oldRender = window.render;
+  if(typeof oldRender === 'function'){
+    window.render = function(){
+      const result = oldRender.apply(this, arguments);
+      try{
+        const log = typeof getLog === 'function' ? getLog() : [];
+        renderMealLogFixed(log);
+      }catch(e){}
+      return result;
+    };
+  }
+
+  function syncModalOpenClass(){
+    const active = document.querySelector('.mb-modal.active');
+    document.body.classList.toggle('mb-modal-open', !!active);
+  }
+
+  const oldClose = window.closeMbModal;
+  window.closeMbModal = function(id){
+    if(typeof oldClose === 'function') oldClose.apply(this, arguments);
+    else q(id)?.classList.remove('active');
+    setTimeout(syncModalOpenClass,0);
+  };
+
+  const observer = new MutationObserver(syncModalOpenClass);
+  observer.observe(document.body,{attributes:true,subtree:true,attributeFilter:['class']});
+
+  document.addEventListener('click',()=>setTimeout(syncModalOpenClass,50),true);
+  document.addEventListener('DOMContentLoaded',()=>{
+    try{
+      const log = typeof getLog === 'function' ? getLog() : [];
+      renderMealLogFixed(log);
+    }catch(e){}
+    syncModalOpenClass();
+  });
+
+  setTimeout(()=>{
+    try{
+      const log = typeof getLog === 'function' ? getLog() : [];
+      renderMealLogFixed(log);
+    }catch(e){}
+    syncModalOpenClass();
+  },500);
+})();
+</script>
+
+
+<style id="mb-log-modal-real-fix-meal-totals-v2">
+#mbLogModalHost{position:fixed!important;inset:0!important;z-index:2147483000!important;display:none;align-items:center!important;justify-content:center!important;padding:18px!important;background:rgba(2,6,23,.68)!important;backdrop-filter:blur(12px)!important;-webkit-backdrop-filter:blur(12px)!important;overflow:hidden!important}
+#mbLogModalHost.active{display:flex!important}
+#mbLogModalHost .mb-modal{position:static!important;inset:auto!important;display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;height:auto!important;min-height:0!important;padding:0!important;background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;overflow:visible!important}
+#mbLogModalHost .mb-modal-card{max-height:84dvh!important;overflow-y:auto!important;margin:0!important}
+body.mb-log-modal-fixed{overflow:hidden!important}
+#screenLog .meal-head{display:grid!important;grid-template-columns:1fr auto!important;align-items:center!important;gap:12px!important}
+#screenLog .meal-title-stack b{display:block;font-size:18px;line-height:1.1;color:var(--bc-text,#fff)}
+#screenLog .meal-title-stack span{display:block;margin-top:5px;font-size:13px;color:#94a3b8;font-weight:800}
+#screenLog .meal-mini-totals{display:grid;grid-template-columns:repeat(4,44px);gap:6px;justify-content:end}
+#screenLog .meal-mini{height:54px;border-radius:14px;background:rgba(2,6,23,.56);border:1px solid rgba(59,130,246,.26);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+#screenLog .meal-mini svg{width:16px;height:16px;fill:none;stroke-width:4.2;stroke-linecap:round;stroke-linejoin:round}
+#screenLog .meal-mini b{font-size:12px;line-height:1;color:#f8fafc;max-width:42px;overflow:hidden;text-overflow:ellipsis}
+#screenLog .meal-mini.cal svg{stroke:#24c8ff;filter:drop-shadow(0 0 3px #24c8ff)}
+#screenLog .meal-mini.pro svg{stroke:#22f26f;filter:drop-shadow(0 0 3px #22f26f)}
+#screenLog .meal-mini.carb svg{stroke:#a855ff;filter:drop-shadow(0 0 3px #a855ff)}
+#screenLog .meal-mini.fat svg{stroke:#ffb31a;filter:drop-shadow(0 0 3px #ffb31a)}
+@media(max-width:430px){#screenLog .meal-head{gap:8px!important}#screenLog .meal-mini-totals{grid-template-columns:repeat(4,39px);gap:5px}#screenLog .meal-mini{height:50px;border-radius:13px}#screenLog .meal-mini svg{width:14px;height:14px}#screenLog .meal-mini b{font-size:11px;max-width:37px}}
+</style>
+
+<script id="mb-log-modal-real-fix-meal-totals-v2-js">
+(function(){
+function q(id){return document.getElementById(id)}
+function N(v){const x=parseFloat(v);return Number.isFinite(x)?x:0}
+function R(v){return Math.round(N(v)*10)/10}
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+const ICONS={
+cal:`<svg viewBox="0 0 64 64"><path d="M34 6C45 18 50 27 50 37C50 48 42 56 32 56C22 56 14 48 14 37C14 27 21 17 34 6Z"/><path d="M31 29C37 34 39 38 39 43C39 48 35 52 30 52C25 52 21 48 21 43C21 37 25 33 31 29Z"/></svg>`,
+pro:`<svg viewBox="0 0 64 64"><path d="M17 22C25 11 43 10 50 23C57 36 46 53 31 53C19 53 10 44 10 33C10 29 12 25 17 22Z"/><circle cx="43" cy="24" r="5"/><path d="M22 38C29 32 37 32 43 38"/></svg>`,
+carb:`<svg viewBox="0 0 64 64"><path d="M22 54L42 10"/><path d="M18 42C14 35 15 29 22 25C26 31 25 38 18 42Z"/><path d="M28 31C24 24 25 18 32 14C36 21 35 27 28 31Z"/><path d="M40 24C37 17 38 12 46 8C50 15 48 21 40 24Z"/><path d="M42 38C46 31 52 28 58 31C55 39 49 42 42 38Z"/><path d="M32 48C36 41 42 38 48 41C45 49 39 52 32 48Z"/></svg>`,
+fat:`<svg viewBox="0 0 64 64"><path d="M32 7C44 21 49 30 49 40C49 50 42 57 32 57C22 57 15 50 15 40C15 30 20 21 32 7Z"/><path d="M36 29C40 34 40 40 36 44C33 47 28 47 25 44C22 40 25 33 36 29Z"/></svg>`};
+function totals(items){return items.reduce((a,x)=>({cal:a.cal+N(x.cal),c:a.c+N(x.c),p:a.p+N(x.p),f:a.f+N(x.f)}),{cal:0,c:0,p:0,f:0})}
+function mini(t){return `<div class="meal-mini-totals"><div class="meal-mini cal">${ICONS.cal}<b>${Math.round(t.cal)}</b></div><div class="meal-mini pro">${ICONS.pro}<b>${R(t.p)}g</b></div><div class="meal-mini carb">${ICONS.carb}<b>${R(t.c)}g</b></div><div class="meal-mini fat">${ICONS.fat}<b>${R(t.f)}g</b></div></div>`}
+function renderMealLogFixed(log){
+ const box=q('mealLog'); if(!box)return;
+ const meals=["Breakfast","Lunch","Dinner","Snack"];
+ if(!log.length){box.innerHTML="<p class='note'>No food added yet.</p>";return}
+ box.innerHTML=meals.map(meal=>{
+  const items=log.map((x,i)=>({...x,index:i})).filter(x=>(x.meal||"Snack")===meal),t=totals(items);
+  const itemHtml=items.length?items.map(x=>`<div class="meal-item"><div><b>${esc(x.name)}</b><div class="meta">${Math.round(N(x.cal))} cal • C ${R(x.c)}g • P ${R(x.p)}g • F ${R(x.f)}g</div></div><div class="edit-actions"><button class="small-btn light" onclick="editFood(${x.index})">Edit</button><button class="small-btn purple" onclick="duplicateFood(${x.index})">Copy</button><button class="small-btn light" onclick="moveFoodMeal(${x.index})">Move</button><button class="small-btn danger" onclick="deleteFood(${x.index})">Remove</button></div></div>`).join(""):"<p class='note'>No items.</p>";
+  return `<div class="meal-block"><div class="meal-head"><div class="meal-title-stack"><b>${meal}</b><span>${items.length} item${items.length===1?'':'s'}</span></div>${mini(t)}</div>${items.length>5?`<div class="meal-items-scroll">${itemHtml}</div>`:itemHtml}</div>`;
+ }).join("");
+}
+window.renderMealLog=renderMealLogFixed;
+function ensureHost(){let host=q('mbLogModalHost');if(!host){host=document.createElement('div');host.id='mbLogModalHost';document.body.appendChild(host);host.addEventListener('click',e=>{if(e.target===host){const modal=host.querySelector('.mb-modal.active');if(modal&&typeof closeMbModal==='function')closeMbModal(modal.id)}})}return host}
+function moveActiveLogModal(){
+ const host=ensureHost();
+ const active=document.querySelector('.mb-modal.active');
+ if(active&&(active.id==='editFoodModal'||active.id==='moveFoodModal')){
+   if(active.parentNode!==host)host.appendChild(active);
+   host.classList.add('active');document.body.classList.add('mb-log-modal-fixed');
+ }else{host.classList.remove('active');document.body.classList.remove('mb-log-modal-fixed')}
+}
+const oldRender=window.render;
+if(typeof oldRender==='function'){window.render=function(){const result=oldRender.apply(this,arguments);try{renderMealLogFixed(typeof getLog==='function'?getLog():[])}catch(e){}setTimeout(moveActiveLogModal,0);return result}}
+const oldClose=window.closeMbModal;
+window.closeMbModal=function(id){const modal=q(id);if(typeof oldClose==='function')oldClose.apply(this,arguments);else modal?.classList.remove('active');setTimeout(moveActiveLogModal,0)}
+new MutationObserver(moveActiveLogModal).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+document.addEventListener('click',()=>setTimeout(moveActiveLogModal,30),true);
+document.addEventListener('DOMContentLoaded',()=>{try{renderMealLogFixed(typeof getLog==='function'?getLog():[])}catch(e){}setTimeout(moveActiveLogModal,100)});
+setTimeout(()=>{try{renderMealLogFixed(typeof getLog==='function'?getLog():[])}catch(e){}moveActiveLogModal()},600);
+})();
+</script>
+
 </body>
 </html>
