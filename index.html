@@ -7954,5 +7954,298 @@ body.mb-clean-modal-open{
 })();
 </script>
 
+
+<style id="mb-progress-final-bar-scale-weight-row-v4">
+/* 7-day bars: target-based scale, readable grey track */
+#weeklyBars .bar{
+  height:11px !important;
+  width:100% !important;
+  border-radius:999px !important;
+  background:rgba(226,232,240,.92) !important;
+  overflow:hidden !important;
+}
+#weeklyBars .bar span{
+  display:block !important;
+  height:100% !important;
+  border-radius:999px !important;
+}
+
+/* Weight entry row: text left, compact buttons right, same row */
+#weightTrend .weight-entry{
+  grid-template-columns:minmax(0,1fr) auto !important;
+  align-items:center !important;
+  gap:12px !important;
+  padding:12px 14px !important;
+}
+
+#weightTrend .weight-entry > div:first-child{
+  min-width:0 !important;
+  display:flex !important;
+  align-items:baseline !important;
+  gap:8px !important;
+  flex-wrap:wrap !important;
+}
+
+#weightTrend .weight-entry b{
+  font-size:16px !important;
+  line-height:1.15 !important;
+  white-space:nowrap !important;
+}
+
+#weightTrend .weight-entry span{
+  font-size:16px !important;
+  line-height:1.15 !important;
+  white-space:nowrap !important;
+}
+
+#weightTrend .weight-actions{
+  display:flex !important;
+  gap:8px !important;
+  width:auto !important;
+  justify-content:flex-end !important;
+  flex:0 0 auto !important;
+}
+
+#weightTrend .weight-actions button{
+  width:76px !important;
+  min-width:76px !important;
+  height:42px !important;
+  min-height:42px !important;
+  padding:0 !important;
+  margin:0 !important;
+  border-radius:14px !important;
+  font-size:13px !important;
+  font-weight:950 !important;
+}
+
+/* Date field: use native date input but visually clean inside theme */
+#mbWeightEditModal input[type="date"]{
+  color:#fff !important;
+  appearance:auto !important;
+  -webkit-appearance:none !important;
+  min-width:0 !important;
+  font-size:16px !important;
+}
+
+#mbWeightEditModal input[type="date"]::-webkit-date-and-time-value{
+  text-align:left;
+  color:#fff;
+}
+
+@media(max-width:430px){
+  #weightTrend .weight-entry{
+    grid-template-columns:minmax(0,1fr) auto !important;
+  }
+  #weightTrend .weight-actions{
+    width:auto !important;
+  }
+  #weightTrend .weight-actions button{
+    width:68px !important;
+    min-width:68px !important;
+    font-size:12px !important;
+  }
+  #weightTrend .weight-entry b,
+  #weightTrend .weight-entry span{
+    font-size:15px !important;
+  }
+}
+</style>
+
+<script id="mb-progress-final-bar-scale-weight-row-v4-js">
+(function(){
+  function q(id){return document.getElementById(id)}
+  function N(v){const x=parseFloat(v);return Number.isFinite(x)?x:0}
+  function R(v){return Math.round(N(v)*10)/10}
+  function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+  function dateKey(d){return d.toISOString().slice(0,10)}
+  function getLogForDate(k){try{return JSON.parse(localStorage.getItem('macro_log_'+k)||'[]')}catch(e){return[]}}
+  function getTargets(){try{return JSON.parse(localStorage.getItem('macro_targets')||'{}')}catch(e){return{}}}
+  function totals(log){return log.reduce((a,x)=>({cal:a.cal+N(x.cal),c:a.c+N(x.c),p:a.p+N(x.p),f:a.f+N(x.f)}),{cal:0,c:0,p:0,f:0})}
+  function prettyDate(d){try{return new Date(d+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"})}catch(e){return d}}
+  function formatLong(d){try{return new Date(d+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}catch(e){return d}}
+
+  function currentMetric(){
+    return localStorage.getItem('macro_weekly_active_metric') || 'cal';
+  }
+
+  function weekData(){
+    const days=[];
+    const today=new Date();
+    for(let i=6;i>=0;i--){
+      const d=new Date(today);
+      d.setDate(today.getDate()-i);
+      const k=dateKey(d);
+      days.push({date:k,label:d.toLocaleDateString('en-US',{weekday:'short'}),...totals(getLogForDate(k))});
+    }
+    return days;
+  }
+
+  function targetForMetric(metric){
+    const t=getTargets();
+    const fallback={cal:2000,p:120,c:250,f:70};
+    const candidates={
+      cal:[t.cal,t.calories,t.kcal,t.targetCalories],
+      p:[t.p,t.pro,t.protein,t.targetProtein],
+      c:[t.c,t.carb,t.carbs,t.targetCarbs],
+      f:[t.f,t.fat,t.targetFat]
+    }[metric] || [];
+    const val=candidates.map(N).find(x=>x>0);
+    return val || fallback[metric] || 1;
+  }
+
+  function renderWeeklyBarsTargetScaled(){
+    const box=q('weeklyBars');
+    if(!box) return;
+
+    const metric=currentMetric();
+    const info={
+      cal:{label:'Calories',unit:'cal',value:d=>d.cal,color:'linear-gradient(90deg,#22c55e,#38bdf8)'},
+      p:{label:'Protein',unit:'g',value:d=>d.p,color:'linear-gradient(90deg,#16a34a,#86efac)'},
+      c:{label:'Carbs',unit:'g',value:d=>d.c,color:'linear-gradient(90deg,#7c3aed,#c084fc)'},
+      f:{label:'Fat',unit:'g',value:d=>d.f,color:'linear-gradient(90deg,#f59e0b,#fbbf24)'}
+    }[metric] || {label:'Calories',unit:'cal',value:d=>d.cal,color:'linear-gradient(90deg,#22c55e,#38bdf8)'};
+
+    const target=targetForMetric(metric);
+    const data=weekData();
+    const title=box.previousElementSibling;
+    if(title && title.classList.contains('macro-heading')){
+      title.innerHTML=`🍴 7-Day ${info.label}`;
+    }
+
+    const tabs=q('weeklyMacroTabs');
+    if(tabs){
+      tabs.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.metric===metric));
+    }
+
+    box.innerHTML=data.map(d=>{
+      const val=info.value(d);
+      const pct=val<=0 ? 0 : Math.min(100,(val/target)*100);
+      const shown=metric==='cal'?Math.round(val):R(val);
+      return `<div class="bar-row">
+        <div class="meta">${d.label} • ${shown} ${info.unit}</div>
+        <div class="bar"><span style="width:${pct}%;background:${info.color}"></span></div>
+      </div>`;
+    }).join('');
+  }
+
+  function normalizeWeightRows(){
+    document.querySelectorAll('#weightTrend .weight-entry').forEach(row=>{
+      const first=row.children[0];
+      if(!first) return;
+      const b=first.querySelector('b');
+      const span=first.querySelector('span');
+      if(b && span){
+        const text=b.textContent || '';
+        // fixes "May 1, 2026169 lb" when old markup had no separator
+        const m=text.match(/^(.+?)(\d+(?:\.\d+)?\s*(?:lb|kg))$/i);
+        if(m){
+          b.textContent=m[1].trim();
+          span.textContent=m[2].trim();
+        }
+      }
+    });
+  }
+
+  function ensureModal(){
+    let m=q('mbWeightEditModal');
+    if(!m){
+      m=document.createElement('div');
+      m.id='mbWeightEditModal';
+      document.body.appendChild(m);
+      m.addEventListener('click',e=>{if(e.target===m)closeWeightModal()});
+    }
+    return m;
+  }
+
+  function closeWeightModal(){
+    const m=q('mbWeightEditModal');
+    if(m){m.classList.remove('active');m.innerHTML='';}
+  }
+  window.closeWeightModal=closeWeightModal;
+
+  window.editWeightEntry=function(date){
+    let entries=[]; try{entries=JSON.parse(localStorage.getItem('macro_weight_entries')||'[]')}catch(e){}
+    const idx=entries.findIndex(x=>x.date===date);
+    if(idx<0) return;
+    const e=entries[idx];
+
+    const m=ensureModal();
+    m.innerHTML=`<div class="mb-weight-card">
+      <h3>Edit Weight</h3>
+      <div class="grid2">
+        <div>
+          <label>Date</label>
+          <input id="mbEditWeightDate" type="date" value="${esc(e.date)}">
+        </div>
+        <div>
+          <label>Unit</label>
+          <select id="mbEditWeightUnit">
+            <option value="lb" ${e.unit==='lb'?'selected':''}>lb</option>
+            <option value="kg" ${e.unit==='kg'?'selected':''}>kg</option>
+          </select>
+        </div>
+      </div>
+      <label>Weight</label>
+      <input id="mbEditWeightValue" type="number" step="0.1" inputmode="decimal" value="${esc(e.weight)}">
+      <div class="actions">
+        <button class="good" id="mbSaveWeightEdit" type="button">Save Changes</button>
+        <button class="light" type="button" onclick="closeWeightModal()">Cancel</button>
+      </div>
+    </div>`;
+    m.classList.add('active');
+
+    q('mbSaveWeightEdit').onclick=function(){
+      entries[idx]={
+        ...e,
+        date:(q('mbEditWeightDate').value||e.date),
+        weight:N(q('mbEditWeightValue').value)||e.weight,
+        unit:q('mbEditWeightUnit').value||e.unit||'lb'
+      };
+      entries.sort((a,b)=>a.date.localeCompare(b.date));
+      localStorage.setItem('macro_weight_entries',JSON.stringify(entries));
+      closeWeightModal();
+      if(typeof renderWeightTrend==='function')renderWeightTrend();
+      setTimeout(()=>{normalizeWeightRows();renderWeeklyBarsTargetScaled();},0);
+    };
+  };
+
+  function wireTabs(){
+    const tabs=q('weeklyMacroTabs');
+    if(!tabs) return;
+    tabs.querySelectorAll('button').forEach(btn=>{
+      if(btn.dataset.targetScaleFixed==='1') return;
+      btn.dataset.targetScaleFixed='1';
+      btn.addEventListener('click',function(e){
+        localStorage.setItem('macro_weekly_active_metric',btn.dataset.metric||'cal');
+        setTimeout(renderWeeklyBarsTargetScaled,0);
+      },true);
+    });
+  }
+
+  const oldRenderProgress=window.renderProgress;
+  if(typeof oldRenderProgress==='function'){
+    window.renderProgress=function(){
+      const result=oldRenderProgress.apply(this,arguments);
+      wireTabs();
+      renderWeeklyBarsTargetScaled();
+      setTimeout(normalizeWeightRows,0);
+      return result;
+    };
+  }
+
+  const oldRenderWeightTrend=window.renderWeightTrend;
+  if(typeof oldRenderWeightTrend==='function'){
+    window.renderWeightTrend=function(){
+      const result=oldRenderWeightTrend.apply(this,arguments);
+      setTimeout(normalizeWeightRows,0);
+      return result;
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{wireTabs();renderWeeklyBarsTargetScaled();normalizeWeightRows();},300));
+  setTimeout(()=>{wireTabs();renderWeeklyBarsTargetScaled();normalizeWeightRows();},900);
+})();
+</script>
+
 </body>
 </html>
