@@ -8567,5 +8567,303 @@ body.mb-clean-modal-open{
 })();
 </script>
 
+
+<style id="mb-scan-portion-confirm-ingredient-category-v2">
+#portionMealModal .portion-confirm{
+  display:none;
+  margin-top:12px;
+  padding:12px 14px;
+  border-radius:16px;
+  color:#bbf7d0;
+  background:rgba(20,83,45,.52);
+  border:1px solid rgba(34,197,94,.38);
+  font-size:14px;
+  font-weight:950;
+  line-height:1.35;
+}
+#portionMealModal.confirmed .portion-confirm{display:block}
+#portionMealModal.confirmed #portionAddBtn{opacity:.65;pointer-events:none}
+#portionMealModal.confirmed #portionCancelBtn{color:#60a5fa!important}
+
+#recipeCategoryPills .pill[data-scan-pill="1"]{
+  border-color:rgba(56,189,248,.45)!important;
+}
+</style>
+
+<script id="mb-scan-portion-confirm-ingredient-category-v2-js">
+(function(){
+  const SCAN_CAT='Scanned Food';
+  const CUSTOM_KEY='macro_custom_foods_v3';
+  const CAT_KEY='macro_custom_categories_v1';
+
+  function q(id){return document.getElementById(id)}
+  function N(v){const x=parseFloat(v);return Number.isFinite(x)?x:0}
+  function R(v){return Math.round(N(v)*10)/10}
+  function norm(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}
+  function read(key, fallback=[]){try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch(e){return fallback}}
+  function write(key,val){localStorage.setItem(key,JSON.stringify(val))}
+  function localKey(i){return norm(i?.name)+'|'+norm(i?.serving)}
+  function dedupe(list){
+    const seen=new Set(),out=[];
+    (list||[]).forEach(i=>{
+      if(!i||!i.name)return;
+      const k=localKey(i);
+      if(seen.has(k))return;
+      seen.add(k);out.push(i);
+    });
+    return out;
+  }
+
+  function getCustomFoods(){return read(CUSTOM_KEY,[])}
+  function setCustomFoods(items){write(CUSTOM_KEY,dedupe(items).slice(0,800))}
+
+  function ensureScanCategorySaved(){
+    const cats=read(CAT_KEY,[]);
+    if(!cats.some(c=>norm(c)===norm(SCAN_CAT))){
+      cats.push(SCAN_CAT);
+      write(CAT_KEY,cats);
+    }
+  }
+
+  function injectScannedIntoRuntime(){
+    ensureScanCategorySaved();
+    const scanned=getCustomFoods().filter(x=>norm(x.cat).includes('scanned') || norm(x.source).includes('scan'));
+    try{ window.foodDatabase=dedupe([...(window.foodDatabase||[]),...scanned]); }catch(e){}
+    try{
+      if(typeof foodDatabase!=='undefined' && Array.isArray(foodDatabase)){
+        foodDatabase=dedupe([...(foodDatabase||[]),...scanned]);
+      }
+    }catch(e){}
+    try{ window._ingredients=dedupe([...(window._ingredients||[]),...scanned]); }catch(e){}
+  }
+
+  function addScannedIngredientPill(){
+    const holder=q('recipeCategoryPills');
+    if(!holder)return;
+    if(Array.from(holder.querySelectorAll('.pill')).some(p=>norm(p.textContent)===norm(SCAN_CAT)))return;
+    const b=document.createElement('button');
+    b.type='button';
+    b.className='pill';
+    b.textContent=SCAN_CAT;
+    b.dataset.scanPill='1';
+    b.onclick=function(){
+      window.currentRecipeCat=SCAN_CAT;
+      holder.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      if(typeof renderIngredientResults==='function')renderIngredientResults();
+    };
+    holder.appendChild(b);
+  }
+
+  function ensureIngredientScanCategory(){
+    ensureScanCategorySaved();
+    try{ if(typeof window.renderRecipeCategoryPills==='function')window.renderRecipeCategoryPills(); }catch(e){}
+    addScannedIngredientPill();
+  }
+
+  function scoreItem(item,query){
+    const qn=norm(query);
+    const hay=norm([item.name,item.cat,item.serving,item.source,item.search,(item.aliases||[]).join(' ')].join(' '));
+    if(!qn)return 1;
+    if(hay.includes(qn))return 100;
+    const words=qn.split(' ').filter(Boolean);
+    return words.reduce((s,w)=>s+(hay.includes(w)?25:-8),0);
+  }
+
+  // Wrap ingredient renderer so Scanned Food works as category AND searched by actual name.
+  const oldRenderIngredient=window.renderIngredientResults;
+  window.renderIngredientResults=function(){
+    injectScannedIntoRuntime();
+
+    const box=q('ingredientResults');
+    if(!box || typeof oldRenderIngredient!=='function'){
+      return oldRenderIngredient?.apply(this,arguments);
+    }
+
+    const selected=norm(window.currentRecipeCat || '');
+    if(selected===norm(SCAN_CAT)){
+      const query=(q('ingredientSearch')?.value||'').trim();
+      const scanned=getCustomFoods()
+        .filter(x=>norm(x.cat).includes('scanned') || norm(x.source).includes('scan'))
+        .map(item=>({item,score:scoreItem(item,query)}))
+        .filter(x=>!query || x.score>0)
+        .sort((a,b)=>b.score-a.score)
+        .map(x=>x.item);
+
+      box.innerHTML=scanned.length ? scanned.map(item=>{
+        const j=JSON.stringify(item).replace(/'/g,'&apos;');
+        const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+        return `<div class="ingredient-row">
+          <div><b>${esc(item.name)}</b>
+          <div class="meta">${esc(item.serving||'1 serving')} • ${Math.round(N(item.cal))} cal • C ${R(item.c)}g • P ${R(item.p)}g • F ${R(item.f)}g</div>
+          <span class="source-chip">Scanned Food</span></div>
+          <button class="small-btn good" type="button" onclick='openIngredientAmountModal(${j})'>Add</button>
+        </div>`;
+      }).join('') : "<p class='note'>No scanned foods yet. Save one from the Scan page first.</p>";
+      return;
+    }
+
+    const result=oldRenderIngredient.apply(this,arguments);
+
+    // If user searches actual scanned item name while another/no category is active, ensure scanned foods are included.
+    const query=(q('ingredientSearch')?.value||'').trim();
+    if(query){
+      const scanned=getCustomFoods()
+        .filter(x=>norm(x.cat).includes('scanned') || norm(x.source).includes('scan'))
+        .map(item=>({item,score:scoreItem(item,query)}))
+        .filter(x=>x.score>0)
+        .sort((a,b)=>b.score-a.score)
+        .map(x=>x.item);
+      if(scanned.length){
+        const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+        const existing=box.innerHTML;
+        const add=scanned.map(item=>{
+          const j=JSON.stringify(item).replace(/'/g,'&apos;');
+          return `<div class="ingredient-row">
+            <div><b>${esc(item.name)}</b>
+            <div class="meta">${esc(item.serving||'1 serving')} • ${Math.round(N(item.cal))} cal • C ${R(item.c)}g • P ${R(item.p)}g • F ${R(item.f)}g</div>
+            <span class="source-chip">Scanned Food</span></div>
+            <button class="small-btn good" type="button" onclick='openIngredientAmountModal(${j})'>Add</button>
+          </div>`;
+        }).join('');
+        if(!existing.includes('Scanned Food') && !existing.toLowerCase().includes(scanned[0].name.toLowerCase())){
+          box.innerHTML=add+existing;
+        }
+      }
+    }
+    return result;
+  };
+
+  // Make portion popup show confirmation inside itself when Add Food is pressed.
+  function upgradePortionModal(){
+    const m=q('portionMealModal');
+    if(!m || m.dataset.scanConfirmUpgraded==='1')return;
+    m.dataset.scanConfirmUpgraded='1';
+
+    const addBtn=m.querySelector('.mb-modal-actions .good');
+    const cancelBtn=m.querySelector('.mb-modal-actions .light');
+    if(addBtn){
+      addBtn.id='portionAddBtn';
+      addBtn.textContent='Add Food';
+    }
+    if(cancelBtn){
+      cancelBtn.id='portionCancelBtn';
+      cancelBtn.textContent='Cancel';
+    }
+    if(!m.querySelector('.portion-confirm')){
+      m.querySelector('.mb-modal-card')?.insertAdjacentHTML('beforeend','<div class="portion-confirm">Added to log.</div>');
+    }
+  }
+
+  const oldOpenPortion=window.openPortionMealModal;
+  if(typeof oldOpenPortion==='function'){
+    window.openPortionMealModal=function(item){
+      const result=oldOpenPortion.apply(this,arguments);
+      setTimeout(()=>{
+        upgradePortionModal();
+        const m=q('portionMealModal');
+        if(m){
+          m.classList.remove('confirmed');
+          const c=m.querySelector('.portion-confirm');
+          if(c)c.textContent='';
+          const cancel=q('portionCancelBtn');
+          if(cancel)cancel.textContent='Cancel';
+          const add=q('portionAddBtn');
+          if(add){add.style.pointerEvents='';add.style.opacity='';}
+        }
+      },0);
+      return result;
+    };
+  }
+
+  const oldConfirm=window.confirmPortionMeal;
+  if(typeof oldConfirm==='function'){
+    window.confirmPortionMeal=function(){
+      const itemName=q('portionTitle')?.textContent || 'Food';
+      const meal=document.querySelector('#portionMealChoices .mb-choice.active')?.dataset.meal || 'log';
+      const result=oldConfirm.apply(this,arguments);
+
+      // oldConfirm closes modal; re-open visual confirmation if this came from scan flow or any portion popup
+      setTimeout(()=>{
+        const m=q('portionMealModal');
+        if(m){
+          upgradePortionModal();
+          m.classList.add('active','confirmed');
+          const card=m.querySelector('.mb-modal-card');
+          const c=m.querySelector('.portion-confirm');
+          if(c)c.textContent=`${itemName} added to ${meal}.`;
+          const cancel=q('portionCancelBtn');
+          if(cancel)cancel.textContent='Close';
+        }
+      },0);
+      return result;
+    };
+  }
+
+  // Make save scanned item add aliases based on name so name-search works.
+  const oldSaveOnly=window.saveScannedFoodToDatabaseOnly;
+  if(typeof oldSaveOnly==='function'){
+    window.saveScannedFoodToDatabaseOnly=function(){
+      const name=clean(q('scanFoodName')?.value)||'Scanned food';
+      const res=oldSaveOnly.apply(this,arguments);
+      let items=getCustomFoods();
+      items=items.map(x=>{
+        if(norm(x.name)===norm(name)){
+          x.cat=SCAN_CAT;
+          x.source=x.source||'scan';
+          x.aliases=dedupe([...(x.aliases||[]).map(a=>({name:a,serving:''})),{name:name,serving:''},{name:'scanned food',serving:''}]).map(a=>a.name);
+        }
+        return x;
+      });
+      setCustomFoods(items);
+      injectScannedIntoRuntime();
+      ensureIngredientScanCategory();
+      if(typeof renderFoodDatabase==='function')renderFoodDatabase();
+      if(typeof renderIngredientResults==='function')renderIngredientResults();
+      return res;
+    };
+  }
+
+  const oldAddScan=window.addScannedFoodToLog;
+  if(typeof oldAddScan==='function'){
+    window.addScannedFoodToLog=function(){
+      const name=clean(q('scanFoodName')?.value)||'Scanned food';
+      const res=oldAddScan.apply(this,arguments);
+      let items=getCustomFoods();
+      items=items.map(x=>{
+        if(norm(x.name)===norm(name)){
+          x.cat=SCAN_CAT;
+          x.source=x.source||'scan';
+          x.aliases=[...new Set([...(x.aliases||[]), name, 'scanned food', 'scan'])];
+        }
+        return x;
+      });
+      setCustomFoods(items);
+      injectScannedIntoRuntime();
+      ensureIngredientScanCategory();
+      return res;
+    };
+  }
+
+  const oldLoad=window.loadFoodDatabase;
+  if(typeof oldLoad==='function'){
+    window.loadFoodDatabase=async function(){
+      const result=await oldLoad.apply(this,arguments);
+      injectScannedIntoRuntime();
+      ensureIngredientScanCategory();
+      if(typeof renderFoodDatabase==='function')renderFoodDatabase();
+      if(typeof renderIngredientResults==='function')renderIngredientResults();
+      return result;
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    ensureIngredientScanCategory();
+    injectScannedIntoRuntime();
+  });
+  setTimeout(()=>{ensureIngredientScanCategory();injectScannedIntoRuntime();},700);
+})();
+</script>
+
 </body>
 </html>
