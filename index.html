@@ -1519,9 +1519,12 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
 
 <section id="screenToday" class="screen active">
   <div class="card card-blue">
-    <h2><span class="bc-icon">HM</span>Today</h2>
-    <label>Date</label>
-    <div class="date-box"><button id="dateDisplay" class="date-display" type="button">Today</button><input id="date" class="hidden-date" type="date"></div>
+    <h2 id="todayDateHeading" class="today-date-heading-v46">
+      <span class="bc-icon">HM</span>
+      <button id="dateDisplay" class="date-display today-title-date-btn" type="button">Today</button>
+      <span class="today-title-arrow">⌄</span>
+      <input id="date" class="today-title-date-input" type="date" aria-label="Select date">
+    </h2>
     <div class="hero-stats" style="margin-top:16px">
       <div class="big-cal"><b id="leftCalBig">0</b><span>Calories left today</span></div>
       <div class="small-stat"><b id="score">0%</b><span>Daily progress</span></div>
@@ -11268,37 +11271,27 @@ body.mb-add-popup-active{
 
 
 
-<!-- MB V45: stable Today-as-date heading without breaking Add popup -->
-<style id="mb-v45-stable-date-heading">
-/* Hide the separate Date label/box visually, but keep the real date input usable for showPicker() */
-#screenToday > .card > label:first-of-type{
-  display:none!important;
-}
-
-#screenToday .date-box{
-  height:0!important;
-  min-height:0!important;
-  padding:0!important;
-  margin:0!important;
-  overflow:hidden!important;
-  opacity:0!important;
-  pointer-events:none!important;
-}
-
-/* Turn the heading into the calendar selector */
-#screenToday h2.today-date-heading-v45{
-  width:max-content!important;
+<!-- MB V46: working Today calendar heading + Add workspace starts after daily-progress panel -->
+<style id="mb-v46-date-and-add-sheet-fix">
+/* Today heading is the calendar selector. No separate Date field. */
+#todayDateHeading.today-date-heading-v46{
+  position:relative!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  width:auto!important;
   max-width:100%!important;
   cursor:pointer!important;
   user-select:none!important;
   -webkit-tap-highlight-color:transparent!important;
-  margin-bottom:18px!important;
+  margin:0 0 18px!important;
 }
 
-#screenToday h2.today-date-heading-v45 #dateDisplay{
+#todayDateHeading .today-title-date-btn{
   display:inline-flex!important;
   width:auto!important;
   height:auto!important;
+  min-height:0!important;
   padding:0!important;
   margin:0!important;
   border:0!important;
@@ -11311,119 +11304,236 @@ body.mb-add-popup-active{
   text-align:left!important;
   appearance:none!important;
   -webkit-appearance:none!important;
+  pointer-events:none!important;
 }
 
-#screenToday h2.today-date-heading-v45 #dateDisplay::after{
-  content:"⌄";
-  display:inline-block;
-  margin-left:10px;
-  font-size:.55em;
-  line-height:1;
-  color:#7dd3fc;
-  transform:translateY(2px);
-  text-shadow:0 0 12px rgba(56,189,248,.7);
+#todayDateHeading .today-title-arrow{
+  color:#7dd3fc!important;
+  font-size:22px!important;
+  font-weight:950!important;
+  line-height:1!important;
+  transform:translateY(2px)!important;
+  text-shadow:0 0 12px rgba(56,189,248,.75)!important;
+  pointer-events:none!important;
+}
+
+#todayDateHeading .today-title-date-input{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  opacity:.001!important;
+  z-index:10!important;
+  cursor:pointer!important;
+  pointer-events:auto!important;
+  appearance:auto!important;
+  -webkit-appearance:auto!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  background:transparent!important;
 }
 
 #screenToday .hero-stats{
   margin-top:4px!important;
 }
 
-/* Keep Add popup layout from previous working version */
+/* Add workspace sheet: starts right after the daily progress panel, so it feels attached */
 #screenAdd.mb-add-popup-open{
+  position:fixed!important;
+  left:0!important;
+  right:0!important;
+  bottom:0!important;
+  top:var(--mb-add-popup-top, 330px)!important;
+  z-index:99980!important;
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:10px 12px calc(env(safe-area-inset-bottom,0px) + 34px)!important;
   overflow-y:auto!important;
   overflow-x:hidden!important;
   -webkit-overflow-scrolling:touch!important;
+  overscroll-behavior:contain!important;
+  background:
+    linear-gradient(180deg,rgba(5,16,35,.98) 0%,rgba(3,10,24,.995) 42%,#020617 100%)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  box-shadow:0 -18px 36px rgba(0,0,0,.30)!important;
+}
+
+#screenAdd.mb-add-popup-open::before{
+  content:"";
+  position:fixed;
+  left:0;
+  right:0;
+  top:calc(var(--mb-add-popup-top, 330px) - 18px);
+  height:32px;
+  pointer-events:none;
+  background:linear-gradient(180deg,rgba(2,6,23,0),rgba(5,16,35,.98));
+  z-index:-1;
+}
+
+/* centered content with safe margins */
+#screenAdd.mb-add-popup-open > *{
+  width:calc(100vw - 40px)!important;
+  max-width:560px!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+  box-sizing:border-box!important;
+}
+
+/* folder bar behaves like the top of the sheet */
+#screenAdd.mb-add-popup-open #mbAddFolderBar{
+  width:calc(100vw - 40px)!important;
+  max-width:560px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  margin:0 auto 14px!important;
+  padding:8px!important;
+  border-radius:26px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  scrollbar-width:none!important;
+  background:linear-gradient(145deg,rgba(9,25,54,.98),rgba(5,14,32,.98))!important;
+  border:1px solid rgba(59,130,246,.34)!important;
+  box-shadow:0 14px 34px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.06)!important;
+}
+#screenAdd.mb-add-popup-open #mbAddFolderBar::-webkit-scrollbar{display:none!important}
+
+#screenAdd.mb-add-popup-open #mbAddFolderBar .mb-folder-tab,
+#screenAdd.mb-add-popup-open #mbAddFolderBar .mb-folder-scan{
+  flex:0 0 auto!important;
+}
+
+#mbAddFolderCloseBtn{
+  position:sticky!important;
+  right:0!important;
+  margin-left:6px!important;
+  flex:0 0 42px!important;
+  z-index:5!important;
+}
+
+/* ensure all add pages stay within the viewport */
+#screenAdd.mb-add-popup-open .card{
+  width:calc(100vw - 40px)!important;
+  max-width:560px!important;
+  margin-top:14px!important;
+  overflow:hidden!important;
+}
+
+#screenAdd.mb-add-popup-open .db-search-plus-row,
+#screenAdd.mb-add-popup-open .meal-builder-search-row{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 72px!important;
+  gap:10px!important;
+}
+#screenAdd.mb-add-popup-open .add-custom-plus-btn,
+#screenAdd.mb-add-popup-open .meal-builder-search-row button,
+#screenAdd.mb-add-popup-open #openCustomFoodBtn{
+  width:72px!important;
+  min-width:72px!important;
+  max-width:72px!important;
+}
+
+@media(max-width:430px){
+  #screenAdd.mb-add-popup-open > *,
+  #screenAdd.mb-add-popup-open .card,
+  #screenAdd.mb-add-popup-open #mbAddFolderBar{
+    width:calc(100vw - 24px)!important;
+    max-width:calc(100vw - 24px)!important;
+  }
+  #screenAdd.mb-add-popup-open .db-search-plus-row,
+  #screenAdd.mb-add-popup-open .meal-builder-search-row{
+    grid-template-columns:minmax(0,1fr) 64px!important;
+    gap:8px!important;
+  }
+  #screenAdd.mb-add-popup-open .add-custom-plus-btn,
+  #screenAdd.mb-add-popup-open .meal-builder-search-row button,
+  #screenAdd.mb-add-popup-open #openCustomFoodBtn{
+    width:64px!important;
+    min-width:64px!important;
+    max-width:64px!important;
+  }
 }
 </style>
 
-<script id="mb-v45-stable-date-heading-js">
+<script id="mb-v46-date-and-add-sheet-fix-js">
 (function(){
   function byId(id){return document.getElementById(id)}
   function localTodayKey(){
     var d=new Date();
     return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   }
-  function pretty(v){
+  function prettyDate(v){
     if(!v || v===localTodayKey()) return 'Today';
     try{
       return new Date(v+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
     }catch(e){return v || 'Today'}
   }
-  function setHeadingText(){
-    var input=byId('date'), display=byId('dateDisplay');
-    if(input && display) display.textContent=pretty(input.value);
+  function updateHeadingDate(){
+    var input=byId('date'), btn=byId('dateDisplay');
+    if(input && btn) btn.textContent=prettyDate(input.value);
   }
-  function openPicker(e){
-    if(e){e.preventDefault();e.stopPropagation();}
+  function setAddTopAfterDailyProgress(){
+    var stats=document.querySelector('#screenToday .hero-stats');
+    var top=0;
+    if(stats){
+      var r=stats.getBoundingClientRect();
+      top=Math.ceil(r.bottom + 8);
+    }
+    if(top < 190){
+      var nav=document.querySelector('.tab-bar');
+      if(nav) top=Math.ceil(nav.getBoundingClientRect().bottom + 16);
+    }
+    if(top < 190) top=330;
+    document.documentElement.style.setProperty('--mb-add-popup-top', top+'px');
+  }
+  function initDate(){
     var input=byId('date');
     if(!input) return;
-    try{
-      if(input.showPicker){input.showPicker();return;}
-    }catch(err){}
-    input.focus();
-    input.click();
-  }
-  function install(){
-    var card=document.querySelector('#screenToday > .card');
-    var h2=card ? card.querySelector('h2') : null;
-    var display=byId('dateDisplay');
-    var input=byId('date');
-    if(!h2 || !display || !input) return;
-
-    h2.classList.add('today-date-heading-v45');
-
-    /* Move the existing dateDisplay button into the heading.
-       This preserves the original app logic that already updates #dateDisplay. */
-    if(display.parentElement !== h2){
-      h2.appendChild(display);
-    }
-
-    /* Remove only the old text node "Today"; keep icon + date button */
-    Array.from(h2.childNodes).forEach(function(n){
-      if(n.nodeType===3 && n.textContent.trim()==='Today') n.textContent='';
-    });
-
-    if(!h2.__mbV45Click){
-      h2.addEventListener('click',openPicker);
-      h2.addEventListener('touchend',openPicker,{passive:false});
-      h2.__mbV45Click=true;
-    }
-
-    if(!input.__mbV45Date){
+    if(!input.value) input.value=localTodayKey();
+    if(!input.__mbV46Bound){
       input.addEventListener('change',function(){
-        setTimeout(setHeadingText,0);
+        updateHeadingDate();
+        if(typeof window.dateChanged==='function'){
+          try{ window.dateChanged(); }catch(e){}
+        }
       });
-      input.__mbV45Date=true;
+      input.__mbV46Bound=true;
     }
-
-    setHeadingText();
+    updateHeadingDate();
   }
 
   var oldUpdate=window.updateDateDisplay;
-  if(typeof oldUpdate==='function' && !window.__mbV45UpdateWrapped){
+  if(typeof oldUpdate==='function' && !window.__mbV46UpdateWrapped){
     window.updateDateDisplay=function(){
-      try{oldUpdate.apply(this,arguments)}catch(e){}
-      setHeadingText();
+      try{ oldUpdate.apply(this,arguments); }catch(e){}
+      updateHeadingDate();
     };
-    window.__mbV45UpdateWrapped=true;
+    window.__mbV46UpdateWrapped=true;
   }
 
-  var oldDateChanged=window.dateChanged;
-  if(typeof oldDateChanged==='function' && !window.__mbV45DateChangedWrapped){
-    window.dateChanged=function(){
-      var r;
-      try{r=oldDateChanged.apply(this,arguments)}catch(e){}
-      setHeadingText();
-      return r;
+  var oldOpen=window.openAddWorkspacePopup;
+  if(typeof oldOpen==='function' && !window.__mbV46OpenWrapped){
+    window.openAddWorkspacePopup=function(){
+      setAddTopAfterDailyProgress();
+      var res=oldOpen.apply(this,arguments);
+      setTimeout(setAddTopAfterDailyProgress,40);
+      setTimeout(setAddTopAfterDailyProgress,250);
+      return res;
     };
-    window.__mbV45DateChangedWrapped=true;
+    window.__mbV46OpenWrapped=true;
   }
 
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',install);
-  else install();
-
-  setTimeout(install,100);
-  setTimeout(install,600);
+  function boot(){
+    initDate();
+    setAddTopAfterDailyProgress();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+  window.addEventListener('resize',setAddTopAfterDailyProgress);
+  window.addEventListener('orientationchange',function(){setTimeout(setAddTopAfterDailyProgress,300)});
 })();
 </script>
 
