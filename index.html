@@ -9627,5 +9627,114 @@ body.mb-clean-modal-open{
 })();
 </script>
 
+
+<style id="mb-v26-fixes">
+/* V26: meal quantity popup buttons horizontal on the same line */
+#mealQuantityModal .mb-modal-actions{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:10px!important;
+  margin-top:14px!important;
+}
+#mealQuantityModal .mb-modal-actions button,
+#mealQuantityModal .mb-modal-actions button:last-child{
+  grid-column:auto!important;
+  width:100%!important;
+  margin:0!important;
+}
+#cancelMealEditBtn{
+  display:none;
+}
+#customMealCard.editing-meal #cancelMealEditBtn{
+  display:block!important;
+}
+#customMealCard.editing-meal .meal-action-row{
+  grid-template-columns:1fr 1fr 1fr!important;
+}
+@media(max-width:430px){
+  #customMealCard.editing-meal .meal-action-row{
+    grid-template-columns:1fr!important;
+  }
+}
+</style>
+
+<script id="mb-v26-custom-meal-search-edit-fixes">
+(function(){
+  function q(id){return document.getElementById(id)}
+  function norm(v){return String(v||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,' ')}
+  function N(v){var n=parseFloat(v);return Number.isFinite(n)?n:0}
+  function R(v){return Math.round(N(v)*10)/10}
+  function readJSON(k){try{return JSON.parse(localStorage.getItem(k)||'[]')||[]}catch(e){return[]}}
+  function getMeals(){try{if(typeof window.getCustomMeals==='function')return window.getCustomMeals()}catch(e){} return readJSON('macro_custom_meals_v1')}
+  function keyOf(x){return norm((x&&x.name)||'')+'|'+norm((x&&x.serving)||'1 meal')+'|custom meal'}
+  function mealItem(m){return Object.assign({},m,{cat:'Custom Meal',serving:m.serving||'1 meal',source:'custom_meal'});}
+  function injectMealsIntoMainDatabase(){
+    var meals=getMeals().map(mealItem); if(!meals.length)return;
+    try{
+      if(typeof foodDatabase!=='undefined' && Array.isArray(foodDatabase)){
+        var seen=new Set(foodDatabase.map(keyOf));
+        meals.slice().reverse().forEach(function(m){var k=keyOf(m); if(!seen.has(k)){foodDatabase.unshift(m);seen.add(k);}});
+      }
+    }catch(e){}
+    try{
+      if(Array.isArray(window.foodDatabase)){
+        var seen2=new Set(window.foodDatabase.map(keyOf));
+        meals.slice().reverse().forEach(function(m){var k=keyOf(m); if(!seen2.has(k)){window.foodDatabase.unshift(m);seen2.add(k);}});
+      }
+    }catch(e){}
+  }
+  window.injectCustomMealsIntoFoodSearch=injectMealsIntoMainDatabase;
+
+  var oldRender=window.renderFoodDatabase;
+  if(typeof oldRender==='function'){
+    window.renderFoodDatabase=function(){injectMealsIntoMainDatabase();return oldRender.apply(this,arguments)};
+  }
+
+  /* Make saved custom meals immediately searchable after saving/deleting, even before reload */
+  var oldSave=window.saveCustomMeal;
+  if(typeof oldSave==='function'){
+    window.saveCustomMeal=function(){var r=oldSave.apply(this,arguments);injectMealsIntoMainDatabase();try{if(typeof oldRender==='function')window.renderFoodDatabase()}catch(e){}return r};
+  }
+  var oldDelete=window.deleteSavedMeal;
+  if(typeof oldDelete==='function'){
+    window.deleteSavedMeal=function(id){var r=oldDelete.apply(this,arguments);try{
+      var meals=getMeals().map(mealItem), allowed=new Set(meals.map(keyOf));
+      if(typeof foodDatabase!=='undefined'&&Array.isArray(foodDatabase))foodDatabase=foodDatabase.filter(function(x){return x.source!=='custom_meal'||allowed.has(keyOf(x))});
+      if(Array.isArray(window.foodDatabase))window.foodDatabase=window.foodDatabase.filter(function(x){return x.source!=='custom_meal'||allowed.has(keyOf(x))});
+      if(typeof window.renderFoodDatabase==='function')window.renderFoodDatabase();
+    }catch(e){}return r};
+  }
+
+  /* Add a Cancel Edit button to Custom Meal Builder and make Edit reversible */
+  function ensureCancelEditButton(){
+    var row=document.querySelector('#customMealCard .meal-action-row'); if(!row||q('cancelMealEditBtn'))return;
+    var b=document.createElement('button'); b.id='cancelMealEditBtn'; b.type='button'; b.className='light'; b.textContent='Cancel Edit';
+    b.onclick=function(){window.cancelSavedMealEdit&&window.cancelSavedMealEdit()};
+    row.appendChild(b);
+  }
+  function renderMealItemsSafe(){try{if(typeof window.renderMealItems==='function')window.renderMealItems()}catch(e){
+    var box=q('mealItemList'); if(box)box.innerHTML='<p class="note">No foods added yet.</p>';
+  }}
+  window.cancelSavedMealEdit=function(){
+    window._mbEditingMealId=null;
+    var card=q('customMealCard'); if(card)card.classList.remove('editing-meal');
+    if(q('mealName'))q('mealName').value='';
+    window._mbMealItems=[];
+    renderMealItemsSafe();
+  };
+  var oldUse=window.useSavedMeal;
+  window.useSavedMeal=function(id){
+    var r=oldUse?oldUse.apply(this,arguments):undefined;
+    window._mbEditingMealId=id;
+    var card=q('customMealCard'); if(card)card.classList.add('editing-meal');
+    ensureCancelEditButton();
+    return r;
+  };
+
+  function init(){ensureCancelEditButton();injectMealsIntoMainDatabase();try{if(typeof window.renderFoodDatabase==='function')window.renderFoodDatabase()}catch(e){}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,250);setTimeout(init,1200)});else{setTimeout(init,150);setTimeout(init,1000)}
+})();
+</script>
+
 </body>
 </html>
