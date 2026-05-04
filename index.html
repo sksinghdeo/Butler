@@ -10131,5 +10131,248 @@ body.mb-clean-modal-open{
 })();
 </script>
 
+
+
+<!-- MB V36: Add page as full popup + Macro Calculator popup from Edit Goals -->
+<style id="mb-v36-popup-add-goals">
+/* Hide Add from the main top navigation; Add Food now opens the full Add workspace as a popup */
+.tab-bar .tab-btn[data-screen="Add"]{display:none!important;}
+
+/* Full Add workspace popup */
+#screenAdd.mb-add-popup-open{
+  position:fixed!important;
+  inset:0!important;
+  z-index:99980!important;
+  display:block!important;
+  overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch!important;
+  padding:18px!important;
+  background:rgba(2,6,23,.66)!important;
+  backdrop-filter:blur(14px)!important;
+  -webkit-backdrop-filter:blur(14px)!important;
+  animation:none!important;
+}
+#screenAdd.mb-add-popup-open::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 25% 8%,rgba(37,99,235,.22),transparent 34%),
+    radial-gradient(circle at 88% 28%,rgba(124,58,237,.18),transparent 30%);
+}
+#screenAdd.mb-add-popup-open > *{
+  position:relative;
+  max-width:560px;
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
+#mbAddPopupClose{
+  display:none;
+}
+#screenAdd.mb-add-popup-open #mbAddPopupClose{
+  display:flex!important;
+  position:sticky!important;
+  top:8px!important;
+  z-index:99990!important;
+  width:100%!important;
+  max-width:560px!important;
+  margin:0 auto 10px!important;
+  justify-content:flex-end!important;
+  pointer-events:none;
+}
+#screenAdd.mb-add-popup-open #mbAddPopupClose button{
+  pointer-events:auto;
+  width:auto!important;
+  min-width:104px!important;
+  margin:0!important;
+  padding:12px 16px!important;
+  border-radius:999px!important;
+  font-size:15px!important;
+  color:#bfdbfe!important;
+  background:rgba(15,23,42,.92)!important;
+  border:1px solid rgba(96,165,250,.30)!important;
+  box-shadow:0 0 22px rgba(37,99,235,.30)!important;
+}
+body.mb-add-popup-lock{overflow:hidden!important;}
+
+/* Macro calculator popup */
+#mbGoalPopup{
+  position:fixed;
+  inset:0;
+  z-index:99970;
+  display:none;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:18px;
+  background:rgba(2,6,23,.68);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+}
+#mbGoalPopup.active{display:block;}
+#mbGoalPopup .mb-goal-shell{max-width:560px;margin:0 auto 28px;position:relative;}
+#mbGoalPopup .mb-goal-close-row{position:sticky;top:8px;z-index:99972;display:flex;justify-content:flex-end;margin-bottom:10px;}
+#mbGoalPopup .mb-goal-close-row button{
+  width:auto!important;
+  min-width:104px!important;
+  margin:0!important;
+  padding:12px 16px!important;
+  border-radius:999px!important;
+  font-size:15px!important;
+  color:#bfdbfe!important;
+  background:rgba(15,23,42,.92)!important;
+  border:1px solid rgba(96,165,250,.30)!important;
+  box-shadow:0 0 22px rgba(37,99,235,.30)!important;
+}
+#mbGoalPopup #mbGoalContent > .card{margin-top:0!important;}
+body.mb-goal-popup-lock{overflow:hidden!important;}
+
+/* Settings should only be app settings now; macro calculator is launched from Edit Goals */
+body.mb-v36-ready #screenSettings > .card.card-red:first-child{display:none!important;}
+
+@media(max-width:430px){
+  #screenAdd.mb-add-popup-open,#mbGoalPopup{padding:12px!important;}
+  #screenAdd.mb-add-popup-open #mbAddPopupClose button,
+  #mbGoalPopup .mb-goal-close-row button{min-width:92px!important;padding:11px 14px!important;}
+}
+</style>
+
+<script id="mb-v36-popup-add-goals-js">
+(function(){
+  const $id=(id)=>document.getElementById(id);
+  let previousScreenName='Today';
+  let originalShowScreen=null;
+  let macroCardHome=null;
+
+  function currentScreenName(){
+    const active=document.querySelector('.screen.active');
+    return active ? active.id.replace(/^screen/,'') : 'Today';
+  }
+
+  function ensureAddClose(){
+    const add=$id('screenAdd');
+    if(!add) return;
+    let close=$id('mbAddPopupClose');
+    if(!close){
+      close=document.createElement('div');
+      close.id='mbAddPopupClose';
+      close.innerHTML='<button type="button" onclick="closeAddWorkspacePopup()">Close</button>';
+      add.insertBefore(close, add.firstChild);
+    }
+  }
+
+  window.openAddWorkspacePopup=function(){
+    const add=$id('screenAdd');
+    if(!add) return;
+    previousScreenName=currentScreenName();
+    ensureAddClose();
+    add.classList.add('mb-add-popup-open');
+    document.body.classList.add('mb-add-popup-lock');
+    try{ if(typeof window.renderFoodDatabase==='function') window.renderFoodDatabase(); }catch(e){}
+    try{ if(typeof window.renderIngredientResults==='function') window.renderIngredientResults(); }catch(e){}
+    try{ if(typeof window.renderMealFoodResults==='function') window.renderMealFoodResults(); }catch(e){}
+    setTimeout(()=>{ try{add.scrollTo({top:0,behavior:'smooth'});}catch(e){add.scrollTop=0;} },30);
+  };
+
+  window.closeAddWorkspacePopup=function(){
+    const add=$id('screenAdd');
+    if(add) add.classList.remove('mb-add-popup-open');
+    document.body.classList.remove('mb-add-popup-lock');
+  };
+
+  function ensureGoalPopup(){
+    let pop=$id('mbGoalPopup');
+    if(!pop){
+      pop=document.createElement('div');
+      pop.id='mbGoalPopup';
+      pop.innerHTML='<div class="mb-goal-shell"><div class="mb-goal-close-row"><button type="button" onclick="closeMacroCalculatorPopup()">Close</button></div><div id="mbGoalContent"></div></div>';
+      document.body.appendChild(pop);
+    }
+    return pop;
+  }
+
+  function findMacroCard(){
+    const cards=Array.from(document.querySelectorAll('#screenSettings > .card'));
+    return cards.find(c=>/Macro Calculator/i.test(c.textContent||'')) || null;
+  }
+
+  window.openMacroCalculatorPopup=function(){
+    const pop=ensureGoalPopup();
+    const content=$id('mbGoalContent');
+    let card=findMacroCard() || macroCardHome;
+    if(!card) return;
+    if(!macroCardHome) macroCardHome=card;
+    content.appendChild(card);
+    card.style.display='';
+    pop.classList.add('active');
+    document.body.classList.add('mb-goal-popup-lock');
+    try{ if(typeof window.calculateMacroTargets==='function') window.calculateMacroTargets(false); }catch(e){}
+    setTimeout(()=>{ try{pop.scrollTo({top:0,behavior:'smooth'});}catch(e){pop.scrollTop=0;} },30);
+  };
+
+  window.closeMacroCalculatorPopup=function(){
+    const pop=$id('mbGoalPopup');
+    const settings=$id('screenSettings');
+    const card=macroCardHome || (pop ? pop.querySelector('.card') : null);
+    if(card && settings){
+      settings.insertBefore(card, settings.firstChild);
+    }
+    if(pop) pop.classList.remove('active');
+    document.body.classList.remove('mb-goal-popup-lock');
+  };
+
+  function wireHomeButtons(){
+    // Today Add Food should open the Add workspace popup, not the Add screen.
+    document.querySelectorAll('button').forEach(btn=>{
+      const txt=(btn.textContent||'').trim();
+      const on=btn.getAttribute('onclick')||'';
+      if(txt==='Add Food' && /showScreen\(['\"]Add['\"]\)/.test(on)){
+        btn.setAttribute('onclick','openAddWorkspacePopup()');
+      }
+      if(/Edit Goals/i.test(txt) && /showScreen\(['\"]Settings['\"]\)/.test(on)){
+        btn.setAttribute('onclick','openMacroCalculatorPopup()');
+      }
+    });
+  }
+
+  function hideAddTopTab(){
+    const addTab=document.querySelector('.tab-bar .tab-btn[data-screen="Add"]');
+    if(addTab) addTab.style.display='none';
+  }
+
+  function overrideShowScreen(){
+    if(window.__mbV36ShowScreenDone) return;
+    originalShowScreen=window.showScreen;
+    if(typeof originalShowScreen==='function'){
+      window.showScreen=function(name){
+        if(name==='Add'){
+          openAddWorkspacePopup();
+          return;
+        }
+        closeAddWorkspacePopup();
+        closeMacroCalculatorPopup();
+        return originalShowScreen.apply(this,arguments);
+      };
+      window.__mbV36ShowScreenDone=true;
+    }
+  }
+
+  function boot(){
+    ensureAddClose();
+    ensureGoalPopup();
+    hideAddTopTab();
+    wireHomeButtons();
+    overrideShowScreen();
+    document.body.classList.add('mb-v36-ready');
+    // Do not let old patches re-show Add as a top tab.
+    setTimeout(hideAddTopTab,300);
+    setTimeout(hideAddTopTab,1200);
+    setTimeout(wireHomeButtons,1200);
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+})();
+</script>
+
 </body>
 </html>
