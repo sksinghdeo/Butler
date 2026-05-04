@@ -11085,5 +11085,186 @@ body.mb-add-popup-active{
 })();
 </script>
 
+
+
+<!-- MB V42: Fix Add workspace page overflow / right-edge clipping on all Add tabs -->
+<style id="mb-v42-add-workspace-overflow-fix">
+/* The Add popup is a full-screen overlay, but every visible part must be centered and clipped safely */
+#screenAdd.mb-add-popup-open{
+  left:0!important;
+  right:0!important;
+  width:100%!important;
+  max-width:none!important;
+  overflow-x:hidden!important;
+  padding-left:0!important;
+  padding-right:0!important;
+}
+
+/* Centered inner width for ALL direct children: folder bar, cards, footer */
+#screenAdd.mb-add-popup-open > *{
+  width:calc(100vw - 40px)!important;
+  max-width:560px!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+  box-sizing:border-box!important;
+}
+
+/* Folder tab bar: no clipping, no hidden right edge, clean close button alignment */
+#screenAdd.mb-add-popup-open #mbAddFolderBar{
+  width:calc(100vw - 40px)!important;
+  max-width:560px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  padding:8px!important;
+  box-sizing:border-box!important;
+  scrollbar-width:none!important;
+}
+
+#screenAdd.mb-add-popup-open #mbAddFolderBar::-webkit-scrollbar{
+  display:none!important;
+}
+
+#screenAdd.mb-add-popup-open #mbAddFolderBar .pill,
+#screenAdd.mb-add-popup-open #mbAddFolderBar button:not(#mbAddFolderCloseBtn){
+  flex:0 0 auto!important;
+}
+
+/* Keep close visible and inside the bar, not hanging out of the page */
+#mbAddFolderCloseBtn{
+  position:sticky!important;
+  right:0!important;
+  margin-left:6px!important;
+  flex:0 0 42px!important;
+  z-index:5!important;
+}
+
+/* Add cards cannot exceed the safe content width */
+#screenAdd.mb-add-popup-open .card{
+  width:calc(100vw - 40px)!important;
+  max-width:560px!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+}
+
+/* Inner rows should never push the card outside the right edge */
+#screenAdd.mb-add-popup-open .row,
+#screenAdd.mb-add-popup-open .db-search-plus-row,
+#screenAdd.mb-add-popup-open .meal-builder-search-row,
+#screenAdd.mb-add-popup-open .recipe-action-row,
+#screenAdd.mb-add-popup-open .meal-action-row{
+  max-width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+
+#screenAdd.mb-add-popup-open input,
+#screenAdd.mb-add-popup-open select,
+#screenAdd.mb-add-popup-open textarea{
+  min-width:0!important;
+}
+
+/* Search + plus rows: prevent plus button from pushing off-screen */
+#screenAdd.mb-add-popup-open .db-search-plus-row,
+#screenAdd.mb-add-popup-open .meal-builder-search-row{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 72px!important;
+  gap:10px!important;
+  align-items:end!important;
+}
+
+#screenAdd.mb-add-popup-open .add-custom-plus-btn,
+#screenAdd.mb-add-popup-open .meal-builder-search-row button,
+#screenAdd.mb-add-popup-open #openCustomFoodBtn{
+  width:72px!important;
+  min-width:72px!important;
+  max-width:72px!important;
+}
+
+/* List cards / history sections should stay inside the page */
+#screenAdd.mb-add-popup-open .compact-details,
+#screenAdd.mb-add-popup-open .mini-result-list,
+#screenAdd.mb-add-popup-open .search-scroll-box,
+#screenAdd.mb-add-popup-open .history-section,
+#screenAdd.mb-add-popup-open .saved-food,
+#screenAdd.mb-add-popup-open .meal-item{
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+
+/* Remove old side artifacts from previous overlay attempts */
+#screenAdd.mb-add-popup-open::after{
+  left:0!important;
+  right:0!important;
+  width:100%!important;
+}
+
+/* On narrow iPhones, use tighter safe margins */
+@media(max-width:430px){
+  #screenAdd.mb-add-popup-open > *,
+  #screenAdd.mb-add-popup-open .card,
+  #screenAdd.mb-add-popup-open #mbAddFolderBar{
+    width:calc(100vw - 24px)!important;
+    max-width:calc(100vw - 24px)!important;
+  }
+
+  #screenAdd.mb-add-popup-open .db-search-plus-row,
+  #screenAdd.mb-add-popup-open .meal-builder-search-row{
+    grid-template-columns:minmax(0,1fr) 64px!important;
+    gap:8px!important;
+  }
+
+  #screenAdd.mb-add-popup-open .add-custom-plus-btn,
+  #screenAdd.mb-add-popup-open .meal-builder-search-row button,
+  #screenAdd.mb-add-popup-open #openCustomFoodBtn{
+    width:64px!important;
+    min-width:64px!important;
+    max-width:64px!important;
+  }
+
+  #mbAddFolderCloseBtn{
+    flex-basis:40px!important;
+  }
+}
+</style>
+
+<script id="mb-v42-add-workspace-overflow-fix-js">
+(function(){
+  function fixAddWorkspaceLayout(){
+    var add=document.getElementById('screenAdd');
+    if(!add || !add.classList.contains('mb-add-popup-open')) return;
+
+    /* force horizontal scroll position to left so no clipped right-edge memory remains */
+    add.scrollLeft=0;
+
+    var bar=document.getElementById('mbAddFolderBar');
+    if(bar){
+      bar.scrollLeft=Math.max(0, bar.scrollLeft);
+    }
+  }
+
+  var oldOpen=window.openAddWorkspacePopup;
+  if(typeof oldOpen==='function' && !window.__mbV42OpenWrapped){
+    window.openAddWorkspacePopup=function(){
+      var res=oldOpen.apply(this,arguments);
+      setTimeout(fixAddWorkspaceLayout,30);
+      setTimeout(fixAddWorkspaceLayout,200);
+      setTimeout(fixAddWorkspaceLayout,600);
+      return res;
+    };
+    window.__mbV42OpenWrapped=true;
+  }
+
+  document.addEventListener('click',function(){
+    setTimeout(fixAddWorkspaceLayout,40);
+  },true);
+
+  window.addEventListener('resize',fixAddWorkspaceLayout);
+  window.addEventListener('orientationchange',function(){setTimeout(fixAddWorkspaceLayout,300)});
+})();
+</script>
+
 </body>
 </html>
