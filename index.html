@@ -1519,9 +1519,9 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
 
 <section id="screenToday" class="screen active">
   <div class="card card-blue">
-    <h2 id="todayDateHeading" class="today-date-heading-v67" onclick="return window.mbDateOpen && window.mbDateOpen(event)">
+    <h2 id="todayDateHeading" class="today-date-heading-v70">
       <span class="bc-icon">HM</span>
-      <button id="dateDisplay" class="today-date-trigger" type="button" onclick="return window.mbDateOpen && window.mbDateOpen(event)">Today</button>
+      <button id="dateDisplay" class="today-date-trigger" type="button">Today</button>
       <span class="today-title-arrow">⌄</span>
       <input id="date" type="date" value="">
     </h2>
@@ -10992,8 +10992,11 @@ body.mb-add-popup-active{overflow:hidden!important;}
 
 
 
-<!-- MB V67: force-working date selector -->
-<style id="mb-v67-force-date">
+
+
+<!-- MB V70: stable in-flow calendar under Today heading -->
+<style id="mb-v70-stable-calendar">
+/* consistent top nav labels */
 .tab-bar{
   display:grid!important;
   grid-template-columns:repeat(4,minmax(0,1fr))!important;
@@ -11020,8 +11023,8 @@ body.mb-add-popup-active{overflow:hidden!important;}
   color:inherit;
 }
 
-#todayDateHeading.today-date-heading-v67{
-  position:relative!important;
+/* visible date heading button */
+#todayDateHeading.today-date-heading-v70{
   display:inline-flex!important;
   align-items:center!important;
   gap:10px!important;
@@ -11029,12 +11032,16 @@ body.mb-add-popup-active{overflow:hidden!important;}
   max-width:100%!important;
   cursor:pointer!important;
   user-select:none!important;
-  -webkit-tap-highlight-color:rgba(56,189,248,.18)!important;
-  z-index:500!important;
-  pointer-events:auto!important;
+  padding:8px 14px!important;
+  border-radius:18px!important;
+  background:linear-gradient(145deg,rgba(2,6,23,.40),rgba(15,23,42,.34))!important;
+  border:1px solid rgba(125,211,252,.28)!important;
+  box-shadow:0 0 18px rgba(56,189,248,.16), inset 0 1px 0 rgba(255,255,255,.06)!important;
+  -webkit-tap-highlight-color:rgba(56,189,248,.20)!important;
+  margin-bottom:18px!important;
 }
-
 #todayDateHeading .today-date-trigger{
+  display:inline-flex!important;
   width:auto!important;
   height:auto!important;
   min-height:0!important;
@@ -11049,36 +11056,33 @@ body.mb-add-popup-active{overflow:hidden!important;}
   line-height:1!important;
   text-align:left!important;
   cursor:pointer!important;
-  pointer-events:auto!important;
 }
-
 #todayDateHeading .today-title-arrow{
-  color:#fff!important;
+  color:#7dd3fc!important;
   font-size:24px!important;
   font-weight:900!important;
   line-height:1!important;
   transform:translateY(1px)!important;
-  pointer-events:none!important;
+  text-shadow:0 0 12px rgba(56,189,248,.75)!important;
 }
-
 #todayDateHeading #date{
   display:none!important;
 }
 
-/* Calendar appears directly under the date heading inside the Home card */
+/* Calendar is in normal page flow, not floating over the dashboard */
 #mbInlineCalendar{
   display:none;
-  position:absolute;
-  left:18px;
-  right:18px;
-  top:88px;
-  z-index:10000;
+  width:100%;
+  box-sizing:border-box;
+  margin:0 0 18px 0;
   padding:14px;
   border-radius:22px;
   background:linear-gradient(145deg,rgba(6,13,28,.99),rgba(9,18,35,.99));
   border:1px solid rgba(56,189,248,.42);
-  box-shadow:0 22px 52px rgba(0,0,0,.62),0 0 30px rgba(37,99,235,.28);
+  box-shadow:0 18px 42px rgba(0,0,0,.50),0 0 24px rgba(37,99,235,.24);
   color:#f8fafc;
+  position:relative;
+  z-index:5;
 }
 #mbInlineCalendar.active{
   display:block!important;
@@ -11108,6 +11112,7 @@ body.mb-add-popup-active{overflow:hidden!important;}
   justify-content:center!important;
   padding:0!important;
   margin:0!important;
+  cursor:pointer!important;
 }
 .mb-cal-grid{
   display:grid;
@@ -11134,6 +11139,8 @@ body.mb-add-popup-active{overflow:hidden!important;}
   justify-content:center!important;
   padding:0!important;
   margin:0!important;
+  cursor:pointer!important;
+  -webkit-tap-highlight-color:rgba(125,211,252,.22)!important;
 }
 .mb-cal-day.blank{
   opacity:0!important;
@@ -11160,13 +11167,9 @@ body.mb-add-popup-active{overflow:hidden!important;}
   margin:0!important;
   border-radius:14px!important;
 }
-
-#screenToday .card-blue{
-  position:relative!important;
-}
 </style>
 
-<script id="mb-v67-force-date-js">
+<script id="mb-v70-stable-calendar-js">
 (function(){
   function byId(id){ return document.getElementById(id); }
 
@@ -11180,11 +11183,11 @@ body.mb-add-popup-active{overflow:hidden!important;}
   }
 
   function parseKey(v){
-    var parts = (v || todayKey()).split('-').map(Number);
-    return new Date(parts[0], parts[1]-1, parts[2]);
+    var p = (v || todayKey()).split('-').map(Number);
+    return new Date(p[0], p[1]-1, p[2]);
   }
 
-  function dateLabel(v){
+  function labelFor(v){
     if(!v || v === todayKey()) return 'Today';
     return parseKey(v).toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
   }
@@ -11192,7 +11195,7 @@ body.mb-add-popup-active{overflow:hidden!important;}
   function updateText(){
     var input = byId('date');
     var display = byId('dateDisplay');
-    if(input && display) display.textContent = dateLabel(input.value);
+    if(input && display) display.textContent = labelFor(input.value);
   }
 
   var visibleMonth = null;
@@ -11200,7 +11203,9 @@ body.mb-add-popup-active{overflow:hidden!important;}
   function ensureCalendar(){
     if(byId('mbInlineCalendar')) return;
 
-    var card = document.querySelector('#screenToday .card-blue') || byId('screenToday');
+    var heading = byId('todayDateHeading');
+    if(!heading || !heading.parentNode) return;
+
     var cal = document.createElement('div');
     cal.id = 'mbInlineCalendar';
     cal.innerHTML =
@@ -11214,29 +11219,34 @@ body.mb-add-popup-active{overflow:hidden!important;}
         '<button type="button" class="light" id="mbCalClose">Close</button>' +
         '<button type="button" class="good" id="mbCalToday">Today</button>' +
       '</div>';
-    card.appendChild(cal);
 
-    byId('mbCalPrev').addEventListener('click', function(e){
-      e.preventDefault(); e.stopPropagation();
+    heading.insertAdjacentElement('afterend', cal);
+
+    byId('mbCalPrev').onclick = function(e){
+      e.preventDefault();
       visibleMonth.setMonth(visibleMonth.getMonth() - 1);
       renderCalendar();
-    });
+      return false;
+    };
 
-    byId('mbCalNext').addEventListener('click', function(e){
-      e.preventDefault(); e.stopPropagation();
+    byId('mbCalNext').onclick = function(e){
+      e.preventDefault();
       visibleMonth.setMonth(visibleMonth.getMonth() + 1);
       renderCalendar();
-    });
+      return false;
+    };
 
-    byId('mbCalClose').addEventListener('click', function(e){
-      e.preventDefault(); e.stopPropagation();
+    byId('mbCalClose').onclick = function(e){
+      e.preventDefault();
       closeCalendar();
-    });
+      return false;
+    };
 
-    byId('mbCalToday').addEventListener('click', function(e){
-      e.preventDefault(); e.stopPropagation();
+    byId('mbCalToday').onclick = function(e){
+      e.preventDefault();
       chooseDate(todayKey());
-    });
+      return false;
+    };
   }
 
   function renderCalendar(){
@@ -11280,20 +11290,17 @@ body.mb-add-popup-active{overflow:hidden!important;}
       btn.className = 'mb-cal-day' + (key === today ? ' today' : '') + (key === selected ? ' selected' : '');
       btn.textContent = day;
       btn.dataset.date = key;
-      btn.addEventListener('click', function(e){
-        e.preventDefault(); e.stopPropagation();
+      btn.onclick = function(e){
+        e.preventDefault();
         chooseDate(this.dataset.date);
-      });
+        return false;
+      };
       grid.appendChild(btn);
     }
   }
 
   function openCalendar(e){
-    if(e){
-      e.preventDefault();
-      e.stopPropagation();
-      if(e.stopImmediatePropagation) e.stopImmediatePropagation();
-    }
+    if(e) e.preventDefault();
 
     var input = byId('date');
     if(input && !input.value) input.value = todayKey();
@@ -11302,7 +11309,7 @@ body.mb-add-popup-active{overflow:hidden!important;}
     renderCalendar();
 
     var cal = byId('mbInlineCalendar');
-    if(cal) cal.classList.add('active');
+    if(cal) cal.classList.toggle('active');
 
     return false;
   }
@@ -11314,7 +11321,7 @@ body.mb-add-popup-active{overflow:hidden!important;}
 
   function chooseDate(key){
     var input = byId('date');
-    if(!input) return;
+    if(!input) return false;
 
     input.value = key;
     updateText();
@@ -11325,19 +11332,15 @@ body.mb-add-popup-active{overflow:hidden!important;}
 
     updateText();
     closeCalendar();
+    return false;
   }
-
-  window.mbDateOpen = openCalendar;
-  window.mbDateChoose = chooseDate;
-  window.mbUpdateTodayText = updateText;
-  window.updateDateDisplay = updateText;
 
   function install(){
     var input = byId('date');
-    var btn = byId('dateDisplay');
+    var display = byId('dateDisplay');
     var heading = byId('todayDateHeading');
 
-    if(!input || !btn || !heading) return;
+    if(!input || !display || !heading) return;
 
     if(!input.value) input.value = todayKey();
     input.style.display = 'none';
@@ -11345,214 +11348,17 @@ body.mb-add-popup-active{overflow:hidden!important;}
     ensureCalendar();
 
     heading.onclick = openCalendar;
-    btn.onclick = openCalendar;
+    display.onclick = openCalendar;
 
-    if(!heading.__mbV67Bound){
-      ['pointerdown','touchstart','mousedown','click'].forEach(function(type){
-        heading.addEventListener(type, openCalendar, {capture:true, passive:false});
-        btn.addEventListener(type, openCalendar, {capture:true, passive:false});
-      });
-      heading.__mbV67Bound = true;
-    }
-
+    window.updateDateDisplay = updateText;
     updateText();
   }
 
-  document.addEventListener('click', function(e){
-    var cal = byId('mbInlineCalendar');
-    if(!cal || !cal.classList.contains('active')) return;
-    if(e.target.closest('#mbInlineCalendar') || e.target.closest('#todayDateHeading')) return;
-    closeCalendar();
-  }, true);
-
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install);
   else install();
 
-  setTimeout(install, 100);
-  setTimeout(install, 600);
-  setTimeout(install, 1500);
-})();
-</script>
-
-
-
-
-
-<!-- MB V69: hard-fix calendar day selection with direct inline handlers -->
-<style id="mb-v69-calendar-hard-select">
-#todayDateHeading.today-date-heading-v67{
-  padding:8px 14px!important;
-  border-radius:18px!important;
-  background:linear-gradient(145deg,rgba(2,6,23,.40),rgba(15,23,42,.34))!important;
-  border:1px solid rgba(125,211,252,.28)!important;
-  box-shadow:0 0 18px rgba(56,189,248,.16), inset 0 1px 0 rgba(255,255,255,.06)!important;
-}
-#todayDateHeading.today-date-heading-v67::after{
-  content:"tap to change";
-  position:absolute;
-  left:58px;
-  top:100%;
-  margin-top:2px;
-  font-size:11px;
-  font-weight:800;
-  letter-spacing:.2px;
-  color:rgba(125,211,252,.72);
-  white-space:nowrap;
-  pointer-events:none;
-}
-#todayDateHeading .today-title-arrow{
-  color:#7dd3fc!important;
-  text-shadow:0 0 12px rgba(56,189,248,.75)!important;
-}
-#mbInlineCalendar,
-#mbInlineCalendar *{
-  pointer-events:auto!important;
-  touch-action:manipulation!important;
-}
-#mbInlineCalendar{
-  z-index:300000!important;
-}
-#mbInlineCalendar .mb-cal-day,
-#mbInlineCalendar .mb-cal-nav,
-#mbInlineCalendar #mbCalClose,
-#mbInlineCalendar #mbCalToday{
-  cursor:pointer!important;
-  -webkit-tap-highlight-color:rgba(125,211,252,.22)!important;
-}
-</style>
-
-<script id="mb-v69-calendar-hard-select-js">
-(function(){
-  function byId(id){ return document.getElementById(id); }
-
-  function todayKey(){
-    var d = new Date();
-    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-  }
-
-  function parseKey(v){
-    var p = (v || todayKey()).split('-').map(Number);
-    return new Date(p[0], p[1]-1, p[2]);
-  }
-
-  function labelFor(v){
-    if(!v || v === todayKey()) return 'Today';
-    return parseKey(v).toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
-  }
-
-  window.mbForceChooseDate = function(key){
-    var input = byId('date');
-    var display = byId('dateDisplay');
-    var cal = byId('mbInlineCalendar');
-
-    if(!input) return false;
-
-    input.value = key || todayKey();
-
-    if(display) display.textContent = labelFor(input.value);
-
-    try{
-      if(typeof window.dateChanged === 'function') window.dateChanged();
-    }catch(e){}
-
-    if(display) display.textContent = labelFor(input.value);
-
-    if(cal) cal.classList.remove('active');
-
-    return false;
-  };
-
-  window.mbForceCalendarClose = function(){
-    var cal = byId('mbInlineCalendar');
-    if(cal) cal.classList.remove('active');
-    return false;
-  };
-
-  window.mbForceCalendarToday = function(){
-    return window.mbForceChooseDate(todayKey());
-  };
-
-  function hardWireCalendar(){
-    var cal = byId('mbInlineCalendar');
-    if(!cal) return;
-
-    /* Replace each day with a cloned button that has only one direct onclick handler.
-       This removes conflicts from earlier listeners. */
-    cal.querySelectorAll('.mb-cal-day:not(.blank)').forEach(function(btn){
-      var key = btn.getAttribute('data-date');
-      if(!key || btn.__mbV69Wired) return;
-
-      var clone = btn.cloneNode(true);
-      clone.setAttribute('onclick', "return window.mbForceChooseDate('" + key + "')");
-      clone.addEventListener('touchend', function(e){
-        e.preventDefault();
-        e.stopPropagation();
-        if(e.stopImmediatePropagation) e.stopImmediatePropagation();
-        window.mbForceChooseDate(key);
-      }, {passive:false});
-      clone.__mbV69Wired = true;
-
-      btn.parentNode.replaceChild(clone, btn);
-    });
-
-    var today = byId('mbCalToday');
-    if(today && !today.__mbV69Wired){
-      today.setAttribute('onclick', 'return window.mbForceCalendarToday()');
-      today.addEventListener('touchend', function(e){
-        e.preventDefault();
-        e.stopPropagation();
-        if(e.stopImmediatePropagation) e.stopImmediatePropagation();
-        window.mbForceCalendarToday();
-      }, {passive:false});
-      today.__mbV69Wired = true;
-    }
-
-    var close = byId('mbCalClose');
-    if(close && !close.__mbV69Wired){
-      close.setAttribute('onclick', 'return window.mbForceCalendarClose()');
-      close.addEventListener('touchend', function(e){
-        e.preventDefault();
-        e.stopPropagation();
-        if(e.stopImmediatePropagation) e.stopImmediatePropagation();
-        window.mbForceCalendarClose();
-      }, {passive:false});
-      close.__mbV69Wired = true;
-    }
-  }
-
-  function install(){
-    var display = byId('dateDisplay');
-    var heading = byId('todayDateHeading');
-
-    if(display){
-      display.setAttribute('aria-label','Change date');
-      display.setAttribute('title','Change date');
-    }
-    if(heading){
-      heading.setAttribute('aria-label','Change date');
-      heading.setAttribute('title','Change date');
-    }
-
-    var oldOpen = window.mbDateOpen;
-    if(typeof oldOpen === 'function' && !window.__mbV69OpenWrapped){
-      window.mbDateOpen = function(e){
-        var result = oldOpen.apply(this, arguments);
-        setTimeout(hardWireCalendar, 20);
-        setTimeout(hardWireCalendar, 120);
-        setTimeout(hardWireCalendar, 300);
-        return result;
-      };
-      window.__mbV69OpenWrapped = true;
-    }
-
-    hardWireCalendar();
-  }
-
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install);
-  else install();
-
-  setTimeout(install, 200);
-  setTimeout(install, 900);
+  setTimeout(install, 150);
+  setTimeout(install, 800);
 })();
 </script>
 
