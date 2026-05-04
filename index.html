@@ -10972,5 +10972,139 @@ body.mb-add-popup-active{overflow:hidden!important;}
 })();
 </script>
 
+
+
+<!-- MB MASTER PATCH: Home label + working date calendar -->
+<style id="mb-master-home-date-fix">
+/* Restore Home text under the home icon in the top nav */
+.tab-bar .tab-btn[data-screen="Today"]{
+  font-size:0!important;
+}
+.tab-bar .tab-btn[data-screen="Today"]::after{
+  content:"Home";
+  display:block;
+  font-size:11.5px;
+  line-height:1.1;
+  font-weight:950;
+  color:inherit;
+}
+
+/* Date heading acts like a calendar selector */
+#todayDateHeading{
+  position:relative!important;
+  cursor:pointer!important;
+  user-select:none!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
+
+#todayDateHeading .today-title-date-btn{
+  pointer-events:none!important;
+  cursor:pointer!important;
+}
+
+#todayDateHeading .today-title-date-input{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  opacity:0.001!important;
+  z-index:20!important;
+  pointer-events:auto!important;
+  cursor:pointer!important;
+  border:0!important;
+  padding:0!important;
+  margin:0!important;
+  appearance:auto!important;
+  -webkit-appearance:auto!important;
+}
+</style>
+
+<script id="mb-master-home-date-fix-js">
+(function(){
+  function el(id){ return document.getElementById(id); }
+
+  function localTodayKey(){
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+
+  function prettyDate(v){
+    if(!v || v === localTodayKey()) return 'Today';
+    try{
+      return new Date(v + 'T00:00:00').toLocaleDateString('en-US', {
+        month:'long',
+        day:'numeric',
+        year:'numeric'
+      });
+    }catch(e){
+      return v || 'Today';
+    }
+  }
+
+  function updateDateHeading(){
+    var input = el('date');
+    var display = el('dateDisplay');
+    if(input && display){
+      display.textContent = prettyDate(input.value);
+    }
+  }
+
+  function installDatePicker(){
+    var heading = el('todayDateHeading');
+    var input = el('date');
+    if(!heading || !input) return;
+
+    if(!input.value) input.value = localTodayKey();
+
+    if(!input.__mbMasterDateBound){
+      input.addEventListener('change', function(){
+        updateDateHeading();
+        try{
+          if(typeof window.dateChanged === 'function') window.dateChanged();
+        }catch(e){}
+        try{
+          if(typeof window.updateDashboard === 'function') window.updateDashboard();
+        }catch(e){}
+      });
+
+      heading.addEventListener('click', function(e){
+        if(e.target === input) return;
+        try{
+          if(input.showPicker) input.showPicker();
+          else { input.focus(); input.click(); }
+        }catch(err){
+          input.focus();
+          input.click();
+        }
+      });
+
+      input.__mbMasterDateBound = true;
+    }
+
+    updateDateHeading();
+  }
+
+  var oldUpdateDateDisplay = window.updateDateDisplay;
+  if(typeof oldUpdateDateDisplay === 'function' && !window.__mbMasterUpdateDateWrapped){
+    window.updateDateDisplay = function(){
+      var result;
+      try{ result = oldUpdateDateDisplay.apply(this, arguments); }catch(e){}
+      updateDateHeading();
+      return result;
+    };
+    window.__mbMasterUpdateDateWrapped = true;
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', installDatePicker);
+  }else{
+    installDatePicker();
+  }
+
+  setTimeout(installDatePicker, 200);
+  setTimeout(installDatePicker, 800);
+})();
+</script>
+
 </body>
 </html>
