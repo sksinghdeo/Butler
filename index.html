@@ -9395,5 +9395,160 @@ body.mb-clean-modal-open{
 })();
 </script>
 
+
+<style id="mb-home-tab-calendar-fix-v1">
+/* Fix Home tab broken layout */
+#mainTabBar .tab-btn[data-screen="Today"],
+.tab-bar .tab-btn[data-screen="Today"]{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:3px !important;
+  color:#eaf2ff !important;
+  font-weight:950 !important;
+  text-align:center !important;
+  overflow:hidden !important;
+}
+
+#mainTabBar .tab-btn[data-screen="Today"] .tab-home-icon,
+.tab-bar .tab-btn[data-screen="Today"] .tab-home-icon{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:23px !important;
+  height:23px !important;
+  margin:0 !important;
+  color:#bfdbfe !important;
+  filter:drop-shadow(0 0 8px rgba(56,189,248,.65));
+  flex:0 0 auto !important;
+}
+
+#mainTabBar .tab-btn[data-screen="Today"] .tab-home-text,
+.tab-bar .tab-btn[data-screen="Today"] .tab-home-text{
+  display:block !important;
+  font-size:17px !important;
+  line-height:1 !important;
+  white-space:nowrap !important;
+}
+
+#mainTabBar .tab-btn[data-screen="Today"].active .tab-home-icon,
+.tab-bar .tab-btn[data-screen="Today"].active .tab-home-icon{
+  color:white !important;
+  filter:drop-shadow(0 0 12px rgba(255,255,255,.85));
+}
+
+/* Fix title calendar tap target */
+.home-date-title{
+  cursor:pointer !important;
+  pointer-events:auto !important;
+  position:relative !important;
+  z-index:3 !important;
+}
+#date.hidden-date{
+  position:absolute !important;
+  opacity:0 !important;
+  width:1px !important;
+  height:1px !important;
+  left:-9999px !important;
+  top:auto !important;
+  pointer-events:auto !important;
+}
+</style>
+
+<script id="mb-home-tab-calendar-fix-v1-js">
+(function(){
+  function q(id){return document.getElementById(id)}
+  function todayISO(){return new Date().toISOString().slice(0,10)}
+  function prettyDate(v){
+    try{return new Date(v+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}
+    catch(e){return v||"Today"}
+  }
+  function titleForDate(v){return v===todayISO() ? "Today" : prettyDate(v)}
+  function homeSvg(){
+    return '<span class="tab-home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3.5 11.2L12 4l8.5 7.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.8 10.5v8.2h4.2v-5h4v5h4.2v-8.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="tab-home-text">Home</span>';
+  }
+  function fixHomeTab(){
+    const btn=document.querySelector('.tab-btn[data-screen="Today"]');
+    if(btn && btn.dataset.homeFixed!=="1"){
+      btn.innerHTML=homeSvg();
+      btn.dataset.homeFixed="1";
+      btn.onclick=function(){ if(typeof window.showScreen==="function") window.showScreen("Today"); };
+    }
+  }
+  function updateTitle(){
+    const d=q("date");
+    const value=(d && d.value) ? d.value : todayISO();
+    const t=q("homeDateTitleText");
+    if(t)t.textContent=titleForDate(value);
+  }
+  function openCalendar(){
+    const input=q("date");
+    if(!input)return;
+    if(!input.value)input.value=todayISO();
+
+    // iOS Safari often blocks showPicker on hidden inputs.
+    // Temporarily place the native input over the title, invisible but tappable.
+    const title=q("homeDateTitle");
+    const r=title ? title.getBoundingClientRect() : null;
+    if(r){
+      input.style.left=r.left+"px";
+      input.style.top=r.top+"px";
+      input.style.width=Math.max(44,r.width)+"px";
+      input.style.height=Math.max(44,r.height)+"px";
+      input.style.zIndex="999999";
+      input.style.pointerEvents="auto";
+    }
+
+    try{
+      if(typeof input.showPicker==="function")input.showPicker();
+      else input.click();
+    }catch(e){
+      input.focus();
+      input.click();
+    }
+
+    setTimeout(function(){
+      input.style.left="-9999px";
+      input.style.top="auto";
+      input.style.width="1px";
+      input.style.height="1px";
+      input.style.zIndex="";
+    },800);
+  }
+  function bindCalendar(){
+    const title=q("homeDateTitle");
+    const input=q("date");
+    if(title && title.dataset.calFixed!=="1"){
+      title.dataset.calFixed="1";
+      title.onclick=function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        openCalendar();
+      };
+    }
+    if(input && input.dataset.calFixed!=="1"){
+      input.dataset.calFixed="1";
+      input.addEventListener("change",function(){
+        updateTitle();
+        try{ if(typeof loadTargets==="function")loadTargets(); }catch(e){}
+        try{ if(typeof loadDailyNotes==="function")loadDailyNotes(); }catch(e){}
+        try{ if(typeof render==="function")render(); }catch(e){}
+        try{ if(typeof renderProgress==="function")renderProgress(); }catch(e){}
+      });
+      input.addEventListener("input",updateTitle);
+    }
+  }
+  function boot(){
+    fixHomeTab();
+    bindCalendar();
+    updateTitle();
+  }
+  document.addEventListener("DOMContentLoaded",boot);
+  setTimeout(boot,100);
+  setTimeout(boot,600);
+})();
+</script>
+
 </body>
 </html>
