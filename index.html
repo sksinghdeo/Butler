@@ -10966,5 +10966,124 @@ body.mb-add-popup-active{
 })();
 </script>
 
+
+
+<!-- MB V41: Integrated Add sheet header blend -->
+<style id="mb-v41-integrated-add-sheet">
+/* The add popup should merge as one sheet, not look like a cut layer over Home */
+#screenAdd.mb-add-popup-open{
+  top:var(--mb-add-popup-top, 318px)!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  padding-top:0!important;
+  z-index:920!important;
+}
+
+/* continuous sheet behind folder bar + content */
+#screenAdd.mb-add-popup-open::after{
+  content:"";
+  position:fixed;
+  left:0;
+  right:0;
+  top:calc(var(--mb-add-popup-top, 318px) - 18px);
+  bottom:0;
+  z-index:-2;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 22% 0%,rgba(37,99,235,.34),transparent 34%),
+    radial-gradient(circle at 95% 0%,rgba(124,58,237,.24),transparent 32%),
+    linear-gradient(180deg,rgba(7,18,39,.98) 0%,rgba(3,10,24,.99) 42%,#020617 100%);
+}
+
+/* remove the visible hard seam line */
+#screenAdd.mb-add-popup-open::before{
+  content:"";
+  position:fixed;
+  left:0;
+  right:0;
+  top:calc(var(--mb-add-popup-top, 318px) - 26px);
+  height:62px;
+  z-index:-1;
+  pointer-events:none;
+  background:linear-gradient(180deg,rgba(2,6,23,0),rgba(7,18,39,.96) 55%,rgba(7,18,39,.98));
+}
+
+/* make the folder bar itself the rounded top of the sheet */
+#screenAdd.mb-add-popup-open #mbAddFolderBar{
+  border-radius:28px 28px 24px 24px!important;
+  background:
+    linear-gradient(145deg,rgba(9,25,54,.98),rgba(5,14,32,.98))!important;
+  border:1px solid rgba(59,130,246,.34)!important;
+  box-shadow:0 14px 34px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.06)!important;
+  margin-top:0!important;
+}
+
+/* reduce the gap between the folder bar and content so it reads as one component */
+#screenAdd.mb-add-popup-open .card:first-of-type{
+  margin-top:12px!important;
+}
+
+/* keep page underneath from peeking through at left/right */
+#screenAdd.mb-add-popup-open > .card,
+#screenAdd.mb-add-popup-open > #mbAddFolderBar{
+  position:relative;
+  z-index:1;
+}
+
+/* disable old top-blend line from v40 */
+#screenAdd.mb-add-popup-open::before{
+  border:0!important;
+}
+
+/* Close remains inside the folder bar without causing a right-side visual notch */
+#mbAddFolderCloseBtn{
+  position:relative!important;
+  right:auto!important;
+  top:auto!important;
+  margin-left:8px!important;
+  flex:0 0 42px!important;
+}
+
+/* small devices: make edge padding consistent with Home cards */
+@media(max-width:430px){
+  #screenAdd.mb-add-popup-open{
+    padding-left:12px!important;
+    padding-right:12px!important;
+  }
+  #screenAdd.mb-add-popup-open::after{
+    top:calc(var(--mb-add-popup-top, 318px) - 14px);
+  }
+}
+</style>
+
+<script id="mb-v41-integrated-add-sheet-js">
+(function(){
+  function setTop(){
+    var nav=document.querySelector('.tab-bar');
+    var top=0;
+    if(nav){
+      var r=nav.getBoundingClientRect();
+      top=Math.ceil(r.bottom + 12);
+    }
+    if(top < 120) top=318;
+    document.documentElement.style.setProperty('--mb-add-popup-top', top+'px');
+  }
+  var oldOpen=window.openAddWorkspacePopup;
+  if(typeof oldOpen==='function' && !window.__mbV41OpenWrapped){
+    window.openAddWorkspacePopup=function(){
+      setTop();
+      document.body.classList.add('mb-add-popup-active');
+      var res=oldOpen.apply(this,arguments);
+      setTimeout(setTop,50);
+      setTimeout(setTop,250);
+      return res;
+    };
+    window.__mbV41OpenWrapped=true;
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',setTop); else setTop();
+  window.addEventListener('resize',setTop);
+})();
+</script>
+
 </body>
 </html>
