@@ -1519,11 +1519,11 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
 
 <section id="screenToday" class="screen active">
   <div class="card card-blue">
-    <h2 id="todayDateHeading" class="today-date-heading-v62">
+    <h2 id="todayDateHeading" class="today-date-heading-final">
       <span class="bc-icon">HM</span>
-      <button id="dateDisplay" class="date-display today-title-date-btn" type="button">Today</button>
+      <button id="dateDisplay" class="today-date-trigger" type="button">Today</button>
       <span class="today-title-arrow">⌄</span>
-      <input id="date" class="today-title-date-input" type="date" aria-label="Select date">
+      <input id="date" type="date" value="">
     </h2>
     <div class="hero-stats" style="margin-top:16px">
       <div class="big-cal"><b id="leftCalBig">0</b><span>Calories left today</span></div>
@@ -10988,9 +10988,10 @@ body.mb-add-popup-active{overflow:hidden!important;}
 
 
 
-<!-- MB V65: inline calendar dropdown for Today heading -->
-<style id="mb-v65-inline-calendar">
-/* Keep top nav labels consistent */
+
+
+<!-- MB V66: working inline calendar attached to Today heading -->
+<style id="mb-v66-working-calendar">
 .tab-bar{
   display:grid!important;
   grid-template-columns:repeat(4,minmax(0,1fr))!important;
@@ -11017,21 +11018,18 @@ body.mb-add-popup-active{overflow:hidden!important;}
   color:inherit;
 }
 
-/* Date heading */
-#todayDateHeading{
+#todayDateHeading.today-date-heading-final{
   position:relative!important;
   display:inline-flex!important;
   align-items:center!important;
   gap:10px!important;
   width:auto!important;
   max-width:100%!important;
-  cursor:pointer!important;
-  user-select:none!important;
-  -webkit-tap-highlight-color:transparent!important;
-  z-index:30!important;
+  z-index:100!important;
 }
 
-#todayDateHeading .today-title-date-btn{
+#todayDateHeading .today-date-trigger{
+  display:inline-flex!important;
   width:auto!important;
   height:auto!important;
   min-height:0!important;
@@ -11045,7 +11043,7 @@ body.mb-add-popup-active{overflow:hidden!important;}
   font-weight:950!important;
   line-height:1!important;
   text-align:left!important;
-  pointer-events:none!important;
+  cursor:pointer!important;
 }
 
 #todayDateHeading .today-title-arrow{
@@ -11057,28 +11055,27 @@ body.mb-add-popup-active{overflow:hidden!important;}
   pointer-events:none!important;
 }
 
-#todayDateHeading .today-title-date-input{
+#todayDateHeading #date{
   display:none!important;
 }
 
-/* Inline calendar, not a full-screen popup */
 #mbInlineCalendar{
   display:none;
   position:absolute;
   left:18px;
   right:18px;
-  top:92px;
-  z-index:1000;
+  top:86px;
+  z-index:5000;
   padding:14px;
   border-radius:22px;
-  background:linear-gradient(145deg,rgba(6,13,28,.98),rgba(9,18,35,.98));
-  border:1px solid rgba(56,189,248,.36);
-  box-shadow:0 20px 48px rgba(0,0,0,.55),0 0 28px rgba(37,99,235,.22);
+  background:linear-gradient(145deg,rgba(6,13,28,.99),rgba(9,18,35,.99));
+  border:1px solid rgba(56,189,248,.40);
+  box-shadow:0 22px 52px rgba(0,0,0,.62),0 0 30px rgba(37,99,235,.28);
   color:#f8fafc;
 }
 
 #mbInlineCalendar.active{
-  display:block;
+  display:block!important;
 }
 
 .mb-cal-head{
@@ -11088,34 +11085,30 @@ body.mb-add-popup-active{overflow:hidden!important;}
   gap:10px;
   margin-bottom:12px;
 }
-
 .mb-cal-title{
   font-weight:950;
   font-size:20px;
 }
-
 .mb-cal-nav{
-  width:42px;
-  height:38px;
-  border-radius:14px;
-  border:1px solid rgba(125,211,252,.28);
-  background:rgba(2,6,23,.62);
-  color:#7dd3fc;
-  font-size:24px;
-  font-weight:950;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:0;
+  width:42px!important;
+  height:38px!important;
+  border-radius:14px!important;
+  border:1px solid rgba(125,211,252,.28)!important;
+  background:rgba(2,6,23,.62)!important;
+  color:#7dd3fc!important;
+  font-size:24px!important;
+  font-weight:950!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0!important;
   margin:0!important;
 }
-
 .mb-cal-grid{
   display:grid;
   grid-template-columns:repeat(7,1fr);
   gap:6px;
 }
-
 .mb-cal-dow{
   text-align:center;
   font-size:12px;
@@ -11123,62 +11116,55 @@ body.mb-add-popup-active{overflow:hidden!important;}
   color:#94a3b8;
   padding:4px 0;
 }
-
 .mb-cal-day{
-  height:38px;
-  border-radius:13px;
-  border:1px solid rgba(59,130,246,.18);
-  background:rgba(2,6,23,.52);
-  color:#e5e7eb;
-  font-size:15px;
-  font-weight:850;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:0;
+  height:38px!important;
+  border-radius:13px!important;
+  border:1px solid rgba(59,130,246,.20)!important;
+  background:rgba(2,6,23,.56)!important;
+  color:#e5e7eb!important;
+  font-size:15px!important;
+  font-weight:850!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0!important;
   margin:0!important;
 }
-
 .mb-cal-day.blank{
-  opacity:0;
-  pointer-events:none;
+  opacity:0!important;
+  pointer-events:none!important;
 }
-
 .mb-cal-day.today{
-  border-color:rgba(34,211,238,.8);
-  box-shadow:0 0 14px rgba(34,211,238,.28);
+  border-color:rgba(34,211,238,.85)!important;
+  box-shadow:0 0 14px rgba(34,211,238,.30)!important;
 }
-
 .mb-cal-day.selected{
-  background:linear-gradient(135deg,#2563eb,#7c3aed);
-  border-color:rgba(255,255,255,.18);
-  color:white;
-  box-shadow:0 0 18px rgba(37,99,235,.40);
+  background:linear-gradient(135deg,#2563eb,#7c3aed)!important;
+  border-color:rgba(255,255,255,.18)!important;
+  color:white!important;
+  box-shadow:0 0 18px rgba(37,99,235,.44)!important;
 }
-
 .mb-cal-actions{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:8px;
   margin-top:12px;
 }
-
 .mb-cal-actions button{
   height:42px!important;
   margin:0!important;
   border-radius:14px!important;
 }
-
 #screenToday .card-blue{
   position:relative!important;
 }
 </style>
 
-<script id="mb-v65-inline-calendar-js">
+<script id="mb-v66-working-calendar-js">
 (function(){
   function byId(id){ return document.getElementById(id); }
 
-  function localTodayKey(){
+  function todayKey(){
     var d = new Date();
     return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   }
@@ -11188,25 +11174,24 @@ body.mb-add-popup-active{overflow:hidden!important;}
   }
 
   function parseKey(v){
-    var parts = (v || localTodayKey()).split('-').map(Number);
-    return new Date(parts[0], parts[1]-1, parts[2]);
+    var p = (v || todayKey()).split('-').map(Number);
+    return new Date(p[0], p[1]-1, p[2]);
   }
 
-  function prettyDate(v){
-    if(!v || v === localTodayKey()) return 'Today';
-    var d = parseKey(v);
-    return d.toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
+  function label(v){
+    if(!v || v === todayKey()) return 'Today';
+    return parseKey(v).toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
   }
 
   function updateText(){
     var input = byId('date');
-    var display = byId('dateDisplay');
-    if(input && display) display.textContent = prettyDate(input.value);
+    var btn = byId('dateDisplay');
+    if(input && btn) btn.textContent = label(input.value);
   }
 
   var visibleMonth = null;
 
-  function ensureCalendar(){
+  function buildCalendar(){
     if(byId('mbInlineCalendar')) return;
 
     var card = document.querySelector('#screenToday .card-blue') || byId('screenToday');
@@ -11225,36 +11210,32 @@ body.mb-add-popup-active{overflow:hidden!important;}
       '</div>';
     card.appendChild(cal);
 
-    byId('mbCalPrev').addEventListener('click', function(e){
+    byId('mbCalPrev').onclick = function(e){
       e.stopPropagation();
       visibleMonth.setMonth(visibleMonth.getMonth() - 1);
       renderCalendar();
-    });
-
-    byId('mbCalNext').addEventListener('click', function(e){
+    };
+    byId('mbCalNext').onclick = function(e){
       e.stopPropagation();
       visibleMonth.setMonth(visibleMonth.getMonth() + 1);
       renderCalendar();
-    });
-
-    byId('mbCalClose').addEventListener('click', function(e){
+    };
+    byId('mbCalClose').onclick = function(e){
       e.stopPropagation();
       closeCalendar();
-    });
-
-    byId('mbCalToday').addEventListener('click', function(e){
+    };
+    byId('mbCalToday').onclick = function(e){
       e.stopPropagation();
-      setDate(localTodayKey());
-      closeCalendar();
-    });
+      chooseDate(todayKey());
+    };
   }
 
   function renderCalendar(){
-    ensureCalendar();
+    buildCalendar();
 
     var input = byId('date');
-    var selected = input && input.value ? input.value : localTodayKey();
-    var today = localTodayKey();
+    var selected = input && input.value ? input.value : todayKey();
+    var today = todayKey();
 
     if(!visibleMonth) visibleMonth = parseKey(selected);
 
@@ -11266,17 +11247,17 @@ body.mb-add-popup-active{overflow:hidden!important;}
     var grid = byId('mbCalGrid');
     grid.innerHTML = '';
 
-    ['S','M','T','W','T','F','S'].forEach(function(d){
-      var div = document.createElement('div');
-      div.className = 'mb-cal-dow';
-      div.textContent = d;
-      grid.appendChild(div);
+    ['S','M','T','W','T','F','S'].forEach(function(x){
+      var d = document.createElement('div');
+      d.className = 'mb-cal-dow';
+      d.textContent = x;
+      grid.appendChild(d);
     });
 
     var first = new Date(y, m, 1);
     var days = new Date(y, m + 1, 0).getDate();
 
-    for(var i=0;i<first.getDay();i++){
+    for(var i=0; i<first.getDay(); i++){
       var blank = document.createElement('button');
       blank.type = 'button';
       blank.className = 'mb-cal-day blank';
@@ -11285,17 +11266,16 @@ body.mb-add-popup-active{overflow:hidden!important;}
 
     for(var day=1; day<=days; day++){
       var key = toKey(new Date(y, m, day));
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'mb-cal-day' + (key === today ? ' today' : '') + (key === selected ? ' selected' : '');
-      btn.textContent = day;
-      btn.dataset.date = key;
-      btn.addEventListener('click', function(e){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'mb-cal-day' + (key === today ? ' today' : '') + (key === selected ? ' selected' : '');
+      b.textContent = day;
+      b.dataset.date = key;
+      b.onclick = function(e){
         e.stopPropagation();
-        setDate(this.dataset.date);
-        closeCalendar();
-      });
-      grid.appendChild(btn);
+        chooseDate(this.dataset.date);
+      };
+      grid.appendChild(b);
     }
   }
 
@@ -11306,11 +11286,10 @@ body.mb-add-popup-active{overflow:hidden!important;}
       if(e.stopImmediatePropagation) e.stopImmediatePropagation();
     }
 
-    ensureCalendar();
-
     var input = byId('date');
-    if(input && !input.value) input.value = localTodayKey();
-    visibleMonth = parseKey(input ? input.value : localTodayKey());
+    if(input && !input.value) input.value = todayKey();
+
+    visibleMonth = parseKey(input ? input.value : todayKey());
 
     renderCalendar();
     byId('mbInlineCalendar').classList.add('active');
@@ -11321,7 +11300,7 @@ body.mb-add-popup-active{overflow:hidden!important;}
     if(cal) cal.classList.remove('active');
   }
 
-  function setDate(key){
+  function chooseDate(key){
     var input = byId('date');
     if(!input) return;
 
@@ -11333,30 +11312,28 @@ body.mb-add-popup-active{overflow:hidden!important;}
     }catch(e){}
 
     updateText();
+    closeCalendar();
   }
 
   function install(){
     var input = byId('date');
+    var btn = byId('dateDisplay');
     var heading = byId('todayDateHeading');
-    var display = byId('dateDisplay');
 
-    if(!input || !heading || !display) return;
+    if(!input || !btn || !heading) return;
 
-    if(!input.value) input.value = localTodayKey();
+    if(!input.value) input.value = todayKey();
     input.style.display = 'none';
 
+    btn.onclick = openCalendar;
     heading.onclick = openCalendar;
-    display.onclick = openCalendar;
 
-    if(!heading.__mbV65Bound){
+    if(!btn.__mbV66Bound){
+      btn.addEventListener('click', openCalendar, true);
+      btn.addEventListener('touchend', openCalendar, {capture:true, passive:false});
       heading.addEventListener('click', openCalendar, true);
       heading.addEventListener('touchend', openCalendar, {capture:true, passive:false});
-      heading.__mbV65Bound = true;
-    }
-
-    if(!input.__mbV65Bound){
-      input.addEventListener('change', updateText);
-      input.__mbV65Bound = true;
+      btn.__mbV66Bound = true;
     }
 
     window.updateDateDisplay = updateText;
@@ -11373,8 +11350,9 @@ body.mb-add-popup-active{overflow:hidden!important;}
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install);
   else install();
 
-  setTimeout(install, 150);
-  setTimeout(install, 800);
+  setTimeout(install, 100);
+  setTimeout(install, 600);
+  setTimeout(install, 1500);
 })();
 </script>
 
