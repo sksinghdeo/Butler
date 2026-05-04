@@ -1508,9 +1508,17 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
 <div class="app">
 <div class="hero bc-hero macro-butler-hero"><img src="macro-butler-logo.svg" alt="Macro Butler"></div>
 
-<div class="tab-bar">
+
+<div class="tab-bar" id="mainTabBar">
   <button class="tab-btn active" type="button" data-screen="Today">
-    <span class="tab-home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3.5 11.2L12 4l8.5 7.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.8 10.5v8.2h4.2v-5h4v5h4.2v-8.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Home</button>
+    <span class="tab-home-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M3.5 11.2L12 4l8.5 7.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M5.8 10.5v8.2h4.2v-5h4v5h4.2v-8.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
+    Home
+  </button>
   <button class="tab-btn" type="button" data-screen="Log"><span></span>Log</button>
   <button class="tab-btn" type="button" data-screen="Progress"><span></span>Progress</button>
   <button class="tab-btn" type="button" data-screen="Settings"><span></span>Settings</button>
@@ -9101,8 +9109,9 @@ body.mb-clean-modal-open{
 </script>
 
 
-<style id="mb-clean-master-nav-popup-v3">
-/* clean top nav */
+<style id="mb-nav-clean-controller-v4">
+/* Four-tab nav only */
+#mainTabBar,
 .tab-bar{
   grid-template-columns:repeat(4,1fr)!important;
 }
@@ -9122,7 +9131,7 @@ body.mb-clean-modal-open{
   display:none!important;
 }
 
-/* date is now the title */
+/* Home title now opens the calendar */
 .home-date-title{
   width:auto!important;
   margin:0!important;
@@ -9139,6 +9148,7 @@ body.mb-clean-modal-open{
   gap:8px!important;
   text-align:left!important;
 }
+.home-date-title:active{transform:scale(.99)}
 .home-date-arrow{
   color:#7dd3fc;
   font-size:24px;
@@ -9153,18 +9163,19 @@ body.mb-clean-modal-open{
   height:1px!important;
 }
 
-/* Add and Scan are popup screens, not top tabs */
-#screenAdd:not(.popup-screen),
-#screenScan:not(.popup-screen){
+/* Add and Scan are popup pages only */
+#screenAdd:not(.mb-popup-screen),
+#screenScan:not(.mb-popup-screen){
   display:none!important;
 }
-.screen.popup-screen{
+.screen.mb-popup-screen{
   display:block!important;
   position:fixed!important;
   inset:0!important;
   z-index:99990!important;
   overflow-y:auto!important;
   -webkit-overflow-scrolling:touch!important;
+  overscroll-behavior:contain!important;
   padding:calc(22px + env(safe-area-inset-top,0px)) 18px 26px!important;
   background:
     radial-gradient(circle at 20% 10%,rgba(37,99,235,.20),transparent 28%),
@@ -9173,7 +9184,7 @@ body.mb-clean-modal-open{
   backdrop-filter:blur(14px)!important;
   -webkit-backdrop-filter:blur(14px)!important;
 }
-.popup-topbar{
+.mb-popup-topbar{
   position:sticky;
   top:0;
   z-index:20;
@@ -9182,47 +9193,49 @@ body.mb-clean-modal-open{
   justify-content:space-between;
   gap:10px;
   padding:6px 0 14px;
-  margin:0 auto 8px;
+  margin:0 auto 10px;
   max-width:560px;
   background:linear-gradient(180deg,rgba(2,6,23,.96),rgba(2,6,23,.76));
   backdrop-filter:blur(12px);
   -webkit-backdrop-filter:blur(12px);
 }
-.popup-topbar-title{
+.mb-popup-title{
   color:#f8fafc;
   font-size:28px;
   font-weight:950;
   line-height:1.05;
 }
-.popup-topbar-actions{
+.mb-popup-actions{
   display:flex;
   align-items:center;
   gap:8px;
 }
-.popup-topbar-actions button{
+.mb-popup-actions button{
   width:auto!important;
-  min-width:76px!important;
+  min-width:78px!important;
   margin:0!important;
   padding:12px 14px!important;
   border-radius:16px!important;
   font-size:14px!important;
 }
-.screen.popup-screen > .card{
+.screen.mb-popup-screen > .card{
   max-width:560px;
   margin:0 auto!important;
 }
-/* avoid duplicate Add Food / Scan Product titles inside popup */
-#screenAdd.popup-screen > .card > .card-title-row,
-#screenScan.popup-screen > .card > h2{
+/* avoid duplicate title rows inside popup */
+#screenAdd.mb-popup-screen > .card > .card-title-row,
+#screenScan.mb-popup-screen > .card > h2{
   display:none!important;
 }
-#screenAdd.popup-screen .creator-footer,
-#screenScan.popup-screen .creator-footer{
+/* remove redundant scan button inside Add card if an older patch inserted it */
+#addPopupScanBtn{display:none!important}
+#screenAdd.mb-popup-screen .creator-footer,
+#screenScan.mb-popup-screen .creator-footer{
   display:none!important;
 }
 </style>
 
-<script id="mb-clean-master-nav-popup-v3-js">
+<script id="mb-nav-clean-controller-v4-js">
 (function(){
   function q(id){return document.getElementById(id)}
   function todayISO(){return new Date().toISOString().slice(0,10)}
@@ -9230,119 +9243,155 @@ body.mb-clean-modal-open{
     try{return new Date(v+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}
     catch(e){return v || "Today"}
   }
-  function homeTitleFor(v){return v===todayISO() ? "Today" : prettyDate(v)}
-  function updateHomeDateTitle(){
-    const date=q('date')?.value || todayISO();
-    const el=q('homeDateTitleText');
-    if(el) el.textContent=homeTitleFor(date);
+  function titleForDate(v){return v===todayISO() ? "Today" : prettyDate(v)}
+  function setHomeTitle(){
+    const input=q("date");
+    const value=(input && input.value) ? input.value : todayISO();
+    const t=q("homeDateTitleText");
+    if(t)t.textContent=titleForDate(value);
+    const old=q("dateDisplay");
+    if(old)old.textContent=titleForDate(value);
   }
 
-  window.updateDateDisplay=function(){updateHomeDateTitle()};
-  window.openDatePicker=function(){
-    const input=q('date');
+  function openNativeDatePicker(){
+    const input=q("date");
     if(!input)return;
-    if(typeof input.showPicker==='function') input.showPicker();
-    else { input.focus(); input.click(); }
-  };
-  window.dateChanged=function(){
-    updateHomeDateTitle();
-    try{if(typeof loadTargets==='function')loadTargets()}catch(e){}
-    try{if(typeof loadDailyNotes==='function')loadDailyNotes()}catch(e){}
-    try{if(typeof render==='function')render()}catch(e){}
-    try{if(typeof renderProgress==='function')renderProgress()}catch(e){}
-  };
+    if(!input.value)input.value=todayISO();
+    if(typeof input.showPicker==="function")input.showPicker();
+    else{
+      input.style.pointerEvents="auto";
+      input.focus();
+      input.click();
+      setTimeout(()=>{input.style.pointerEvents="none"},300);
+    }
+  }
 
-  function ensurePopupBar(screenName){
-    const section=q('screen'+screenName);
+  function updateForDateChange(){
+    setHomeTitle();
+    try{if(typeof loadTargets==="function")loadTargets()}catch(e){}
+    try{if(typeof loadDailyNotes==="function")loadDailyNotes()}catch(e){}
+    try{if(typeof render==="function")render()}catch(e){}
+    try{if(typeof renderProgress==="function")renderProgress()}catch(e){}
+  }
+
+  function closePopup(){
+    ["Add","Scan"].forEach(function(name){
+      const s=q("screen"+name);
+      if(s)s.classList.remove("active","mb-popup-screen");
+    });
+    document.documentElement.style.overflow="";
+    document.body.style.overflow="";
+    window.__mbPopupPage="";
+    window.__mbPopupReturn="";
+    try{if(typeof stopBarcodeCamera==="function")stopBarcodeCamera()}catch(e){}
+  }
+
+  function ensurePopupTopbar(name){
+    const section=q("screen"+name);
     if(!section)return;
-    let bar=section.querySelector(':scope > .popup-topbar');
+    let bar=section.querySelector(":scope > .mb-popup-topbar");
     if(bar)return bar;
 
-    bar=document.createElement('div');
-    bar.className='popup-topbar';
-    const title=screenName==='Scan' ? 'Scan Product' : 'Add Food';
-    const scanButton=screenName==='Add'
-      ? '<button class="light popup-scan-btn" type="button">Scan</button>'
-      : '';
-    bar.innerHTML='<div class="popup-topbar-title">'+title+'</div><div class="popup-topbar-actions">'+scanButton+'<button class="light popup-back-btn" type="button">Back</button></div>';
+    bar=document.createElement("div");
+    bar.className="mb-popup-topbar";
+    const title=name==="Scan" ? "Scan Product" : "Add Food";
+    bar.innerHTML =
+      '<div class="mb-popup-title">'+title+'</div>'+
+      '<div class="mb-popup-actions">'+
+        (name==="Add" ? '<button class="light mb-popup-scan" type="button">Scan</button>' : '')+
+        '<button class="light mb-popup-back" type="button">Back</button>'+
+      '</div>';
     section.insertBefore(bar,section.firstChild);
 
-    const scan=bar.querySelector('.popup-scan-btn');
-    if(scan) scan.onclick=function(){openPopupScreen('Scan','Add')};
+    const scan=bar.querySelector(".mb-popup-scan");
+    if(scan)scan.onclick=function(){openPopup("Scan","Add")};
 
-    const back=bar.querySelector('.popup-back-btn');
+    const back=bar.querySelector(".mb-popup-back");
     back.onclick=function(){
-      if(screenName==='Scan' && window.__popupReturnTo==='Add'){
-        openPopupScreen('Add','Home');
-      }else{
-        closePopupScreens();
-        showNormalScreen('Today');
+      if(name==="Scan" && window.__mbPopupReturn==="Add") openPopup("Add","Home");
+      else{
+        closePopup();
+        showScreenClean("Today");
       }
     };
     return bar;
   }
 
-  function closePopupScreens(){
-    ['Add','Scan'].forEach(n=>{
-      const s=q('screen'+n);
-      if(s) s.classList.remove('active','popup-screen');
-    });
-    document.documentElement.style.overflow='';
-    document.body.style.overflow='';
-    try{if(typeof stopBarcodeCamera==='function')stopBarcodeCamera()}catch(e){}
-  }
-
-  function showNormalScreen(name){
-    closePopupScreens();
-    document.querySelectorAll('.screen').forEach(s=>{
-      if(s.id!=='screenAdd' && s.id!=='screenScan') s.classList.remove('active');
-    });
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-    const t=q('screen'+name);
-    const btn=document.querySelector('.tab-btn[data-screen="'+name+'"]');
-    if(t)t.classList.add('active');
-    if(btn)btn.classList.add('active');
-    if(name==='Progress'){try{renderProgress();calculateWeightGoal(false)}catch(e){}}
-    if(name==='Log'){try{render();loadDailyNotes()}catch(e){}}
-    try{window.scrollTo({top:0,behavior:'smooth'})}catch(e){}
-  }
-
-  function openPopupScreen(name, returnTo){
-    closePopupScreens();
-    window.__popupReturnTo=returnTo || 'Home';
-    const s=q('screen'+name);
+  function openPopup(name, returnTo){
+    closePopup();
+    const s=q("screen"+name);
     if(!s)return;
-    ensurePopupBar(name);
-    s.classList.add('active','popup-screen');
-    document.documentElement.style.overflow='hidden';
-    document.body.style.overflow='hidden';
-    if(name==='Add'){try{if(typeof renderFoodDatabase==='function')renderFoodDatabase()}catch(e){}}
+    ensurePopupTopbar(name);
+    s.classList.add("active","mb-popup-screen");
+    window.__mbPopupPage=name;
+    window.__mbPopupReturn=returnTo || "Home";
+    document.documentElement.style.overflow="hidden";
+    document.body.style.overflow="hidden";
+    if(name==="Add"){
+      try{if(typeof renderFoodDatabase==="function")renderFoodDatabase()}catch(e){}
+    }
   }
 
-  window.openPopupScreen=openPopupScreen;
-  window.closePopupScreens=closePopupScreens;
+  function showScreenClean(name){
+    if(name==="Add"){openPopup("Add","Home");return}
+    if(name==="Scan"){openPopup("Scan","Home");return}
 
-  window.showScreen=function(name){
-    if(name==='Add'){openPopupScreen('Add','Home');return}
-    if(name==='Scan'){openPopupScreen('Scan','Home');return}
-    showNormalScreen(name);
-  };
+    closePopup();
+
+    document.querySelectorAll(".screen").forEach(function(s){
+      if(s.id!=="screenAdd" && s.id!=="screenScan")s.classList.remove("active");
+    });
+    const target=q("screen"+name);
+    if(target)target.classList.add("active");
+
+    document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});
+    const btn=document.querySelector('.tab-btn[data-screen="'+name+'"]');
+    if(btn)btn.classList.add("active");
+
+    if(name==="Log"){
+      try{if(typeof render==="function")render()}catch(e){}
+      try{if(typeof loadDailyNotes==="function")loadDailyNotes()}catch(e){}
+    }
+    if(name==="Progress"){
+      try{if(typeof renderProgress==="function")renderProgress()}catch(e){}
+      try{if(typeof calculateWeightGoal==="function")calculateWeightGoal(false)}catch(e){}
+    }
+    try{window.scrollTo({top:0,behavior:"smooth"})}catch(e){}
+  }
 
   function boot(){
-    const d=q('date');
-    if(d && !d.value)d.value=todayISO();
-    const h=q('homeDateTitle');
-    if(h)h.onclick=function(e){e.preventDefault();openDatePicker()};
-    if(d)d.addEventListener('change',dateChanged);
-    updateHomeDateTitle();
-    document.querySelectorAll('.tab-btn').forEach(btn=>{
-      btn.onclick=function(){showScreen(btn.dataset.screen)};
+    const input=q("date");
+    if(input && !input.value)input.value=todayISO();
+
+    const title=q("homeDateTitle");
+    if(title)title.onclick=function(e){e.preventDefault();openNativeDatePicker()};
+
+    if(input && input.dataset.mbDateBound!=="1"){
+      input.dataset.mbDateBound="1";
+      input.addEventListener("change",updateForDateChange);
+      input.addEventListener("input",setHomeTitle);
+    }
+
+    document.querySelectorAll(".tab-btn").forEach(function(btn){
+      btn.onclick=function(){showScreenClean(btn.dataset.screen)};
     });
-    // main Add Food button remains onclick showScreen('Add'), this override handles it
+
+    const redundant=q("addPopupScanBtn");
+    if(redundant)redundant.remove();
+
+    window.showScreen=showScreenClean;
+    window.openPopupScreen=openPopup;
+    window.closePopupScreens=closePopup;
+    window.updateDateDisplay=setHomeTitle;
+    window.dateChanged=updateForDateChange;
+    window.openDatePicker=openNativeDatePicker;
+
+    setHomeTitle();
   }
 
-  document.addEventListener('DOMContentLoaded',boot);
-  setTimeout(boot,250);
+  document.addEventListener("DOMContentLoaded",boot);
+  setTimeout(boot,150);
+  setTimeout(boot,600);
 })();
 </script>
 
