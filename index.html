@@ -10025,5 +10025,111 @@ body.mb-clean-modal-open{
 })();
 </script>
 
+
+
+<!-- MB V35: restore scan icon in folder bar + restore History Use behavior -->
+<style id="mb-v35-scan-history-use-css">
+  /* The previous rule hid every span inside the scan button. This restores only the SVG span. */
+  #mbFolderScanBtn span.mb-v34-scan-icon,
+  #mbFolderScanBtn span.mb-v35-scan-icon{
+    display:flex!important;
+    width:25px!important;
+    height:25px!important;
+    align-items:center!important;
+    justify-content:center!important;
+    color:#fff!important;
+    filter:drop-shadow(0 0 10px rgba(255,255,255,.75))!important;
+  }
+  #mbFolderScanBtn span.mb-v34-scan-icon svg,
+  #mbFolderScanBtn span.mb-v35-scan-icon svg{
+    width:100%!important;
+    height:100%!important;
+    display:block!important;
+    fill:none!important;
+    stroke:currentColor!important;
+    stroke-width:2.8!important;
+    stroke-linecap:round!important;
+    stroke-linejoin:round!important;
+  }
+  #mbFolderScanBtn{
+    min-width:66px!important;
+    width:auto!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    background:linear-gradient(135deg,#2563eb,#7c3aed)!important;
+    box-shadow:0 0 18px rgba(37,99,235,.55), inset 0 1px 0 rgba(255,255,255,.16)!important;
+  }
+</style>
+<script id="mb-v35-scan-history-use-js">
+(function(){
+  function q(id){return document.getElementById(id)}
+
+  function scanSvg(){
+    return '<span class="mb-v35-scan-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3"/><path d="M16 4h3a1 1 0 0 1 1 1v3"/><path d="M20 16v3a1 1 0 0 1-1 1h-3"/><path d="M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M7 12h10"/><path d="M9 8v8"/><path d="M15 8v8"/></svg></span>';
+  }
+
+  function restoreScanButton(){
+    var btn=q('mbFolderScanBtn');
+    if(!btn)return;
+    btn.innerHTML=scanSvg();
+    btn.setAttribute('aria-label','Open scan');
+    btn.onclick=function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      if(typeof window.openScanPopup==='function') window.openScanPopup();
+      else if(typeof window.showScreen==='function') window.showScreen('Scan');
+    };
+  }
+
+  function decodeItem(encoded){
+    if(!encoded)return null;
+    try{return JSON.parse(decodeURIComponent(encoded));}
+    catch(e){try{return JSON.parse(encoded)}catch(_){return null}}
+  }
+
+  /* History Favorites / Recent Use must behave like the normal Add Food Use button:
+     open the portion + meal popup, not a plain alert. */
+  window.openUseFoodPopup=function(encoded){
+    var item=decodeItem(encoded);
+    if(!item)return;
+    try{
+      if(typeof window.openPortionMealModal==='function'){
+        window.openPortionMealModal(item);
+        return;
+      }
+      if(typeof window.openFoodUsePopup==='function'){
+        window.openFoodUsePopup(item);
+        return;
+      }
+      if(typeof window.chooseFood==='function'){
+        window.chooseFood(item);
+        return;
+      }
+    }catch(e){
+      console.error('History Use failed',e);
+    }
+    alert('Could not open Add Food popup for '+(item.name||'this item'));
+  };
+
+  /* Extra safety: if any history Use button was rendered with a stale handler, intercept it. */
+  document.addEventListener('click',function(e){
+    var btn=e.target.closest && e.target.closest('#mbAddHistoryCard .mb-v32-actions button.good');
+    if(!btn)return;
+    var onclick=btn.getAttribute('onclick')||'';
+    var m=onclick.match(/openUseFoodPopup\('([^']+)'\)/);
+    if(m){
+      e.preventDefault();
+      e.stopPropagation();
+      window.openUseFoodPopup(m[1]);
+    }
+  },true);
+
+  function boot(){restoreScanButton();setTimeout(restoreScanButton,250);setTimeout(restoreScanButton,1000);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+  document.addEventListener('click',function(){setTimeout(restoreScanButton,60)},true);
+})();
+</script>
+
 </body>
 </html>
