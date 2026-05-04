@@ -11957,5 +11957,57 @@ body.mb-add-popup-active{
 })();
 </script>
 
+
+
+<!-- MB V49: lower Add popup start before six progress rings -->
+<style id="mb-v49-add-start-before-rings">
+#screenAdd.mb-add-popup-open{
+  top:var(--mb-add-modal-top, 470px)!important;
+}
+
+#screenAdd.mb-add-popup-open::before{
+  top:calc(var(--mb-add-modal-top, 470px) - 18px)!important;
+}
+</style>
+
+<script id="mb-v49-add-start-before-rings-js">
+(function(){
+  function setAddStartBeforeRings(){
+    var grid=document.querySelector('#screenToday .progress-grid');
+    var top=0;
+    if(grid){
+      var r=grid.getBoundingClientRect();
+      top=Math.ceil(r.top - 14);
+    }
+    if(top < 220){
+      var stats=document.querySelector('#screenToday .hero-stats');
+      if(stats) top=Math.ceil(stats.getBoundingClientRect().bottom + 10);
+    }
+    if(top < 220) top=470;
+    document.documentElement.style.setProperty('--mb-add-modal-top', top + 'px');
+    document.documentElement.style.setProperty('--mb-add-clean-top', top + 'px');
+    document.documentElement.style.setProperty('--mb-add-popup-top', top + 'px');
+  }
+
+  var oldOpen=window.openAddWorkspacePopup;
+  if(typeof oldOpen==='function' && !window.__mbV49OpenWrapped){
+    window.openAddWorkspacePopup=function(){
+      setAddStartBeforeRings();
+      var res=oldOpen.apply(this,arguments);
+      setTimeout(setAddStartBeforeRings,40);
+      setTimeout(setAddStartBeforeRings,250);
+      return res;
+    };
+    window.__mbV49OpenWrapped=true;
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',setAddStartBeforeRings);
+  else setAddStartBeforeRings();
+
+  window.addEventListener('resize',setAddStartBeforeRings);
+  window.addEventListener('orientationchange',function(){setTimeout(setAddStartBeforeRings,300)});
+})();
+</script>
+
 </body>
 </html>
