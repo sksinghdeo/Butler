@@ -9933,5 +9933,97 @@ body.mb-clean-modal-open{
 })();
 </script>
 
+
+
+<!-- MB V34: correct folder scan icon, stabilize history formatting, sync saved meals/recipes keys -->
+<style id="mb-v34-history-and-scan-fix-css">
+  /* Scan belongs in the folder bar now; hide duplicate large button inside Add Food card */
+  #openScanPopupBtn{display:none!important;}
+  #mbFolderScanBtn{min-width:66px!important;width:auto!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;padding:10px 16px!important;}
+  #mbFolderScanBtn span{display:none!important;}
+  #mbFolderScanBtn .mb-v34-scan-icon{width:25px;height:25px;display:block;color:#fff;filter:drop-shadow(0 0 10px rgba(255,255,255,.75));}
+  #mbFolderScanBtn .mb-v34-scan-icon svg{width:100%;height:100%;display:block;fill:none;stroke:currentColor;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round;}
+
+  /* History: make it compact and consistent with the rest of the app */
+  #mbAddHistoryCard{padding:24px 22px!important;overflow:hidden!important;}
+  #mbAddHistoryCard h2{display:block!important;margin:0 0 12px!important;padding:0!important;line-height:1.04!important;letter-spacing:-.5px!important;text-shadow:0 0 12px rgba(37,99,235,.18)!important;}
+  #mbAddHistoryCard .mb-history-title-text{font-size:38px!important;font-weight:950!important;color:#f8fafc!important;letter-spacing:-.5px!important;}
+  #mbAddHistoryCard .mb-history-title-text::first-letter{color:#60a5fa!important;}
+  #mbAddHistoryCard .history-note{margin:0 0 18px!important;font-size:15px!important;line-height:1.45!important;}
+  #mbAddHistoryCard .mb-v32-history-wrap{display:grid!important;gap:12px!important;margin-top:16px!important;}
+  #mbAddHistoryCard .mb-v32-section{border-radius:24px!important;border:1px solid rgba(59,130,246,.28)!important;background:rgba(2,6,23,.35)!important;overflow:hidden!important;box-shadow:0 0 22px rgba(37,99,235,.10)!important;}
+  #mbAddHistoryCard .mb-v32-head{height:auto!important;min-height:72px!important;padding:16px 18px!important;border-radius:0!important;margin:0!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;background:linear-gradient(135deg,rgba(15,40,85,.92),rgba(42,20,78,.88))!important;text-align:left!important;}
+  #mbAddHistoryCard .mb-v32-head-left{display:flex!important;align-items:center!important;gap:12px!important;min-width:0!important;font-size:21px!important;line-height:1.12!important;font-weight:950!important;color:#fff!important;white-space:normal!important;}
+  #mbAddHistoryCard .mb-v32-ico{width:28px!important;height:28px!important;min-width:28px!important;color:#7dd3fc!important;filter:drop-shadow(0 0 8px rgba(56,189,248,.6))!important;}
+  #mbAddHistoryCard .mb-v32-chev{min-width:20px!important;text-align:center!important;color:#7dd3fc!important;}
+  #mbAddHistoryCard .mb-v32-body{padding:0 14px 10px!important;background:rgba(2,6,23,.22)!important;}
+  #mbAddHistoryCard .mb-v32-row{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:10px!important;align-items:center!important;padding:14px 0!important;border-bottom:1px solid rgba(96,165,250,.16)!important;}
+  #mbAddHistoryCard .mb-v32-row b{font-size:18px!important;line-height:1.18!important;color:#f8fafc!important;overflow-wrap:anywhere!important;}
+  #mbAddHistoryCard .mb-v32-row .meta{font-size:14px!important;line-height:1.34!important;color:#94a3b8!important;}
+  #mbAddHistoryCard .mb-v32-actions{display:flex!important;gap:7px!important;align-items:center!important;justify-content:flex-end!important;flex-wrap:nowrap!important;}
+  #mbAddHistoryCard .mb-v32-actions button{margin:0!important;width:auto!important;min-width:64px!important;padding:10px 10px!important;border-radius:15px!important;font-size:14px!important;line-height:1!important;}
+  #mbAddHistoryCard .mb-v32-fav{width:54px!important;min-width:54px!important;height:54px!important;padding:0!important;}
+  #mbAddHistoryCard .mb-v32-fav::before{font-size:28px!important;}
+  #mbAddHistoryCard .mb-v32-empty{padding:14px 0!important;margin:0!important;font-size:14px!important;}
+  body.light-mode #mbAddHistoryCard .mb-history-title-text{color:#0f172a!important;}
+
+  @media(max-width:430px){
+    #mbAddHistoryCard{padding:22px 18px!important;}
+    #mbAddHistoryCard .mb-history-title-text{font-size:34px!important;}
+    #mbAddHistoryCard .mb-v32-head{min-height:66px!important;padding:15px 16px!important;}
+    #mbAddHistoryCard .mb-v32-head-left{font-size:20px!important;gap:10px!important;}
+    #mbAddHistoryCard .mb-v32-row{grid-template-columns:minmax(0,1fr) auto!important;gap:8px!important;}
+    #mbAddHistoryCard .mb-v32-actions{gap:6px!important;}
+    #mbAddHistoryCard .mb-v32-actions button{min-width:58px!important;padding:9px 9px!important;font-size:13px!important;}
+    #mbAddHistoryCard .mb-v32-fav{width:50px!important;min-width:50px!important;height:50px!important;}
+    #mbAddHistoryCard .mb-v32-fav::before{font-size:26px!important;}
+  }
+</style>
+<script id="mb-v34-history-and-scan-fix-js">
+(function(){
+  function q(id){return document.getElementById(id)}
+  function read(k){try{return JSON.parse(localStorage.getItem(k)||'[]')||[]}catch(e){return[]}}
+  function write(k,v){try{localStorage.setItem(k,JSON.stringify(v||[]))}catch(e){}}
+  function norm(v){return String(v||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,' ')}
+  function dedupe(arr){var seen={};return (arr||[]).filter(function(x){if(!x||!x.name)return false;var k=norm(x.name)+'|'+norm(x.serving||'')+'|'+Math.round(parseFloat(x.cal)||0);if(seen[k])return false;seen[k]=1;return true;});}
+
+  function syncStorage(){
+    /* Earlier builder saved meals to v1 while History was reading v3. Mirror both directions. */
+    var mealKeys=['macro_custom_meals_v3','macro_custom_meals_v1','macro_custom_meals_v2','macro_custom_meals','customMeals','savedCustomMeals'];
+    var meals=dedupe([].concat.apply([],mealKeys.map(read))).map(function(m){return Object.assign({cat:'Custom Meal',serving:'1 meal',source:'custom_meal'},m,{cat:'Custom Meal',serving:m.serving||'1 meal',source:m.source||'custom_meal'});});
+    if(meals.length){mealKeys.forEach(function(k){write(k,meals)});}
+
+    var recipeKeys=['macro_custom_recipes_v3','macro_custom_recipes_v1','macro_custom_recipes_v2','macro_custom_recipes','customRecipes','savedCustomRecipes'];
+    var recipes=dedupe([].concat.apply([],recipeKeys.map(read))).map(function(r){return Object.assign({cat:'Custom Recipe',serving:'1 recipe',source:'custom_recipe'},r,{cat:'Custom Recipe',serving:r.serving||'1 recipe',source:r.source||'custom_recipe'});});
+    if(recipes.length){recipeKeys.forEach(function(k){write(k,recipes)});}
+  }
+
+  function setFolderScanIcon(){
+    var btn=q('mbFolderScanBtn');
+    if(!btn)return;
+    btn.innerHTML='<span class="mb-v34-scan-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3"/><path d="M16 4h3a1 1 0 0 1 1 1v3"/><path d="M20 16v3a1 1 0 0 1-1 1h-3"/><path d="M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M7 12h10"/><path d="M9 8v8"/><path d="M15 8v8"/></svg></span>';
+    btn.onclick=function(e){e.preventDefault();e.stopPropagation();if(typeof window.openScanPopup==='function')window.openScanPopup();else if(typeof window.showScreen==='function')window.showScreen('Scan');};
+  }
+
+  function refresh(){
+    syncStorage();
+    setFolderScanIcon();
+    try{if(typeof window.renderSavedMeals==='function')window.renderSavedMeals()}catch(e){}
+    try{if(typeof window.renderSavedRecipes==='function')window.renderSavedRecipes()}catch(e){}
+    try{if(typeof window.renderFoodDatabase==='function')window.renderFoodDatabase()}catch(e){}
+  }
+
+  var oldSaveMeal=window.saveCustomMeal;
+  window.saveCustomMeal=function(){var r=oldSaveMeal?oldSaveMeal.apply(this,arguments):undefined;setTimeout(refresh,80);return r;};
+  var oldDeleteMeal=window.deleteSavedMeal;
+  window.deleteSavedMeal=function(){var r=oldDeleteMeal?oldDeleteMeal.apply(this,arguments):undefined;setTimeout(refresh,80);return r;};
+  var oldSaveRecipe=window.saveCustomRecipe;
+  window.saveCustomRecipe=function(){var r=oldSaveRecipe?oldSaveRecipe.apply(this,arguments):undefined;setTimeout(refresh,80);return r;};
+
+  function boot(){refresh();setTimeout(refresh,250);setTimeout(refresh,1000);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
+</script>
+
 </body>
 </html>
