@@ -9736,5 +9736,106 @@ body.mb-clean-modal-open{
 })();
 </script>
 
+
+<!-- MB V27: Add Food folder-style sections -->
+<style id="mb-v27-add-food-folders-css">
+  #mbAddFolderBar{
+    display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;
+    margin:0 0 14px;padding:9px;border-radius:24px;
+    background:linear-gradient(145deg,rgba(2,6,23,.78),rgba(15,23,42,.62));
+    border:1px solid rgba(56,189,248,.28);
+    box-shadow:0 16px 34px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  #mbAddFolderBar::-webkit-scrollbar{display:none;}
+  .mb-folder-tab,.mb-folder-scan{
+    width:auto!important;flex:0 0 auto!important;margin:0!important;padding:12px 14px!important;
+    border-radius:17px!important;font-size:15px!important;font-weight:950!important;line-height:1!important;
+    color:#dbeafe!important;background:rgba(2,6,23,.72)!important;
+    border:1px solid rgba(96,165,250,.22)!important;box-shadow:none!important;
+    display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;
+  }
+  .mb-folder-tab span,.mb-folder-scan span{font-size:18px;line-height:1;color:#7dd3fc;filter:drop-shadow(0 0 7px rgba(56,189,248,.55));}
+  .mb-folder-tab.active{
+    color:#fff!important;background:linear-gradient(135deg,#2563eb,#7c3aed)!important;
+    border-color:rgba(125,211,252,.55)!important;box-shadow:0 0 22px rgba(37,99,235,.55)!important;
+  }
+  .mb-folder-scan{
+    min-width:54px!important;padding-left:14px!important;padding-right:14px!important;
+    background:linear-gradient(135deg,#2563eb,#7c3aed)!important;
+    box-shadow:0 0 20px rgba(37,99,235,.50)!important;
+  }
+  #screenAdd > .card.mb-folder-page.mb-folder-hidden{display:none!important;}
+  #mbAddHistoryCard .compact-details{margin-top:12px!important;}
+  #mbAddHistoryCard .compact-details:not([open]){margin-bottom:10px!important;}
+  #mbAddHistoryCard .history-note{margin-bottom:14px!important;}
+  body.light-mode #mbAddFolderBar{background:rgba(255,255,255,.86);border-color:#bfdbfe;box-shadow:0 12px 26px rgba(15,23,42,.14)}
+  body.light-mode .mb-folder-tab{background:#f8fafc!important;color:#1e293b!important;border-color:#dbeafe!important;}
+  @media(max-width:430px){
+    #mbAddFolderBar{gap:7px;padding:8px;border-radius:22px;margin-bottom:12px;}
+    .mb-folder-tab,.mb-folder-scan{padding:11px 12px!important;font-size:14px!important;border-radius:16px!important;}
+    .mb-folder-scan{min-width:50px!important;}
+  }
+</style>
+<script id="mb-v27-add-food-folders-js">
+(function(){
+  function q(id){return document.getElementById(id)}
+  function addCls(el,c){if(el&&!el.classList.contains(c))el.classList.add(c)}
+  function closeDetail(id){var d=q(id); if(d)d.removeAttribute('open')}
+  function visibleFolder(){return window._mbAddFolder||'add'}
+  window.mbShowAddFolder=function(name){
+    window._mbAddFolder=name||'add';
+    document.querySelectorAll('#mbAddFolderBar .mb-folder-tab').forEach(function(b){b.classList.toggle('active',b.dataset.folder===window._mbAddFolder)});
+    var map={add:'mb-folder-add',recipe:'mb-folder-recipe',meals:'mb-folder-meals',history:'mb-folder-history'};
+    document.querySelectorAll('#screenAdd > .mb-folder-page').forEach(function(card){
+      var show=card.classList.contains(map[window._mbAddFolder]||'mb-folder-add');
+      card.classList.toggle('mb-folder-hidden',!show);
+    });
+    try{window.scrollTo({top:document.querySelector('#screenAdd')?.offsetTop||0,behavior:'smooth'})}catch(e){}
+  };
+  function makeHistoryCard(screen){
+    var card=q('mbAddHistoryCard');
+    if(!card){
+      card=document.createElement('div');
+      card.id='mbAddHistoryCard';
+      card.className='card card-purple mb-folder-page mb-folder-history mb-folder-hidden';
+      card.innerHTML='<h2><span class="bc-icon">▤</span>History</h2><p class="note history-note">Favorites, recent foods, saved recipes, and saved meals appear here.</p><div id="mbAddHistoryContent"></div>';
+      var footer=screen.querySelector('.creator-footer');
+      if(footer)screen.insertBefore(card,footer); else screen.appendChild(card);
+    }
+    var content=q('mbAddHistoryContent');
+    ['favoriteDetails','recentDetails','savedRecipeDetails','savedMealDetails'].forEach(function(id){
+      var el=q(id); if(el&&content&&el.parentElement!==content){el.removeAttribute('open');content.appendChild(el)}
+    });
+    return card;
+  }
+  function ensureFolders(){
+    var screen=q('screenAdd'); if(!screen)return;
+    var addCard=screen.querySelector(':scope > .card:not(#customRecipeCard):not(#customMealCard):not(#mbAddHistoryCard)');
+    var recipe=q('customRecipeCard');
+    var meal=q('customMealCard');
+    if(addCard){addCls(addCard,'mb-folder-page');addCls(addCard,'mb-folder-add')}
+    if(recipe){addCls(recipe,'mb-folder-page');addCls(recipe,'mb-folder-recipe')}
+    if(meal){addCls(meal,'mb-folder-page');addCls(meal,'mb-folder-meals')}
+    var history=makeHistoryCard(screen);
+    closeDetail('favoriteDetails');closeDetail('recentDetails');closeDetail('savedRecipeDetails');closeDetail('savedMealDetails');
+    if(!q('mbAddFolderBar')&&addCard){
+      var bar=document.createElement('div');
+      bar.id='mbAddFolderBar';
+      bar.innerHTML='<button type="button" class="mb-folder-tab active" data-folder="add"><span>＋</span>Add Food</button><button type="button" id="mbFolderScanBtn" class="mb-folder-scan" aria-label="Open scan"><span>⌗</span></button><button type="button" class="mb-folder-tab" data-folder="recipe"><span>▦</span>Recipe</button><button type="button" class="mb-folder-tab" data-folder="meals"><span>◫</span>Meals</button><button type="button" class="mb-folder-tab" data-folder="history"><span>▤</span>History</button>';
+      screen.insertBefore(bar,addCard);
+      bar.addEventListener('click',function(e){
+        var tab=e.target.closest('.mb-folder-tab');
+        if(tab){window.mbShowAddFolder(tab.dataset.folder);return;}
+        if(e.target.closest('#mbFolderScanBtn')){try{if(typeof window.openScanPopup==='function')window.openScanPopup();else if(typeof window.showScreen==='function')window.showScreen('Scan')}catch(err){}}
+      });
+    }
+    window.mbShowAddFolder(visibleFolder());
+  }
+  function init(){ensureFolders();setTimeout(ensureFolders,500);setTimeout(ensureFolders,1500);setTimeout(ensureFolders,3000)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+  document.addEventListener('click',function(){setTimeout(ensureFolders,80)},true);
+})();
+</script>
+
 </body>
 </html>
