@@ -10657,328 +10657,70 @@ body.mb-goal-popup-lock{
 
 
 <!-- MB V52: consolidated Add sheet layout; removes prior conflict behavior -->
-<style id="mb-v52-add-sheet-consolidated">
-/* Add tab stays hidden from the main top nav; Home button opens Add popup */
-.tab-bar .tab-btn[data-screen="Add"]{display:none!important;}
-
-/* Main nav labels */
-.tab-bar .tab-btn[data-screen="Today"] .nav-label{
-  display:block!important;
-  font-size:12px!important;
-  line-height:1.1!important;
-  font-weight:950!important;
-}
-.tab-bar .tab-btn[data-screen="Today"] .nav-label::after{content:none!important;}
-
-/* Add workspace: one clean sheet below the main nav.
-   This avoids fighting the Home progress/ring layout. */
-#screenAdd.mb-add-popup-open{
-  position:fixed!important;
-  inset:var(--mb-add-top, 178px) 0 0 0!important;
-  z-index:99980!important;
-  display:block!important;
-  width:100vw!important;
-  max-width:100vw!important;
-  margin:0!important;
-  padding:12px 10px calc(env(safe-area-inset-bottom,0px) + 42px)!important;
-  overflow-y:auto!important;
-  overflow-x:hidden!important;
-  -webkit-overflow-scrolling:touch!important;
-  overscroll-behavior:contain!important;
-  background:
-    radial-gradient(circle at 25% 0%, rgba(37,99,235,.28), transparent 34%),
-    radial-gradient(circle at 92% 12%, rgba(124,58,237,.20), transparent 32%),
-    linear-gradient(180deg,#07152c 0%,#031024 45%,#020617 100%)!important;
-  backdrop-filter:none!important;
-  -webkit-backdrop-filter:none!important;
-  box-shadow:0 -18px 42px rgba(0,0,0,.48)!important;
-  border-top:1px solid rgba(56,189,248,.30)!important;
-}
-#screenAdd.mb-add-popup-open::before,
-#screenAdd.mb-add-popup-open::after{
-  content:none!important;
-  display:none!important;
-}
-
-/* centered safe content */
-#screenAdd.mb-add-popup-open > *,
-#screenAdd.mb-add-popup-open #mbAddFolderBar,
-#screenAdd.mb-add-popup-open .card{
-  width:min(560px, calc(100vw - 20px))!important;
-  max-width:min(560px, calc(100vw - 20px))!important;
-  margin-left:auto!important;
-  margin-right:auto!important;
-  box-sizing:border-box!important;
-}
-
-/* Folder row */
-#screenAdd.mb-add-popup-open #mbAddFolderBar{
-  position:sticky!important;
-  top:0!important;
-  z-index:99990!important;
-  margin-top:0!important;
-  margin-bottom:14px!important;
-  padding:8px!important;
-  display:flex!important;
-  align-items:center!important;
-  gap:8px!important;
-  overflow-x:auto!important;
-  overflow-y:hidden!important;
-  scrollbar-width:none!important;
-  border-radius:24px!important;
-  background:linear-gradient(145deg,rgba(4,14,32,.99),rgba(8,22,49,.97))!important;
-  border:1px solid rgba(59,130,246,.36)!important;
-  box-shadow:0 14px 32px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.06)!important;
-}
-#screenAdd.mb-add-popup-open #mbAddFolderBar::-webkit-scrollbar{display:none!important;}
-#screenAdd.mb-add-popup-open #mbAddFolderBar .mb-folder-tab,
-#screenAdd.mb-add-popup-open #mbAddFolderBar .mb-folder-scan{
-  flex:0 0 auto!important;
-  white-space:nowrap!important;
-}
-
-/* X aligned in the folder row */
-#mbAddFolderCloseBtn{
-  position:sticky!important;
-  right:0!important;
-  top:auto!important;
-  margin:0 0 0 6px!important;
-  flex:0 0 40px!important;
-  width:40px!important;
-  min-width:40px!important;
-  max-width:40px!important;
-  height:40px!important;
-  border-radius:15px!important;
-  z-index:20!important;
-  font-size:0!important;
-  display:inline-flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  color:#7dd3fc!important;
-  background:linear-gradient(145deg,rgba(15,23,42,.98),rgba(2,6,23,.96))!important;
-  border:1px solid rgba(125,211,252,.42)!important;
-  box-shadow:0 0 16px rgba(56,189,248,.34), inset 0 1px 0 rgba(255,255,255,.10)!important;
-}
-#mbAddFolderCloseBtn::before{
-  content:"×";
-  font-size:29px;
-  font-weight:850;
-  line-height:1;
-  color:#7dd3fc;
-  text-shadow:0 0 12px rgba(56,189,248,.75);
-  transform:translateY(-1px);
-}
-
-/* Hide older Close row */
-#screenAdd.mb-add-popup-open #mbAddPopupClose{display:none!important;}
-
-/* Cards */
-#screenAdd.mb-add-popup-open .card{
-  margin-top:0!important;
-  margin-bottom:20px!important;
-  border-radius:28px!important;
-  overflow:hidden!important;
-  position:relative!important;
-}
-
-/* Search rows */
-#screenAdd.mb-add-popup-open .db-search-plus-row,
-#screenAdd.mb-add-popup-open .meal-builder-search-row{
-  display:grid!important;
-  grid-template-columns:minmax(0,1fr) 62px!important;
-  gap:8px!important;
-  width:100%!important;
-  max-width:100%!important;
-  align-items:stretch!important;
-  box-sizing:border-box!important;
-}
-#screenAdd.mb-add-popup-open .add-custom-plus-btn,
-#screenAdd.mb-add-popup-open .meal-builder-search-row button,
-#screenAdd.mb-add-popup-open #openCustomFoodBtn{
-  width:62px!important;
-  min-width:62px!important;
-  max-width:62px!important;
-  height:auto!important;
-  margin-top:0!important;
-}
-
-/* Result rows and buttons remain inside card */
-#screenAdd.mb-add-popup-open .saved-food{
-  grid-template-columns:minmax(0,1fr) auto!important;
-  gap:10px!important;
-}
-#screenAdd.mb-add-popup-open .small-btn{
-  width:auto!important;
-  min-width:82px!important;
-  max-width:96px!important;
-  padding-left:10px!important;
-  padding-right:10px!important;
-}
-#screenAdd.mb-add-popup-open .star-btn{
-  width:50px!important;
-  min-width:50px!important;
-  max-width:50px!important;
-  flex:0 0 50px!important;
-}
-#screenAdd.mb-add-popup-open input,
-#screenAdd.mb-add-popup-open textarea,
-#screenAdd.mb-add-popup-open select,
-#screenAdd.mb-add-popup-open .compact-details,
-#screenAdd.mb-add-popup-open .search-scroll-box,
-#screenAdd.mb-add-popup-open .mini-result-list{
-  max-width:100%!important;
-  min-width:0!important;
-  box-sizing:border-box!important;
-}
-
-body.mb-add-popup-lock,
-body.mb-add-popup-active{overflow:hidden!important;}
-
-@media(max-width:430px){
-  #screenAdd.mb-add-popup-open{
-    padding-left:8px!important;
-    padding-right:8px!important;
-  }
-  #screenAdd.mb-add-popup-open > *,
-  #screenAdd.mb-add-popup-open #mbAddFolderBar,
-  #screenAdd.mb-add-popup-open .card{
-    width:calc(100vw - 16px)!important;
-    max-width:calc(100vw - 16px)!important;
-  }
-  #screenAdd.mb-add-popup-open .card{
-    padding-left:18px!important;
-    padding-right:18px!important;
-  }
-}
-</style>
-
-<script id="mb-v52-add-sheet-consolidated-js">
-(function(){
-  function setAddTop(){
-    var nav=document.querySelector('.tab-bar');
-    var top=0;
-    if(nav){
-      var r=nav.getBoundingClientRect();
-      top=Math.ceil(r.bottom + 14);
-    }
-    if(top<135) top=178;
-    document.documentElement.style.setProperty('--mb-add-top', top+'px');
-  }
-
-  function ensureCloseButton(){
-    var bar=document.getElementById('mbAddFolderBar');
-    if(!bar) return;
-    var btn=document.getElementById('mbAddFolderCloseBtn');
-    if(!btn){
-      btn=document.createElement('button');
-      btn.id='mbAddFolderCloseBtn';
-      btn.type='button';
-      btn.setAttribute('aria-label','Close Add Food');
-      btn.addEventListener('click',function(e){
-        e.preventDefault();
-        e.stopPropagation();
-        if(typeof window.closeAddWorkspacePopup==='function') window.closeAddWorkspacePopup();
-      });
-      bar.appendChild(btn);
-    }
-  }
-
-  function normalize(){
-    setAddTop();
-    ensureCloseButton();
-    var add=document.getElementById('screenAdd');
-    if(add && add.classList.contains('mb-add-popup-open')){
-      add.scrollLeft=0;
-    }
-  }
-
-  var oldOpen=window.openAddWorkspacePopup;
-  if(typeof oldOpen==='function' && !window.__mbV52OpenWrapped){
-    window.openAddWorkspacePopup=function(){
-      setAddTop();
-      ensureCloseButton();
-      var res=oldOpen.apply(this,arguments);
-      document.body.classList.add('mb-add-popup-lock','mb-add-popup-active');
-      setTimeout(function(){
-        normalize();
-        var add=document.getElementById('screenAdd');
-        if(add){add.scrollTop=0;add.scrollLeft=0;}
-      },40);
-      setTimeout(normalize,250);
-      return res;
-    };
-    window.__mbV52OpenWrapped=true;
-  }
-
-  var oldClose=window.closeAddWorkspacePopup;
-  if(typeof oldClose==='function' && !window.__mbV52CloseWrapped){
-    window.closeAddWorkspacePopup=function(){
-      document.body.classList.remove('mb-add-popup-lock','mb-add-popup-active');
-      return oldClose.apply(this,arguments);
-    };
-    window.__mbV52CloseWrapped=true;
-  }
-
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',normalize); else normalize();
-  window.addEventListener('resize',setAddTop);
-})();
-</script>
-
-
-
 <!-- MB V53: Add pages start before rings + fixed Add top bar + fixed scaling -->
 <!-- MB V54: exact start under daily progress card + right-safe add pages -->
 
 
 <!-- MB V55: compact Add sheet, fixed scale, reduced top overlap region -->
-<style id="mb-v55-compact-add-sheet">
-/* Add sheet starts exactly at the bottom of the daily-progress card */
+
+
+<!-- MB V56: corrected Add popup using app-aligned fixed sheet, not viewport-wide sheet -->
+<style id="mb-v56-add-popup-app-aligned">
+/* Main Add nav remains hidden; Add Food button opens this workspace. */
+.tab-bar .tab-btn[data-screen="Add"]{
+  display:none!important;
+}
+
+/* The sheet is aligned to the actual .app column, so the right side no longer clips. */
 #screenAdd.mb-add-popup-open{
   position:fixed!important;
-  left:0!important;
-  right:0!important;
+  left:var(--mb-app-left, 20px)!important;
+  right:auto!important;
   bottom:0!important;
-  top:var(--mb-add-v55-top, 420px)!important;
+  top:var(--mb-add-top, 430px)!important;
+  width:var(--mb-app-width, calc(100vw - 40px))!important;
+  max-width:var(--mb-app-width, calc(100vw - 40px))!important;
   z-index:99980!important;
   display:block!important;
-  width:100vw!important;
-  max-width:100vw!important;
   margin:0!important;
-  padding:0 12px calc(env(safe-area-inset-bottom,0px) + 36px)!important;
+  padding:0 0 calc(env(safe-area-inset-bottom,0px) + 36px)!important;
   overflow-y:auto!important;
   overflow-x:hidden!important;
   -webkit-overflow-scrolling:touch!important;
   overscroll-behavior:contain!important;
   background:linear-gradient(180deg,#06142b 0%,#031024 48%,#020617 100%)!important;
-  border-top:1px solid rgba(56,189,248,.38)!important;
-  box-shadow:0 -10px 30px rgba(0,0,0,.45)!important;
+  border:1px solid rgba(56,189,248,.32)!important;
+  border-bottom:0!important;
+  box-shadow:0 -14px 34px rgba(0,0,0,.50)!important;
+  border-radius:24px 24px 0 0!important;
   backdrop-filter:none!important;
   -webkit-backdrop-filter:none!important;
 }
 
+/* Remove all old sheet overlays/seams. */
 #screenAdd.mb-add-popup-open::before,
 #screenAdd.mb-add-popup-open::after{
   content:none!important;
   display:none!important;
 }
 
-/* Keep everything a little narrower so the right side does not clip */
+/* Everything inside uses the sheet width, not 100vw. */
 #screenAdd.mb-add-popup-open > *,
 #screenAdd.mb-add-popup-open #mbAddFolderBar,
 #screenAdd.mb-add-popup-open .card{
-  width:min(536px, calc(100vw - 28px))!important;
-  max-width:min(536px, calc(100vw - 28px))!important;
-  margin-left:auto!important;
-  margin-right:auto!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin-left:0!important;
+  margin-right:0!important;
   box-sizing:border-box!important;
 }
 
-/* Compact top folder bar */
+/* Compact top folder bar, with close button in-line. */
 #screenAdd.mb-add-popup-open #mbAddFolderBar{
   position:sticky!important;
   top:0!important;
   z-index:99991!important;
-  margin:0 auto 10px!important;
+  margin:0 0 10px!important;
   padding:6px!important;
   min-height:50px!important;
   display:flex!important;
@@ -10987,13 +10729,15 @@ body.mb-add-popup-active{overflow:hidden!important;}
   overflow-x:auto!important;
   overflow-y:hidden!important;
   scrollbar-width:none!important;
-  border-radius:0 0 22px 22px!important;
+  border-radius:22px 22px 20px 20px!important;
   background:linear-gradient(145deg,rgba(4,14,32,.99),rgba(8,22,49,.99))!important;
   border:1px solid rgba(59,130,246,.38)!important;
   border-top:0!important;
   box-shadow:0 10px 24px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.06)!important;
 }
-#screenAdd.mb-add-popup-open #mbAddFolderBar::-webkit-scrollbar{display:none!important;}
+#screenAdd.mb-add-popup-open #mbAddFolderBar::-webkit-scrollbar{
+  display:none!important;
+}
 
 #screenAdd.mb-add-popup-open #mbAddFolderBar .mb-folder-tab,
 #screenAdd.mb-add-popup-open #mbAddFolderBar .mb-folder-scan{
@@ -11025,25 +10769,27 @@ body.mb-add-popup-active{overflow:hidden!important;}
   padding:0!important;
   border-radius:14px!important;
   z-index:50!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
 }
 
-/* Card scaling */
+/* Add page cards are scaled to the app sheet, not wider than it. */
 #screenAdd.mb-add-popup-open .card{
-  margin:0 auto 18px!important;
-  padding:18px!important;
-  border-radius:26px!important;
+  margin:0 0 18px!important;
+  padding:16px!important;
+  border-radius:24px!important;
   overflow:hidden!important;
 }
 
-/* Reduce heading size slightly inside Add pages */
 #screenAdd.mb-add-popup-open .card h2{
-  font-size:34px!important;
+  font-size:31px!important;
   line-height:1.1!important;
   margin-top:0!important;
   margin-bottom:14px!important;
 }
 
-/* Fix all right-side overflow */
+/* Fix rows that were causing right clipping. */
 #screenAdd.mb-add-popup-open .row{
   display:grid!important;
   grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
@@ -11087,7 +10833,7 @@ body.mb-add-popup-active{overflow:hidden!important;}
   box-sizing:border-box!important;
 }
 
-/* Result rows: smaller buttons so they fit cleanly */
+/* Results: keep star/use/add buttons within the right edge. */
 #screenAdd.mb-add-popup-open .saved-food{
   display:grid!important;
   grid-template-columns:minmax(0,1fr) auto!important;
@@ -11099,77 +10845,82 @@ body.mb-add-popup-active{overflow:hidden!important;}
 
 #screenAdd.mb-add-popup-open .small-btn{
   width:auto!important;
-  min-width:74px!important;
-  max-width:88px!important;
-  padding:12px 8px!important;
+  min-width:72px!important;
+  max-width:86px!important;
+  padding:11px 8px!important;
   font-size:15px!important;
 }
 
 #screenAdd.mb-add-popup-open .star-btn{
-  width:46px!important;
-  min-width:46px!important;
-  max-width:46px!important;
-  flex:0 0 46px!important;
+  width:44px!important;
+  min-width:44px!important;
+  max-width:44px!important;
+  flex:0 0 44px!important;
 }
 
-/* Hide older floating close */
+/* Hide old close row from older patches. */
 #screenAdd.mb-add-popup-open #mbAddPopupClose,
 #screenAdd.mb-add-popup-open .mb-add-close-row,
 #screenAdd.mb-add-popup-open .floating-add-close{
   display:none!important;
 }
 
-@media(max-width:430px){
-  #screenAdd.mb-add-popup-open{
-    padding-left:10px!important;
-    padding-right:10px!important;
-  }
-
-  #screenAdd.mb-add-popup-open > *,
-  #screenAdd.mb-add-popup-open #mbAddFolderBar,
-  #screenAdd.mb-add-popup-open .card{
-    width:calc(100vw - 24px)!important;
-    max-width:calc(100vw - 24px)!important;
-  }
-
-  #screenAdd.mb-add-popup-open .card{
-    padding:16px!important;
-  }
-
-  #screenAdd.mb-add-popup-open .card h2{
-    font-size:31px!important;
-  }
+body.mb-add-popup-lock,
+body.mb-add-popup-active{
+  overflow:hidden!important;
 }
 </style>
 
-<script id="mb-v55-compact-add-sheet-js">
+<script id="mb-v56-add-popup-app-aligned-js">
 (function(){
-  function setV55Top(){
-    var stats=document.querySelector('#screenToday .hero-stats');
+  function setAddGeometry(){
+    var app=document.querySelector('.app');
+    var grid=document.querySelector('#screenToday .progress-grid');
+    var nav=document.querySelector('.tab-bar');
+
+    var left=12, width=window.innerWidth-24;
+    if(app){
+      var ar=app.getBoundingClientRect();
+      left=Math.max(0, Math.round(ar.left));
+      width=Math.round(ar.width);
+    }
+
     var top=0;
-
-    if(stats){
-      var r=stats.getBoundingClientRect();
-      top=Math.ceil(r.bottom + 1);
+    if(grid){
+      var gr=grid.getBoundingClientRect();
+      top=Math.ceil(gr.top - 8);  // just before the color rings start
     }
-
-    if(top < 240){
-      var nav=document.querySelector('.tab-bar');
-      if(nav) top=Math.ceil(nav.getBoundingClientRect().bottom + 16);
+    if(top < 230 && nav){
+      top=Math.ceil(nav.getBoundingClientRect().bottom + 14);
     }
+    if(top < 230) top=420;
 
-    if(top < 240) top=420;
-
-    document.documentElement.style.setProperty('--mb-add-v55-top', top+'px');
-    document.documentElement.style.setProperty('--mb-add-v54-top', top+'px');
-    document.documentElement.style.setProperty('--mb-add-v53-top', top+'px');
+    document.documentElement.style.setProperty('--mb-app-left', left+'px');
+    document.documentElement.style.setProperty('--mb-app-width', width+'px');
     document.documentElement.style.setProperty('--mb-add-top', top+'px');
-    document.documentElement.style.setProperty('--mb-add-modal-top', top+'px');
-    document.documentElement.style.setProperty('--mb-add-sheet-start', top+'px');
+  }
+
+  function ensureClose(){
+    var bar=document.getElementById('mbAddFolderBar');
+    if(!bar) return;
+    var btn=document.getElementById('mbAddFolderCloseBtn');
+    if(!btn){
+      btn=document.createElement('button');
+      btn.type='button';
+      btn.id='mbAddFolderCloseBtn';
+      btn.setAttribute('aria-label','Close Add Food');
+      btn.addEventListener('click',function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        if(typeof window.closeAddWorkspacePopup==='function') window.closeAddWorkspacePopup();
+      });
+      bar.appendChild(btn);
+    }
   }
 
   function normalize(){
-    setV55Top();
+    setAddGeometry();
+    ensureClose();
     var add=document.getElementById('screenAdd');
     if(add && add.classList.contains('mb-add-popup-open')){
       add.scrollLeft=0;
@@ -11178,23 +10929,34 @@ body.mb-add-popup-active{overflow:hidden!important;}
   }
 
   var oldOpen=window.openAddWorkspacePopup;
-  if(typeof oldOpen==='function' && !window.__mbV55OpenWrapped){
+  if(typeof oldOpen==='function' && !window.__mbV56OpenWrapped){
     window.openAddWorkspacePopup=function(){
-      setV55Top();
-      var res=oldOpen.apply(this,arguments);
+      setAddGeometry();
+      ensureClose();
+      var result=oldOpen.apply(this,arguments);
+      document.body.classList.add('mb-add-popup-lock','mb-add-popup-active');
       setTimeout(normalize,30);
       setTimeout(normalize,180);
       setTimeout(normalize,500);
-      return res;
+      return result;
     };
-    window.__mbV55OpenWrapped=true;
+    window.__mbV56OpenWrapped=true;
   }
 
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',setV55Top);
-  else setV55Top();
+  var oldClose=window.closeAddWorkspacePopup;
+  if(typeof oldClose==='function' && !window.__mbV56CloseWrapped){
+    window.closeAddWorkspacePopup=function(){
+      document.body.classList.remove('mb-add-popup-lock','mb-add-popup-active');
+      return oldClose.apply(this,arguments);
+    };
+    window.__mbV56CloseWrapped=true;
+  }
 
-  window.addEventListener('resize',setV55Top);
-  window.addEventListener('orientationchange',function(){setTimeout(setV55Top,300)});
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',normalize);
+  else normalize();
+
+  window.addEventListener('resize',setAddGeometry);
+  window.addEventListener('orientationchange',function(){setTimeout(setAddGeometry,300)});
 })();
 </script>
 
