@@ -9421,5 +9421,130 @@ body.mb-clean-modal-open{
 })();
 </script>
 
+
+
+<!-- MB V24: clear add confirmations + scan popup flow fix -->
+<style id="mb-v24-confirmation-and-scan-flow-css">
+  #portionMealModal{z-index:1000002!important;}
+  #customFoodModal{z-index:1000003!important;}
+  .mb-v24-confirm{
+    display:none;margin-top:12px;padding:12px 14px;border-radius:16px;
+    color:#bbf7d0;background:rgba(20,83,45,.58);border:1px solid rgba(34,197,94,.42);
+    font-size:14px;font-weight:950;line-height:1.35;box-shadow:0 0 18px rgba(34,197,94,.16)
+  }
+  .mb-v24-confirm.show{display:block!important;}
+  #portionMealModal.mb-v24-done .mb-v24-confirm,
+  #customFoodModal.mb-v24-done .mb-v24-confirm{display:block!important;}
+  #portionMealModal.mb-v24-done .mb-modal-actions .good,
+  #customFoodModal.mb-v24-done .mb-modal-actions .good{opacity:.72;pointer-events:none;}
+</style>
+<script id="mb-v24-confirmation-and-scan-flow-js">
+(function(){
+  function q(id){return document.getElementById(id)}
+  function N(v){var n=parseFloat(v);return Number.isFinite(n)?n:0}
+  function R(v){return Math.round(N(v)*10)/10}
+  function toast(msg){try{if(typeof window.mbToast==='function')return window.mbToast(msg);if(typeof window.toast==='function')return window.toast(msg)}catch(e){} }
+  function todayKey(){try{return 'macro_log_'+(q('date')?.value||new Date().toISOString().slice(0,10))}catch(e){return 'macro_log_'+new Date().toISOString().slice(0,10)}}
+  function getLogSafe(){try{if(typeof window.getLog==='function')return window.getLog()}catch(e){}try{return JSON.parse(localStorage.getItem(todayKey())||'[]')}catch(e){return[]}}
+  function saveLogSafe(log){try{if(typeof window.saveLog==='function'){window.saveLog(log);return}}catch(e){}localStorage.setItem(todayKey(),JSON.stringify(log||[]));try{if(typeof window.render==='function')window.render()}catch(e){}}
+  function confirmBox(modalId){
+    var m=q(modalId); if(!m)return null;
+    var card=m.querySelector('.mb-modal-card')||m.querySelector('.edit-modal')||m;
+    var box=m.querySelector('.mb-v24-confirm');
+    if(!box&&card){box=document.createElement('div');box.className='mb-v24-confirm';card.appendChild(box)}
+    return box;
+  }
+  function resetModalConfirm(modalId){
+    var m=q(modalId); if(!m)return;
+    m.classList.remove('mb-v24-done');
+    var b=m.querySelector('.mb-v24-confirm'); if(b){b.classList.remove('show');b.textContent=''}
+    Array.from(m.querySelectorAll('button')).forEach(function(btn){if(/close/i.test(btn.textContent))btn.textContent='Cancel'});
+  }
+  function showModalConfirm(modalId,msg){
+    var m=q(modalId), b=confirmBox(modalId); if(!m||!b)return;
+    b.textContent=msg; b.classList.add('show'); m.classList.add('mb-v24-done','active');
+    Array.from(m.querySelectorAll('button')).forEach(function(btn){if(/cancel/i.test(btn.textContent))btn.textContent='Close'});
+    try{b.scrollIntoView({behavior:'smooth',block:'nearest'})}catch(e){}
+  }
+
+  /* Use popup confirmation for every source: search results, favourites, recent, custom meals, scanned foods. */
+  var oldOpenPortion=window.openPortionMealModal;
+  if(typeof oldOpenPortion==='function'){
+    window.openPortionMealModal=function(item){
+      window.__mbV24PortionItem=item||null;
+      var res=oldOpenPortion.apply(this,arguments);
+      setTimeout(function(){resetModalConfirm('portionMealModal');confirmBox('portionMealModal')},20);
+      return res;
+    };
+  }
+  window.confirmPortionMeal=function(){
+    var item=window.__mbV24PortionItem;
+    if(!item){toast('No food selected');return;}
+    var activePortion=document.querySelector('#portionChoices .mb-choice.active');
+    var raw=activePortion?activePortion.getAttribute('data-val'):'1';
+    var mult=raw==='custom'?(N(q('customPortionValue')?.value)||1):(parseFloat(raw)||1);
+    var activeMeal=document.querySelector('#portionMealChoices .mb-choice.active');
+    var meal=(activeMeal&&activeMeal.getAttribute('data-meal'))||'Snack';
+    var label=Math.abs(mult-1)<.001?'1x':(Math.abs(mult-.5)<.001?'1/2':(Math.abs(mult-.25)<.001?'1/4':(Math.abs(mult-1/3)<.01?'1/3':(R(mult)+'x'))));
+    var entry={name:(item.name||'Food')+(label==='1x'?'':' ('+label+')'),meal:meal,cal:Math.round(N(item.cal)*mult),c:R(N(item.c)*mult),p:R(N(item.p)*mult),f:R(N(item.f)*mult)};
+    var log=getLogSafe(); log.push(entry); saveLogSafe(log);
+    try{if(typeof window.addRecent==='function')window.addRecent(item)}catch(e){}
+    try{if(typeof window.render==='function')window.render()}catch(e){}
+    showModalConfirm('portionMealModal',(item.name||'Food')+' added to '+meal+'.');
+    toast((item.name||'Food')+' added');
+  };
+
+  /* Custom Food popup: show confirmation inside popup instead of instantly jumping away. */
+  function customFoodItem(){
+    var name=(q('cfName')?.value||'').trim(); if(!name){alert('Enter food name');return null;}
+    return {id:'custom_food_'+Date.now(),name:name,serving:(q('cfServing')?.value||'1 serving').trim(),cat:(q('cfCat')?.value||'Custom Food').trim(),cal:Math.round(N(q('cfCal')?.value)),c:R(q('cfC')?.value),p:R(q('cfP')?.value),f:R(q('cfF')?.value),source:'custom',aliases:[]};
+  }
+  function localKey(i){return String(i?.name||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()+'|'+String(i?.serving||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}
+  function readCustomFoods(){try{return JSON.parse(localStorage.getItem('macro_custom_foods_v3')||'[]')}catch(e){return[]}}
+  function writeCustomFoods(items){localStorage.setItem('macro_custom_foods_v3',JSON.stringify(items||[]))}
+  function saveItemToDb(item){
+    var arr=readCustomFoods().filter(function(x){return localKey(x)!==localKey(item)}); arr.unshift(item); writeCustomFoods(arr.slice(0,800));
+    try{if(Array.isArray(window.foodDatabase))window.foodDatabase=[item].concat(window.foodDatabase)}catch(e){}
+    try{if(typeof foodDatabase!=='undefined'&&Array.isArray(foodDatabase))foodDatabase=[item].concat(foodDatabase)}catch(e){}
+    try{if(typeof window.renderFoodDatabase==='function')window.renderFoodDatabase()}catch(e){}
+  }
+  var oldOpenCustom=window.openCustomFoodModal;
+  if(typeof oldOpenCustom==='function'){
+    window.openCustomFoodModal=function(){var res=oldOpenCustom.apply(this,arguments);setTimeout(function(){resetModalConfirm('customFoodModal');confirmBox('customFoodModal')},40);return res;};
+  }
+  window.addCustomFoodToLog=function(){
+    var item=customFoodItem(); if(!item)return;
+    var mult=N(q('cfServings')?.value)||1;
+    var meal=q('cfMeal')?.value||'Breakfast';
+    var entry={name:item.name+(item.serving?' ('+item.serving+')':''),meal:meal,cal:Math.round(item.cal*mult),c:R(item.c*mult),p:R(item.p*mult),f:R(item.f*mult)};
+    var log=getLogSafe(); log.push(entry); saveLogSafe(log);
+    try{if(typeof window.addRecent==='function')window.addRecent(item)}catch(e){}
+    saveItemToDb(item);
+    try{if(q('cfFav')?.classList.contains('active')&&typeof window.toggleFavorite==='function'&&!(typeof window.isFavorite==='function'&&window.isFavorite(item)))window.toggleFavorite(item)}catch(e){}
+    showModalConfirm('customFoodModal',item.name+' added to '+meal+'.');
+    toast(item.name+' added');
+  };
+
+  /* Scan review: close/hide the scan popup before opening portion popup so the next popup is visible immediately. */
+  window.addScannedFoodToLog=function(){
+    var item={
+      id:'scan_'+Date.now(),name:(q('scanFoodName')?.value||'Scanned food').trim()||'Scanned food',
+      serving:(q('scanServing')?.value||'1 serving').trim(),cat:'Scanned Food',cal:Math.round(N(q('scanCal')?.value)),
+      c:R(q('scanCarbs')?.value),p:R(q('scanProtein')?.value),f:R(q('scanFat')?.value),source:'scan',aliases:['scan','scanned','barcode','ocr']
+    };
+    try{saveItemToDb(item)}catch(e){}
+    try{if(q('scanFavBtn')?.classList.contains('active')&&typeof window.toggleFavorite==='function'&&!(typeof window.isFavorite==='function'&&window.isFavorite(item)))window.toggleFavorite(item)}catch(e){}
+    var scanModal=q('scanPopupModal'); if(scanModal)scanModal.classList.remove('active'); document.body.style.overflow='';
+    if(typeof window.openPortionMealModal==='function')window.openPortionMealModal(item);
+    setTimeout(function(){var pm=q('portionMealModal'); if(pm)pm.classList.add('active')},40);
+  };
+
+  document.addEventListener('click',function(e){
+    var cancel=e.target.closest&&e.target.closest('#portionMealModal .mb-modal-actions .light, #customFoodModal .mb-modal-actions .light');
+    if(cancel){setTimeout(function(){resetModalConfirm('portionMealModal');resetModalConfirm('customFoodModal')},80)}
+  },true);
+})();
+</script>
+
 </body>
 </html>
