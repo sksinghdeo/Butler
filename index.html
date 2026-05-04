@@ -9443,5 +9443,64 @@ body.light-mode #todayDynamicTitle{color:#0f172a !important}
 })();
 </script>
 
+
+<style id="mb-nav-popup-fix-v2">
+.tab-btn[data-screen="Today"]{min-width:118px!important}
+.tab-btn[data-screen="Today"]::before{content:""!important;display:none!important}
+.tab-btn[data-screen="Today"] .nav-icon{display:inline-flex!important;width:24px!important;height:24px!important;margin-bottom:3px!important;color:#bfdbfe!important;filter:drop-shadow(0 0 8px rgba(56,189,248,.65))}
+.tab-btn[data-screen="Today"].active .nav-icon{color:#fff!important;filter:drop-shadow(0 0 12px rgba(255,255,255,.85))}
+#screenToday .today-date-label,#screenToday .date-box{display:none!important}
+#todayDynamicTitle{width:auto!important;margin:0!important;padding:0!important;background:transparent!important;box-shadow:none!important;border:0!important;color:var(--bc-text,#f8fafc)!important;font-size:38px!important;line-height:1.05!important;font-weight:950!important;text-align:left!important;display:inline-flex!important;align-items:center!important;gap:8px!important}
+#todayDynamicTitle .down-arrow{font-size:22px;color:#7dd3fc;filter:drop-shadow(0 0 8px rgba(56,189,248,.55));transform:translateY(2px)}
+.mb-fullpage-backdrop{padding-top:calc(18px + env(safe-area-inset-top,0px))!important}
+.mb-fullpage-shell{max-height:calc(100dvh - 36px - env(safe-area-inset-top,0px))!important}
+.mb-fullpage-header{padding-top:8px!important;margin-bottom:10px!important}
+#addPopupScanBtn{display:none!important}
+#mbFullpageModal[data-page="Scan"] #mbFullpageScanBtn{display:none!important}
+#mbFullpageModal[data-page="Add"] #mbFullpageScanBtn{display:inline-block!important}
+#mbFullpageContent>.screen.mb-popup-page>.card{margin-top:8px!important}
+</style>
+<script id="mb-nav-popup-fix-v2-js">
+(function(){
+  function q(id){return document.getElementById(id)}
+  function todayISO(){return new Date().toISOString().slice(0,10)}
+  function pretty(v){try{return new Date(v+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}catch(e){return v||"Today"}}
+  function titleForDate(v){return v===todayISO()?"Today":pretty(v)}
+  function homeSvg(){return '<span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3.5 11.2L12 4l8.5 7.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.8 10.5v8.2h4.2v-5h4v5h4.2v-8.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>'}
+  function rebuildHomeTab(){const btn=document.querySelector('.tab-btn[data-screen="Today"]');if(btn)btn.innerHTML=homeSvg()+"Home"}
+  function updateHomeTitleDate(){const date=q('date')?.value||todayISO();const t=q('todayDynamicTitleText');if(t)t.textContent=titleForDate(date);const d=q('dateDisplay');if(d)d.textContent=titleForDate(date)}
+  function rebuildTodayTitle(){
+    const card=q('screenToday')?.querySelector('.card');if(!card)return;
+    const h2=card.querySelector('h2');
+    const dateLabel=Array.from(card.querySelectorAll('label')).find(l=>/date/i.test(l.textContent||''));if(dateLabel)dateLabel.classList.add('today-date-label');
+    const dateBox=card.querySelector('.date-box');if(dateBox)dateBox.style.display='none';
+    if(h2 && !q('todayDynamicTitle'))h2.innerHTML='<span class="bc-icon">HM</span><button id="todayDynamicTitle" type="button"><span id="todayDynamicTitleText">Today</span><span class="down-arrow">⌄</span></button>';
+    const titleBtn=q('todayDynamicTitle');
+    if(titleBtn)titleBtn.onclick=function(e){e.preventDefault();const input=q('date');if(!input)return;if(typeof input.showPicker==='function')input.showPicker();else{input.focus();input.click()}};
+    updateHomeTitleDate();
+  }
+  function hideRemovedTabs(){document.querySelectorAll('.tab-btn[data-screen="Add"],.tab-btn[data-screen="Scan"]').forEach(b=>b.remove())}
+  window.updateDateDisplay=function(){updateHomeTitleDate()};
+  window.dateChanged=function(){try{if(typeof loadTargets==='function')loadTargets();if(typeof loadDailyNotes==='function')loadDailyNotes();if(typeof render==='function')render();if(typeof renderProgress==='function')renderProgress()}catch(e){}updateHomeTitleDate()};
+  document.addEventListener('change',function(e){if(e.target&&e.target.id==='date')window.dateChanged()},true);
+  function putBackCurrentPopup(){const content=q('mbFullpageContent');if(!content)return;const current=content.querySelector('.screen');if(!current)return;const name=current.id.replace('screen','');const ph=window['__mbPlaceholder'+name];if(ph&&ph.parentNode)ph.parentNode.insertBefore(current,ph.nextSibling);current.classList.remove('mb-popup-page','active')}
+  window.openFullpageModal=function(name){
+    const modal=q('mbFullpageModal'),content=q('mbFullpageContent'),section=q('screen'+name);if(!modal||!content||!section)return;
+    putBackCurrentPopup();content.appendChild(section);section.classList.add('active','mb-popup-page');modal.classList.add('active');modal.dataset.page=name;
+    document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';
+    const title=q('mbFullpageTitle');if(title)title.textContent=name==='Scan'?'Scan Product':'Add Food';
+    const scanBtn=q('mbFullpageScanBtn');if(scanBtn){scanBtn.style.display=name==='Add'?'':'none';scanBtn.onclick=function(){window.openFullpageModal('Scan')}}
+    const backBtn=q('mbFullpageBackBtn');if(backBtn){backBtn.textContent='Back';backBtn.onclick=function(){if(modal.dataset.page==='Scan')window.openFullpageModal('Add');else{window.closeFullpageModal();if(typeof showScreen==='function')showScreen('Today')}}}
+    try{if(name==='Add'&&typeof renderFoodDatabase==='function')renderFoodDatabase()}catch(e){}
+  };
+  window.closeFullpageModal=function(){const modal=q('mbFullpageModal');putBackCurrentPopup();modal?.classList.remove('active');if(modal)modal.dataset.page='';document.documentElement.style.overflow='';document.body.style.overflow='';try{if(typeof stopBarcodeCamera==='function')stopBarcodeCamera()}catch(e){}};
+  const oldShowScreen=window.showScreen;
+  window.showScreen=function(name){if(name==='Add'||name==='Scan'){window.openFullpageModal(name);return}if(name==='Today'||name==='Log'||name==='Progress'||name==='Settings')window.closeFullpageModal();if(typeof oldShowScreen==='function')oldShowScreen(name);hideRemovedTabs();rebuildHomeTab();rebuildTodayTitle()};
+  function rewireButtons(){document.querySelectorAll('button').forEach(btn=>{const attr=btn.getAttribute('onclick')||'';if(attr.includes("showScreen('Add')")||attr.includes('showScreen("Add")'))btn.setAttribute('onclick',"openFullpageModal('Add')");if(attr.includes("showScreen('Scan')")||attr.includes('showScreen("Scan")'))btn.setAttribute('onclick',"openFullpageModal('Scan')")});const redundant=q('addPopupScanBtn');if(redundant)redundant.remove()}
+  function boot(){hideRemovedTabs();rebuildHomeTab();rebuildTodayTitle();rewireButtons();const date=q('date');if(date&&!date.value)date.value=todayISO();updateHomeTitleDate()}
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,100));setTimeout(boot,500);
+})();
+</script>
+
 </body>
 </html>
