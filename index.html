@@ -10814,5 +10814,157 @@ body.mb-goal-popup-lock{
 })();
 </script>
 
+
+
+<!-- MB V40: Add popup seamless overlay background / remove side discontinuity -->
+<style id="mb-v40-add-popup-seamless">
+/* Make the Add workspace behave like a real sheet over the page, not a transparent cutout */
+body.mb-add-popup-active{
+  overflow:hidden!important;
+}
+
+#screenAdd.mb-add-popup-open{
+  position:fixed!important;
+  left:0!important;
+  right:0!important;
+  bottom:0!important;
+  top:var(--mb-add-popup-top, 318px)!important;
+  z-index:900!important;
+  display:block!important;
+  width:100vw!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:12px max(12px, env(safe-area-inset-left)) calc(env(safe-area-inset-bottom,0px) + 42px) max(12px, env(safe-area-inset-right))!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  -webkit-overflow-scrolling:touch!important;
+  overscroll-behavior:contain!important;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(37,99,235,.32), transparent 34%),
+    radial-gradient(circle at 90% 10%, rgba(124,58,237,.22), transparent 30%),
+    linear-gradient(180deg,#06142b 0%,#020617 46%,#020617 100%)!important;
+  box-shadow:0 -18px 40px rgba(0,0,0,.40)!important;
+}
+
+/* soft top blend so the page does not look chopped */
+#screenAdd.mb-add-popup-open::before{
+  content:"";
+  position:fixed;
+  left:0;
+  right:0;
+  top:calc(var(--mb-add-popup-top, 318px) - 34px);
+  height:44px;
+  pointer-events:none;
+  z-index:-1;
+  background:linear-gradient(180deg,rgba(2,6,23,0),rgba(6,20,43,.98));
+}
+
+/* center all popup content to the same width as the app */
+#screenAdd.mb-add-popup-open > *{
+  max-width:560px!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
+
+/* folder bar gets its own seamless card; no background leak at left/right edges */
+#screenAdd.mb-add-popup-open #mbAddFolderBar{
+  width:100%!important;
+  max-width:560px!important;
+  margin:0 auto 14px!important;
+  padding:8px!important;
+  border-radius:26px!important;
+  background:linear-gradient(145deg,rgba(3,12,27,.98),rgba(9,23,49,.96))!important;
+  border:1px solid rgba(59,130,246,.34)!important;
+  box-shadow:0 16px 34px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.06)!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+}
+
+/* keep cards visually continuous below the folder bar */
+#screenAdd.mb-add-popup-open .card{
+  margin-top:14px!important;
+  margin-bottom:20px!important;
+}
+
+/* make close look like a part of the folder bar, not a floating mismatch */
+#mbAddFolderCloseBtn{
+  margin-left:8px!important;
+  align-self:center!important;
+}
+
+/* hide any old floating close controls from earlier versions */
+#screenAdd.mb-add-popup-open .mb-add-close-row,
+#screenAdd.mb-add-popup-open #mbAddPopupClose,
+#screenAdd.mb-add-popup-open .floating-add-close{
+  display:none!important;
+}
+
+/* remove visible horizontal seam if a home card is behind the overlay */
+#screenAdd.mb-add-popup-open .card:first-of-type{
+  border-top-color:rgba(59,130,246,.34)!important;
+}
+
+@media(max-width:430px){
+  #screenAdd.mb-add-popup-open{
+    padding-left:10px!important;
+    padding-right:10px!important;
+  }
+  #screenAdd.mb-add-popup-open #mbAddFolderBar{
+    border-radius:24px!important;
+    padding:7px!important;
+  }
+}
+</style>
+
+<script id="mb-v40-add-popup-seamless-js">
+(function(){
+  function setAddPopupTopV40(){
+    var nav=document.querySelector('.tab-bar');
+    var top=0;
+    if(nav){
+      var r=nav.getBoundingClientRect();
+      top=Math.ceil(r.bottom + 12);
+    }
+    if(top < 120) top=318;
+    document.documentElement.style.setProperty('--mb-add-popup-top', top+'px');
+  }
+
+  var oldOpen=window.openAddWorkspacePopup;
+  if(typeof oldOpen==='function' && !window.__mbV40OpenWrapped){
+    window.openAddWorkspacePopup=function(){
+      setAddPopupTopV40();
+      document.body.classList.add('mb-add-popup-active');
+      var result=oldOpen.apply(this,arguments);
+      setTimeout(function(){
+        setAddPopupTopV40();
+        document.body.classList.add('mb-add-popup-active');
+      },50);
+      return result;
+    };
+    window.__mbV40OpenWrapped=true;
+  }
+
+  var oldClose=window.closeAddWorkspacePopup;
+  if(typeof oldClose==='function' && !window.__mbV40CloseWrapped){
+    window.closeAddWorkspacePopup=function(){
+      document.body.classList.remove('mb-add-popup-active');
+      return oldClose.apply(this,arguments);
+    };
+    window.__mbV40CloseWrapped=true;
+  }
+
+  function boot(){
+    setAddPopupTopV40();
+    var add=document.getElementById('screenAdd');
+    if(add && add.classList.contains('mb-add-popup-open')){
+      document.body.classList.add('mb-add-popup-active');
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+  window.addEventListener('resize',setAddPopupTopV40);
+  window.addEventListener('orientationchange',function(){setTimeout(setAddPopupTopV40,250)});
+})();
+</script>
+
 </body>
 </html>
