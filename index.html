@@ -9980,5 +9980,127 @@ body.mb-clean-modal-open{
 })();
 </script>
 
+
+<!-- MB V29: History heading + popup editors for saved recipes/meals -->
+<style id="mb-v29-history-edit-css">
+  #mbAddHistoryCard h2{
+    display:flex!important;
+    align-items:center!important;
+    gap:0!important;
+    margin-bottom:14px!important;
+    line-height:1.05!important;
+  }
+  #mbAddHistoryCard h2 .bc-icon{display:none!important;}
+  #mbAddHistoryCard h2 .mb-history-title-text{
+    display:inline-block!important;
+    font-size:42px!important;
+    line-height:1.05!important;
+    font-weight:950!important;
+    letter-spacing:-.5px!important;
+  }
+  @media(max-width:430px){#mbAddHistoryCard h2 .mb-history-title-text{font-size:40px!important;}}
+  .mb-edit-list-box{
+    margin-top:12px;
+    padding:12px;
+    border-radius:18px;
+    background:rgba(2,6,23,.42);
+    border:1px solid rgba(56,189,248,.22);
+    max-height:170px;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  .mb-edit-list-row{padding:9px 0;border-bottom:1px solid rgba(96,165,250,.14)}
+  .mb-edit-list-row:last-child{border-bottom:0}
+  .mb-edit-list-row b{display:block;color:#f8fafc;font-size:15px;line-height:1.25}
+  .mb-edit-list-row span{display:block;color:#94a3b8;font-size:13px;line-height:1.35;margin-top:3px}
+  .mb-edit-modal-title{margin-bottom:6px!important;}
+  .mb-edit-note{margin:0 0 14px!important;}
+  .mb-edit-modal-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important;margin-top:14px!important;}
+  .mb-edit-modal-actions button{margin:0!important;width:100%!important;}
+</style>
+<script id="mb-v29-history-edit-js">
+(function(){
+  function q(id){return document.getElementById(id)}
+  function N(v){var n=parseFloat(v);return isNaN(n)?0:n}
+  function R(v){return Math.round(N(v)*10)/10}
+  function esc(s){return String(s==null?'':s).replace(/[&<>'"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]})}
+  function read(k){try{return JSON.parse(localStorage.getItem(k)||'[]')}catch(e){return[]}}
+  function write(k,v){localStorage.setItem(k,JSON.stringify(v||[]))}
+  function recipes(){return read('macro_custom_recipes_v3')}
+  function setRecipes(v){write('macro_custom_recipes_v3',v)}
+  function meals(){return read('macro_custom_meals_v3')}
+  function setMeals(v){write('macro_custom_meals_v3',v)}
+  function close(id){var el=q(id); if(el)el.remove()}
+  function refreshAll(){
+    try{if(typeof renderSavedRecipes==='function')renderSavedRecipes()}catch(e){}
+    try{if(typeof renderSavedMeals==='function')renderSavedMeals()}catch(e){}
+    try{if(typeof renderFoodDatabase==='function')renderFoodDatabase()}catch(e){}
+    try{if(typeof renderFavorites==='function')renderFavorites()}catch(e){}
+    try{if(typeof renderRecent==='function')renderRecent()}catch(e){}
+  }
+  function themedConfirm(msg){
+    if(typeof showConfirm==='function')showConfirm(msg);
+    else if(typeof showMbCleanToast==='function')showMbCleanToast(msg);
+    else if(typeof mbToast==='function')mbToast(msg);
+    else alert(msg);
+  }
+  function listHtml(arr){
+    if(!arr||!arr.length)return '<p class="note">No detailed items saved for this entry.</p>';
+    return arr.map(function(x){return '<div class="mb-edit-list-row"><b>'+esc(x.name||'Item')+'</b><span>'+esc(x.serving||'1 serving')+' • '+Math.round(N(x.cal))+' cal • C '+R(x.c)+'g • P '+R(x.p)+'g • F '+R(x.f)+'g</span></div>'}).join('');
+  }
+  function openSavedRecipeEditor(id){
+    var r=recipes().find(function(x){return String(x.id)===String(id)}); if(!r)return;
+    close('mbSavedRecipeEditModal');
+    var html='<div id="mbSavedRecipeEditModal" class="mb-modal active"><div class="mb-modal-card">'+
+      '<h3 class="mb-edit-modal-title">Edit Saved Recipe</h3><p class="note mb-edit-note">Update the saved recipe here. The search database and history will refresh immediately.</p>'+
+      '<label>Recipe Name</label><input id="mbEditRecipeName" value="'+esc(r.name||'')+'">'+
+      '<div class="row"><div><label>Calories</label><input id="mbEditRecipeCal" type="number" step="1" value="'+esc(Math.round(N(r.cal)))+'"></div><div><label>Carbs (g)</label><input id="mbEditRecipeC" type="number" step="0.1" value="'+esc(R(r.c))+'"></div></div>'+
+      '<div class="row"><div><label>Protein (g)</label><input id="mbEditRecipeP" type="number" step="0.1" value="'+esc(R(r.p))+'"></div><div><label>Fat (g)</label><input id="mbEditRecipeF" type="number" step="0.1" value="'+esc(R(r.f))+'"></div></div>'+
+      '<div class="mb-edit-list-box"><b style="color:#f8fafc">Recipe ingredients</b>'+listHtml(r.ingredients||[])+'</div>'+
+      '<div class="mb-edit-modal-actions"><button class="good" type="button" onclick="saveSavedRecipePopup(\''+esc(r.id)+'\')">Save Recipe</button><button class="light" type="button" onclick="document.getElementById(\'mbSavedRecipeEditModal\').remove()">Cancel</button></div>'+
+      '</div></div>';
+    document.body.insertAdjacentHTML('beforeend',html);
+  }
+  function openSavedMealEditor(id){
+    var m=meals().find(function(x){return String(x.id)===String(id)}); if(!m)return;
+    close('mbSavedMealEditModal');
+    var html='<div id="mbSavedMealEditModal" class="mb-modal active"><div class="mb-modal-card">'+
+      '<h3 class="mb-edit-modal-title">Edit Saved Meal</h3><p class="note mb-edit-note">Update the saved meal here. The search database and history will refresh immediately.</p>'+
+      '<label>Meal Name</label><input id="mbEditMealName" value="'+esc(m.name||'')+'">'+
+      '<div class="row"><div><label>Calories</label><input id="mbEditMealCal" type="number" step="1" value="'+esc(Math.round(N(m.cal)))+'"></div><div><label>Carbs (g)</label><input id="mbEditMealC" type="number" step="0.1" value="'+esc(R(m.c))+'"></div></div>'+
+      '<div class="row"><div><label>Protein (g)</label><input id="mbEditMealP" type="number" step="0.1" value="'+esc(R(m.p))+'"></div><div><label>Fat (g)</label><input id="mbEditMealF" type="number" step="0.1" value="'+esc(R(m.f))+'"></div></div>'+
+      '<div class="mb-edit-list-box"><b style="color:#f8fafc">Meal items</b>'+listHtml(m.items||[])+'</div>'+
+      '<div class="mb-edit-modal-actions"><button class="good" type="button" onclick="saveSavedMealPopup(\''+esc(m.id)+'\')">Save Meal</button><button class="light" type="button" onclick="document.getElementById(\'mbSavedMealEditModal\').remove()">Cancel</button></div>'+
+      '</div></div>';
+    document.body.insertAdjacentHTML('beforeend',html);
+  }
+  window.saveSavedRecipePopup=function(id){
+    var arr=recipes(), idx=arr.findIndex(function(x){return String(x.id)===String(id)}); if(idx<0)return;
+    arr[idx]=Object.assign({},arr[idx],{name:(q('mbEditRecipeName')?.value||arr[idx].name||'Recipe').trim(),serving:'1 recipe',cat:'Custom Recipe',source:'custom_recipe',cal:Math.round(N(q('mbEditRecipeCal')?.value)),c:R(q('mbEditRecipeC')?.value),p:R(q('mbEditRecipeP')?.value),f:R(q('mbEditRecipeF')?.value)});
+    setRecipes(arr); close('mbSavedRecipeEditModal'); refreshAll(); themedConfirm('Custom recipe updated');
+  };
+  window.saveSavedMealPopup=function(id){
+    var arr=meals(), idx=arr.findIndex(function(x){return String(x.id)===String(id)}); if(idx<0)return;
+    arr[idx]=Object.assign({},arr[idx],{name:(q('mbEditMealName')?.value||arr[idx].name||'Meal').trim(),serving:'1 meal',cat:'Custom Meal',source:'custom_meal',cal:Math.round(N(q('mbEditMealCal')?.value)),c:R(q('mbEditMealC')?.value),p:R(q('mbEditMealP')?.value),f:R(q('mbEditMealF')?.value)});
+    setMeals(arr); close('mbSavedMealEditModal'); refreshAll(); themedConfirm('Custom meal updated');
+  };
+  window.editSavedRecipeFinal=function(id){openSavedRecipeEditor(id)};
+  window.useSavedMeal=function(id){openSavedMealEditor(id)};
+  window.editSavedMealFinal=function(id){openSavedMealEditor(id)};
+
+  /* Keep History details from collapsing/glitching after old folder click handlers run. */
+  var ids=['favoriteDetails','recentDetails','savedRecipeDetails','savedMealDetails'];
+  var state={favoriteDetails:false,recentDetails:false,savedRecipeDetails:false,savedMealDetails:false};
+  function updateStateFromDom(){ids.forEach(function(id){var d=q(id); if(d)state[id]=d.hasAttribute('open')})}
+  function applyState(){ids.forEach(function(id){var d=q(id); if(!d)return; if(state[id])d.setAttribute('open',''); else d.removeAttribute('open')})}
+  document.addEventListener('toggle',function(e){if(e.target&&ids.indexOf(e.target.id)>=0){state[e.target.id]=e.target.hasAttribute('open'); setTimeout(applyState,160); setTimeout(applyState,350)}},true);
+  document.addEventListener('click',function(e){var s=e.target.closest&&e.target.closest('#mbAddHistoryCard details summary'); if(s){var d=s.closest('details'); if(d&&ids.indexOf(d.id)>=0){state[d.id]=!d.hasAttribute('open'); setTimeout(applyState,180); setTimeout(applyState,420)}}},true);
+  function fixHeading(){var h=document.querySelector('#mbAddHistoryCard h2'); if(h){h.innerHTML='<span class="mb-history-title-text">History</span>';}}
+  function boot(){updateStateFromDom();fixHeading();setTimeout(fixHeading,400);setTimeout(fixHeading,1200);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+  setInterval(function(){fixHeading(); if(document.querySelector('#mbAddHistoryCard:not(.mb-folder-hidden)'))applyState();},600);
+})();
+</script>
+
 </body>
 </html>
