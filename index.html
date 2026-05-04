@@ -10974,8 +10974,10 @@ body.mb-add-popup-active{overflow:hidden!important;}
 
 
 
-<!-- MB MASTER PATCH: Home label + working date calendar -->
-<style id="mb-master-home-date-fix">
+
+
+<!-- MB MASTER PATCH v2: Home label + reliable date modal calendar -->
+<style id="mb-master-date-modal-fix">
 /* Restore Home text under the home icon in the top nav */
 .tab-bar .tab-btn[data-screen="Today"]{
   font-size:0!important;
@@ -10989,39 +10991,76 @@ body.mb-add-popup-active{overflow:hidden!important;}
   color:inherit;
 }
 
-/* Date heading acts like a calendar selector */
+/* Heading becomes the date selector trigger */
 #todayDateHeading{
   position:relative!important;
   cursor:pointer!important;
   user-select:none!important;
   -webkit-tap-highlight-color:transparent!important;
 }
-
 #todayDateHeading .today-title-date-btn{
-  pointer-events:none!important;
-  cursor:pointer!important;
-}
-
-#todayDateHeading .today-title-date-input{
-  position:absolute!important;
-  inset:0!important;
-  width:100%!important;
-  height:100%!important;
-  opacity:0.001!important;
-  z-index:20!important;
   pointer-events:auto!important;
   cursor:pointer!important;
-  border:0!important;
-  padding:0!important;
+  width:auto!important;
+}
+#todayDateHeading .today-title-date-input{
+  display:none!important; /* native hidden picker was unreliable on iPhone */
+}
+
+/* Date modal */
+#mbDateModal{
+  position:fixed;
+  inset:0;
+  z-index:100200;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:rgba(2,6,23,.72);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+}
+#mbDateModal.active{display:flex}
+#mbDateModal .mb-date-card{
+  width:100%;
+  max-width:420px;
+  border-radius:28px;
+  padding:22px;
+  background:linear-gradient(145deg,rgba(6,13,28,.98),rgba(9,18,35,.96));
+  border:1px solid rgba(56,189,248,.34);
+  box-shadow:0 28px 70px rgba(0,0,0,.65),0 0 38px rgba(37,99,235,.28);
+  color:#f8fafc;
+}
+#mbDateModal h3{
+  margin:0 0 14px;
+  font-size:28px;
+  font-weight:950;
+}
+#mbDatePickerInput{
+  width:100%;
+  height:58px;
+  border-radius:18px;
+  padding:0 14px;
+  font-size:18px;
+  font-weight:850;
+  background:rgba(2,6,23,.72);
+  color:#f8fafc;
+  border:1.5px solid rgba(59,130,246,.42);
+}
+.mb-date-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:14px;
+}
+.mb-date-actions button{
   margin:0!important;
-  appearance:auto!important;
-  -webkit-appearance:auto!important;
 }
 </style>
 
-<script id="mb-master-home-date-fix-js">
+<script id="mb-master-date-modal-fix-js">
 (function(){
-  function el(id){ return document.getElementById(id); }
+  function $(id){ return document.getElementById(id); }
 
   function localTodayKey(){
     var d = new Date();
@@ -11042,67 +11081,123 @@ body.mb-add-popup-active{overflow:hidden!important;}
   }
 
   function updateDateHeading(){
-    var input = el('date');
-    var display = el('dateDisplay');
-    if(input && display){
-      display.textContent = prettyDate(input.value);
-    }
+    var input = $('date');
+    var display = $('dateDisplay');
+    if(input && display) display.textContent = prettyDate(input.value);
   }
 
-  function installDatePicker(){
-    var heading = el('todayDateHeading');
-    var input = el('date');
-    if(!heading || !input) return;
+  function ensureDateModal(){
+    if($('mbDateModal')) return;
+
+    var modal = document.createElement('div');
+    modal.id = 'mbDateModal';
+    modal.innerHTML =
+      '<div class="mb-date-card" role="dialog" aria-modal="true" aria-label="Select date">' +
+        '<h3>Select Date</h3>' +
+        '<input id="mbDatePickerInput" type="date">' +
+        '<div class="mb-date-actions">' +
+          '<button type="button" class="light" id="mbDateCancel">Cancel</button>' +
+          '<button type="button" class="good" id="mbDateApply">Use Date</button>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(modal);
+
+    modal.addEventListener('click', function(e){
+      if(e.target === modal) closeDateModal();
+    });
+
+    $('mbDateCancel').addEventListener('click', closeDateModal);
+    $('mbDateApply').addEventListener('click', applyDateModal);
+  }
+
+  function openDateModal(e){
+    if(e){
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    ensureDateModal();
+
+    var mainInput = $('date');
+    var modalInput = $('mbDatePickerInput');
+
+    if(mainInput && !mainInput.value) mainInput.value = localTodayKey();
+    modalInput.value = mainInput ? mainInput.value : localTodayKey();
+
+    $('mbDateModal').classList.add('active');
+
+    setTimeout(function(){
+      try{ modalInput.focus(); }catch(err){}
+      try{ if(modalInput.showPicker) modalInput.showPicker(); }catch(err){}
+    }, 80);
+  }
+
+  function closeDateModal(){
+    var modal = $('mbDateModal');
+    if(modal) modal.classList.remove('active');
+  }
+
+  function applyDateModal(){
+    var mainInput = $('date');
+    var modalInput = $('mbDatePickerInput');
+    if(!mainInput || !modalInput) return;
+
+    mainInput.value = modalInput.value || localTodayKey();
+
+    updateDateHeading();
+
+    try{
+      if(typeof window.dateChanged === 'function') window.dateChanged();
+      else mainInput.dispatchEvent(new Event('change', {bubbles:true}));
+    }catch(e){
+      try{ mainInput.dispatchEvent(new Event('change', {bubbles:true})); }catch(err){}
+    }
+
+    closeDateModal();
+  }
+
+  function install(){
+    var heading = $('todayDateHeading');
+    var display = $('dateDisplay');
+    var input = $('date');
+
+    if(!heading || !display || !input) return;
 
     if(!input.value) input.value = localTodayKey();
 
-    if(!input.__mbMasterDateBound){
-      input.addEventListener('change', function(){
-        updateDateHeading();
-        try{
-          if(typeof window.dateChanged === 'function') window.dateChanged();
-        }catch(e){}
-        try{
-          if(typeof window.updateDashboard === 'function') window.updateDashboard();
-        }catch(e){}
-      });
+    /* Remove old native input overlay from blocking taps */
+    input.style.display = 'none';
 
-      heading.addEventListener('click', function(e){
-        if(e.target === input) return;
-        try{
-          if(input.showPicker) input.showPicker();
-          else { input.focus(); input.click(); }
-        }catch(err){
-          input.focus();
-          input.click();
-        }
-      });
+    if(!heading.__mbDateModalBound){
+      heading.addEventListener('click', openDateModal);
+      display.addEventListener('click', openDateModal);
+      heading.__mbDateModalBound = true;
+    }
 
-      input.__mbMasterDateBound = true;
+    if(!input.__mbDateUpdateBound){
+      input.addEventListener('change', updateDateHeading);
+      input.__mbDateUpdateBound = true;
     }
 
     updateDateHeading();
   }
 
   var oldUpdateDateDisplay = window.updateDateDisplay;
-  if(typeof oldUpdateDateDisplay === 'function' && !window.__mbMasterUpdateDateWrapped){
+  if(typeof oldUpdateDateDisplay === 'function' && !window.__mbDateModalUpdateWrapped){
     window.updateDateDisplay = function(){
       var result;
       try{ result = oldUpdateDateDisplay.apply(this, arguments); }catch(e){}
       updateDateHeading();
       return result;
     };
-    window.__mbMasterUpdateDateWrapped = true;
+    window.__mbDateModalUpdateWrapped = true;
   }
 
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', installDatePicker);
-  }else{
-    installDatePicker();
-  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install);
+  else install();
 
-  setTimeout(installDatePicker, 200);
-  setTimeout(installDatePicker, 800);
+  setTimeout(install, 200);
+  setTimeout(install, 900);
 })();
 </script>
 
