@@ -9838,386 +9838,98 @@ body.mb-clean-modal-open{
 </script>
 
 
-<!-- MB V28: folder scan placement + history accordions fix -->
-<style id="mb-v28-folder-history-fix-css">
-  /* Scan now lives only in the folder bar, not inside the Add Food card header */
-  #screenAdd > .mb-folder-add #openScanPopupBtn{
-    display:none!important;
-  }
 
-  /* Make the folder bar behave like clean folder tabs */
-  #mbAddFolderBar{
-    scroll-padding-left:8px!important;
-    align-items:center!important;
-  }
-  #mbFolderScanBtn{
-    min-width:72px!important;
-    height:auto!important;
-  }
-  #mbFolderScanBtn span{
-    display:none!important;
-  }
-  #mbFolderScanBtn .mb-scan-folder-icon{
-    width:24px!important;
-    height:24px!important;
-    display:block!important;
-    stroke:#fff!important;
-    fill:none!important;
-    stroke-width:2.7!important;
-    stroke-linecap:round!important;
-    stroke-linejoin:round!important;
-    filter:drop-shadow(0 0 10px rgba(255,255,255,.75));
-  }
 
-  /* Proper History heading spacing */
-  #mbAddHistoryCard h2{
-    display:flex!important;
-    align-items:center!important;
-    gap:12px!important;
-    white-space:normal!important;
-  }
-  #mbAddHistoryCard h2 .bc-icon{
-    margin-right:0!important;
-    flex:0 0 auto!important;
-  }
-  #mbAddHistoryCard h2 .mb-history-title-text{
-    display:inline-block!important;
-    line-height:1.05!important;
-  }
-
-  /* History accordion rows must stay tappable and visually separated */
-  #mbAddHistoryCard .compact-details{
-    display:block!important;
-    margin:12px 0!important;
-    overflow:hidden!important;
-  }
-  #mbAddHistoryCard .compact-details summary{
-    cursor:pointer!important;
-    user-select:none!important;
-    -webkit-user-select:none!important;
-    touch-action:manipulation!important;
-  }
-  #mbAddHistoryCard .compact-details[open] .compact-list{
-    display:block!important;
-  }
-  #mbAddHistoryCard .compact-details:not([open]) .compact-list{
-    display:none!important;
-  }
+<!-- MB V32: clean History + edit in exact Recipe/Meal builders -->
+<style id="mb-v32-history-builder-css">
+  #mbAddHistoryCard h2{display:block!important;margin:0 0 14px!important;line-height:1.05!important;padding:0!important;}
+  #mbAddHistoryCard h2 .bc-icon,#mbAddHistoryCard h2 .section-svg{display:none!important;}
+  #mbAddHistoryCard .mb-history-title-text{font-size:42px!important;font-weight:950!important;letter-spacing:-.5px!important;color:#f8fafc!important;}
+  body.light-mode #mbAddHistoryCard .mb-history-title-text{color:#0f172a!important;}
+  .mb-v32-history-wrap{display:grid;gap:12px;margin-top:18px;}
+  .mb-v32-section{border:1px solid rgba(59,130,246,.28);border-radius:24px;overflow:hidden;background:rgba(2,6,23,.36);box-shadow:0 0 20px rgba(37,99,235,.08)}
+  .mb-v32-head{width:100%;margin:0!important;padding:18px!important;border-radius:0!important;background:linear-gradient(135deg,rgba(15,40,85,.92),rgba(40,18,75,.86))!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;box-shadow:none!important;color:#fff!important;text-align:left!important;}
+  .mb-v32-head-left{display:flex;align-items:center;gap:12px;font-size:24px;font-weight:950;}
+  .mb-v32-ico{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;color:#7dd3fc;font-size:20px;filter:drop-shadow(0 0 8px rgba(56,189,248,.6));}
+  .mb-v32-chev{color:#7dd3fc;font-size:19px;font-weight:950;transition:transform .18s ease;}
+  .mb-v32-section.open .mb-v32-chev{transform:rotate(180deg)}
+  .mb-v32-body{display:none;padding:0 18px 12px;background:rgba(2,6,23,.22);}
+  .mb-v32-section.open .mb-v32-body{display:block;}
+  .mb-v32-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:16px 0;border-bottom:1px solid rgba(96,165,250,.16);}
+  .mb-v32-row:last-child{border-bottom:0;}
+  .mb-v32-row b{display:block;color:#f8fafc;font-size:19px;line-height:1.22;overflow-wrap:anywhere;}
+  .mb-v32-row .meta{font-size:15px;line-height:1.38;}
+  .mb-v32-actions{display:flex;gap:8px;align-items:center;justify-content:flex-end;}
+  .mb-v32-actions button{margin:0!important;width:auto!important;min-width:76px!important;padding:12px 12px!important;border-radius:16px!important;font-size:15px!important;}
+  .mb-v32-fav{min-width:56px!important;width:56px!important;height:56px!important;padding:0!important;background:rgba(15,23,42,.82)!important;border:1px solid rgba(96,165,250,.28)!important;color:#94a3b8!important;box-shadow:0 0 12px rgba(37,99,235,.18)!important;font-size:0!important;position:relative!important;}
+  .mb-v32-fav::before{content:'★';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:30px;color:#94a3b8;}
+  .mb-v32-fav.active::before{color:#ffd21f;filter:drop-shadow(0 0 10px rgba(250,204,21,.9));}
+  .mb-v32-empty{padding:16px 0!important;margin:0!important;}
+  .mb-editing-banner{padding:12px 14px;border-radius:18px;background:rgba(37,99,235,.18);border:1px solid rgba(96,165,250,.30);color:#dbeafe;font-weight:900;margin:0 0 14px;}
+  .mb-builder-cancel-edit{margin-top:10px!important;display:none;}
+  .mb-builder-cancel-edit.active{display:block!important;}
   @media(max-width:430px){
-    #mbFolderScanBtn{min-width:58px!important;}
-    #mbFolderScanBtn .mb-scan-folder-icon{width:22px!important;height:22px!important;}
+    #mbAddHistoryCard .mb-history-title-text{font-size:40px!important;}
+    .mb-v32-row{grid-template-columns:1fr;align-items:start;}
+    .mb-v32-actions{justify-content:flex-start;}
   }
 </style>
-<script id="mb-v28-folder-history-fix-js">
+<script id="mb-v32-history-builder-js">
 (function(){
   function q(id){return document.getElementById(id)}
-  var historyOpenState={favoriteDetails:false,recentDetails:false,savedRecipeDetails:false,savedMealDetails:false};
-  var initialized=false;
-  var ids=Object.keys(historyOpenState);
-  function scanSvg(){return '<svg class="mb-scan-folder-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3"/><path d="M16 4h3a1 1 0 0 1 1 1v3"/><path d="M20 16v3a1 1 0 0 1-1 1h-3"/><path d="M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M7 12h10"/><path d="M9 8v8"/><path d="M15 8v8"/></svg>';}
-  function beautifyFolderBar(){
-    var scan=q('mbFolderScanBtn');
-    if(scan && !scan.querySelector('.mb-scan-folder-icon')) scan.innerHTML=scanSvg();
-    var bar=q('mbAddFolderBar');
-    if(bar){
-      bar.querySelectorAll('.mb-folder-tab').forEach(function(btn){
-        btn.addEventListener('click',function(){setTimeout(function(){try{btn.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});}catch(e){}},60);},{once:false});
-      });
-      var active=bar.querySelector('.mb-folder-tab.active');
-      if(active){try{active.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});}catch(e){}}
-    }
-  }
-  function fixHistoryHeading(){
-    var h=document.querySelector('#mbAddHistoryCard h2');
-    if(h && !h.querySelector('.mb-history-title-text')){
-      var icon=h.querySelector('.bc-icon');
-      h.innerHTML='';
-      if(icon)h.appendChild(icon);else h.insertAdjacentHTML('beforeend','<span class="bc-icon">▤</span>');
-      var t=document.createElement('span'); t.className='mb-history-title-text'; t.textContent='History'; h.appendChild(t);
-    }
-  }
-  function captureState(){
-    ids.forEach(function(id){var el=q(id); if(el)historyOpenState[id]=el.hasAttribute('open');});
-    initialized=true;
-  }
-  function applyState(){
-    ids.forEach(function(id){var el=q(id); if(!el)return; if(historyOpenState[id])el.setAttribute('open',''); else el.removeAttribute('open');});
-  }
-  function wireHistoryDetails(){
-    ids.forEach(function(id){
-      var el=q(id); if(!el || el.__mbV28Wired)return;
-      el.__mbV28Wired=true;
-      if(!initialized) historyOpenState[id]=el.hasAttribute('open');
-      var summary=el.querySelector('summary');
-      if(summary){
-        summary.addEventListener('click',function(e){
-          /* The old folder script closes these after every click. Restore the user's intended state after it runs. */
-          var willOpen=!el.hasAttribute('open');
-          historyOpenState[id]=willOpen;
-          setTimeout(function(){historyOpenState[id]=willOpen; applyState();},120);
-          setTimeout(function(){historyOpenState[id]=willOpen; applyState();},260);
-        },true);
-      }
-    });
-    if(!initialized) captureState();
-  }
-  function fix(){
-    beautifyFolderBar();
-    fixHistoryHeading();
-    wireHistoryDetails();
-    applyState();
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(fix,250);setTimeout(fix,900);setTimeout(fix,1800);});
-  else{setTimeout(fix,120);setTimeout(fix,700);setTimeout(fix,1600)}
-  document.addEventListener('click',function(e){
-    var s=e.target.closest && e.target.closest('#mbAddHistoryCard .compact-details summary');
-    if(s){
-      var d=s.closest('details');
-      if(d && d.id && historyOpenState.hasOwnProperty(d.id)) historyOpenState[d.id]=!d.hasAttribute('open');
-    }
-    setTimeout(fix,180);
-  },true);
-})();
-</script>
-
-
-<!-- MB V29: History heading + popup editors for saved recipes/meals -->
-<style id="mb-v29-history-edit-css">
-  #mbAddHistoryCard h2{
-    display:flex!important;
-    align-items:center!important;
-    gap:0!important;
-    margin-bottom:14px!important;
-    line-height:1.05!important;
-  }
-  #mbAddHistoryCard h2 .bc-icon{display:none!important;}
-  #mbAddHistoryCard h2 .mb-history-title-text{
-    display:inline-block!important;
-    font-size:42px!important;
-    line-height:1.05!important;
-    font-weight:950!important;
-    letter-spacing:-.5px!important;
-  }
-  @media(max-width:430px){#mbAddHistoryCard h2 .mb-history-title-text{font-size:40px!important;}}
-  .mb-edit-list-box{
-    margin-top:12px;
-    padding:12px;
-    border-radius:18px;
-    background:rgba(2,6,23,.42);
-    border:1px solid rgba(56,189,248,.22);
-    max-height:170px;
-    overflow-y:auto;
-    -webkit-overflow-scrolling:touch;
-  }
-  .mb-edit-list-row{padding:9px 0;border-bottom:1px solid rgba(96,165,250,.14)}
-  .mb-edit-list-row:last-child{border-bottom:0}
-  .mb-edit-list-row b{display:block;color:#f8fafc;font-size:15px;line-height:1.25}
-  .mb-edit-list-row span{display:block;color:#94a3b8;font-size:13px;line-height:1.35;margin-top:3px}
-  .mb-edit-modal-title{margin-bottom:6px!important;}
-  .mb-edit-note{margin:0 0 14px!important;}
-  .mb-edit-modal-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important;margin-top:14px!important;}
-  .mb-edit-modal-actions button{margin:0!important;width:100%!important;}
-</style>
-<script id="mb-v29-history-edit-js">
-(function(){
-  function q(id){return document.getElementById(id)}
-  function N(v){var n=parseFloat(v);return isNaN(n)?0:n}
-  function R(v){return Math.round(N(v)*10)/10}
   function esc(s){return String(s==null?'':s).replace(/[&<>'"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]})}
-  function read(k){try{return JSON.parse(localStorage.getItem(k)||'[]')}catch(e){return[]}}
-  function write(k,v){localStorage.setItem(k,JSON.stringify(v||[]))}
-  function recipes(){return read('macro_custom_recipes_v3')}
-  function setRecipes(v){write('macro_custom_recipes_v3',v)}
-  function meals(){return read('macro_custom_meals_v3')}
-  function setMeals(v){write('macro_custom_meals_v3',v)}
-  function close(id){var el=q(id); if(el)el.remove()}
-  function refreshAll(){
-    try{if(typeof renderSavedRecipes==='function')renderSavedRecipes()}catch(e){}
-    try{if(typeof renderSavedMeals==='function')renderSavedMeals()}catch(e){}
-    try{if(typeof renderFoodDatabase==='function')renderFoodDatabase()}catch(e){}
-    try{if(typeof renderFavorites==='function')renderFavorites()}catch(e){}
-    try{if(typeof renderRecent==='function')renderRecent()}catch(e){}
-  }
-  function themedConfirm(msg){
-    if(typeof showConfirm==='function')showConfirm(msg);
-    else if(typeof showMbCleanToast==='function')showMbCleanToast(msg);
-    else if(typeof mbToast==='function')mbToast(msg);
-    else alert(msg);
-  }
-  function listHtml(arr){
-    if(!arr||!arr.length)return '<p class="note">No detailed items saved for this entry.</p>';
-    return arr.map(function(x){return '<div class="mb-edit-list-row"><b>'+esc(x.name||'Item')+'</b><span>'+esc(x.serving||'1 serving')+' • '+Math.round(N(x.cal))+' cal • C '+R(x.c)+'g • P '+R(x.p)+'g • F '+R(x.f)+'g</span></div>'}).join('');
-  }
-  function openSavedRecipeEditor(id){
-    var r=recipes().find(function(x){return String(x.id)===String(id)}); if(!r)return;
-    close('mbSavedRecipeEditModal');
-    var html='<div id="mbSavedRecipeEditModal" class="mb-modal active"><div class="mb-modal-card">'+
-      '<h3 class="mb-edit-modal-title">Edit Saved Recipe</h3><p class="note mb-edit-note">Update the saved recipe here. The search database and history will refresh immediately.</p>'+
-      '<label>Recipe Name</label><input id="mbEditRecipeName" value="'+esc(r.name||'')+'">'+
-      '<div class="row"><div><label>Calories</label><input id="mbEditRecipeCal" type="number" step="1" value="'+esc(Math.round(N(r.cal)))+'"></div><div><label>Carbs (g)</label><input id="mbEditRecipeC" type="number" step="0.1" value="'+esc(R(r.c))+'"></div></div>'+
-      '<div class="row"><div><label>Protein (g)</label><input id="mbEditRecipeP" type="number" step="0.1" value="'+esc(R(r.p))+'"></div><div><label>Fat (g)</label><input id="mbEditRecipeF" type="number" step="0.1" value="'+esc(R(r.f))+'"></div></div>'+
-      '<div class="mb-edit-list-box"><b style="color:#f8fafc">Recipe ingredients</b>'+listHtml(r.ingredients||[])+'</div>'+
-      '<div class="mb-edit-modal-actions"><button class="good" type="button" onclick="saveSavedRecipePopup(\''+esc(r.id)+'\')">Save Recipe</button><button class="light" type="button" onclick="document.getElementById(\'mbSavedRecipeEditModal\').remove()">Cancel</button></div>'+
-      '</div></div>';
-    document.body.insertAdjacentHTML('beforeend',html);
-  }
-  function openSavedMealEditor(id){
-    var m=meals().find(function(x){return String(x.id)===String(id)}); if(!m)return;
-    close('mbSavedMealEditModal');
-    var html='<div id="mbSavedMealEditModal" class="mb-modal active"><div class="mb-modal-card">'+
-      '<h3 class="mb-edit-modal-title">Edit Saved Meal</h3><p class="note mb-edit-note">Update the saved meal here. The search database and history will refresh immediately.</p>'+
-      '<label>Meal Name</label><input id="mbEditMealName" value="'+esc(m.name||'')+'">'+
-      '<div class="row"><div><label>Calories</label><input id="mbEditMealCal" type="number" step="1" value="'+esc(Math.round(N(m.cal)))+'"></div><div><label>Carbs (g)</label><input id="mbEditMealC" type="number" step="0.1" value="'+esc(R(m.c))+'"></div></div>'+
-      '<div class="row"><div><label>Protein (g)</label><input id="mbEditMealP" type="number" step="0.1" value="'+esc(R(m.p))+'"></div><div><label>Fat (g)</label><input id="mbEditMealF" type="number" step="0.1" value="'+esc(R(m.f))+'"></div></div>'+
-      '<div class="mb-edit-list-box"><b style="color:#f8fafc">Meal items</b>'+listHtml(m.items||[])+'</div>'+
-      '<div class="mb-edit-modal-actions"><button class="good" type="button" onclick="saveSavedMealPopup(\''+esc(m.id)+'\')">Save Meal</button><button class="light" type="button" onclick="document.getElementById(\'mbSavedMealEditModal\').remove()">Cancel</button></div>'+
-      '</div></div>';
-    document.body.insertAdjacentHTML('beforeend',html);
-  }
-  window.saveSavedRecipePopup=function(id){
-    var arr=recipes(), idx=arr.findIndex(function(x){return String(x.id)===String(id)}); if(idx<0)return;
-    arr[idx]=Object.assign({},arr[idx],{name:(q('mbEditRecipeName')?.value||arr[idx].name||'Recipe').trim(),serving:'1 recipe',cat:'Custom Recipe',source:'custom_recipe',cal:Math.round(N(q('mbEditRecipeCal')?.value)),c:R(q('mbEditRecipeC')?.value),p:R(q('mbEditRecipeP')?.value),f:R(q('mbEditRecipeF')?.value)});
-    setRecipes(arr); close('mbSavedRecipeEditModal'); refreshAll(); themedConfirm('Custom recipe updated');
-  };
-  window.saveSavedMealPopup=function(id){
-    var arr=meals(), idx=arr.findIndex(function(x){return String(x.id)===String(id)}); if(idx<0)return;
-    arr[idx]=Object.assign({},arr[idx],{name:(q('mbEditMealName')?.value||arr[idx].name||'Meal').trim(),serving:'1 meal',cat:'Custom Meal',source:'custom_meal',cal:Math.round(N(q('mbEditMealCal')?.value)),c:R(q('mbEditMealC')?.value),p:R(q('mbEditMealP')?.value),f:R(q('mbEditMealF')?.value)});
-    setMeals(arr); close('mbSavedMealEditModal'); refreshAll(); themedConfirm('Custom meal updated');
-  };
-  window.editSavedRecipeFinal=function(id){openSavedRecipeEditor(id)};
-  window.useSavedMeal=function(id){openSavedMealEditor(id)};
-  window.editSavedMealFinal=function(id){openSavedMealEditor(id)};
-
-  /* Keep History details from collapsing/glitching after old folder click handlers run. */
-  var ids=['favoriteDetails','recentDetails','savedRecipeDetails','savedMealDetails'];
-  var state={favoriteDetails:false,recentDetails:false,savedRecipeDetails:false,savedMealDetails:false};
-  function updateStateFromDom(){ids.forEach(function(id){var d=q(id); if(d)state[id]=d.hasAttribute('open')})}
-  function applyState(){ids.forEach(function(id){var d=q(id); if(!d)return; if(state[id])d.setAttribute('open',''); else d.removeAttribute('open')})}
-  document.addEventListener('toggle',function(e){if(e.target&&ids.indexOf(e.target.id)>=0){state[e.target.id]=e.target.hasAttribute('open'); setTimeout(applyState,160); setTimeout(applyState,350)}},true);
-  document.addEventListener('click',function(e){var s=e.target.closest&&e.target.closest('#mbAddHistoryCard details summary'); if(s){var d=s.closest('details'); if(d&&ids.indexOf(d.id)>=0){state[d.id]=!d.hasAttribute('open'); setTimeout(applyState,180); setTimeout(applyState,420)}}},true);
-  function fixHeading(){var h=document.querySelector('#mbAddHistoryCard h2'); if(h){h.innerHTML='<span class="mb-history-title-text">History</span>';}}
-  function boot(){updateStateFromDom();fixHeading();setTimeout(fixHeading,400);setTimeout(fixHeading,1200);}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
-  setInterval(function(){fixHeading(); if(document.querySelector('#mbAddHistoryCard:not(.mb-folder-hidden)'))applyState();},600);
-})();
-</script>
-
-
-
-<!-- MB V30: stable History accordions + reliable popup editors -->
-<style id="mb-v30-history-stable-css">
-  #mbAddHistoryCard h2{
-    display:block!important;
-    margin:0 0 14px!important;
-    padding:0!important;
-    line-height:1.05!important;
-  }
-  #mbAddHistoryCard h2 .bc-icon{display:none!important;}
-  #mbAddHistoryCard h2 .mb-history-title-text,
-  #mbAddHistoryCard h2{
-    font-size:42px!important;
-    font-weight:950!important;
-    letter-spacing:-.5px!important;
-    color:#f8fafc!important;
-  }
-  #mbAddHistoryCard .compact-details{position:relative!important;z-index:2!important;display:block!important;}
-  #mbAddHistoryCard .compact-details summary{position:relative!important;z-index:3!important;}
-  #mbAddHistoryCard .compact-details[open] .compact-list{display:block!important;}
-  #mbAddHistoryCard .compact-details:not([open]) .compact-list{display:none!important;}
-  .mb-v30-edit-list{margin-top:12px;padding:12px;border-radius:18px;background:rgba(2,6,23,.46);border:1px solid rgba(56,189,248,.24);max-height:180px;overflow:auto;-webkit-overflow-scrolling:touch;}
-  .mb-v30-edit-list-row{padding:9px 0;border-bottom:1px solid rgba(96,165,250,.14)}
-  .mb-v30-edit-list-row:last-child{border-bottom:0}
-  .mb-v30-edit-list-row b{display:block;color:#f8fafc;font-size:15px;line-height:1.25}
-  .mb-v30-edit-list-row span{display:block;color:#94a3b8;font-size:13px;line-height:1.35;margin-top:3px}
-  .mb-v30-edit-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important;margin-top:14px!important;}
-  .mb-v30-edit-actions button{margin:0!important;width:100%!important;}
-  body.light-mode #mbAddHistoryCard h2,body.light-mode #mbAddHistoryCard h2 .mb-history-title-text{color:#0f172a!important;}
-  @media(max-width:430px){#mbAddHistoryCard h2,#mbAddHistoryCard h2 .mb-history-title-text{font-size:40px!important;}}
-</style>
-<script id="mb-v30-history-stable-js">
-(function(){
-  function q(id){return document.getElementById(id)}
-  function N(v){var n=parseFloat(v);return isNaN(n)?0:n}
+  function N(v){var n=parseFloat(v);return Number.isFinite(n)?n:0}
   function R(v){return Math.round(N(v)*10)/10}
-  function esc(s){return String(s==null?'':s).replace(/[&<>'"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]})}
-  function read(k){try{return JSON.parse(localStorage.getItem(k)||'[]')}catch(e){return[]}}
+  function norm(v){return String(v||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,' ')}
+  function read(k){try{return JSON.parse(localStorage.getItem(k)||'[]')||[]}catch(e){return[]}}
   function write(k,v){localStorage.setItem(k,JSON.stringify(v||[]))}
-  var recipeKey='macro_custom_recipes_v3', mealKey='macro_custom_meals_v3';
+  var recipeKey='macro_custom_recipes_v3', mealKey='macro_custom_meals_v3', favKey='favorite_foods_v3', recentKey='recent_foods_v3';
   function recipes(){return read(recipeKey)} function setRecipes(v){write(recipeKey,v)}
   function meals(){return read(mealKey)} function setMeals(v){write(mealKey,v)}
-  function notify(msg){if(typeof showMbCleanToast==='function')showMbCleanToast(msg);else if(typeof mbToast==='function')mbToast(msg);else alert(msg)}
-  function refresh(){['renderSavedRecipes','renderSavedMeals','renderFoodDatabase','renderFavorites','renderRecent'].forEach(function(fn){try{if(typeof window[fn]==='function')window[fn]()}catch(e){}})}
+  function favs(){try{return typeof getFavorites==='function'?getFavorites():read(favKey)}catch(e){return read(favKey)}}
+  function setFavs(v){try{if(typeof setFavorites==='function')setFavorites(v||[]);else write(favKey,v)}catch(e){write(favKey,v)}}
+  function recents(){try{return typeof getRecent==='function'?getRecent():read(recentKey)}catch(e){return read(recentKey)}}
+  function itemKey(x){return norm((x&&x.name)||'')+'|'+norm((x&&x.serving)||'')+'|'+Math.round(N(x&&x.cal))}
+  function isFav(x){return favs().some(function(f){return itemKey(f)===itemKey(x)})}
+  function notify(msg){try{if(typeof showMbCleanToast==='function')return showMbCleanToast(msg)}catch(e){} try{if(typeof mbToast==='function')return mbToast(msg)}catch(e){} alert(msg)}
+  function refreshAll(){['renderFoodDatabase','renderFavorites','renderRecent','renderSavedRecipes','renderSavedMeals'].forEach(function(fn){try{if(typeof window[fn]==='function')window[fn]()}catch(e){}}); renderHistory();}
+  var openState={fav:false,recent:false,recipe:false,meal:false};
+  function simpleRow(x){var enc=encodeURIComponent(JSON.stringify(x||{}));var active=isFav(x)?'active':'';return '<div class="mb-v32-row"><div><b>'+esc(x.name||'Food')+'</b><div class="meta">'+esc(x.cat||x.category||'Food')+' • '+esc(x.serving||'1 serving')+'</div><div class="meta">'+Math.round(N(x.cal))+' cal • C '+R(x.c)+'g • P '+R(x.p)+'g • F '+R(x.f)+'g</div></div><div class="mb-v32-actions"><button class="mb-v32-fav '+active+'" type="button" onclick="mbV32ToggleFav(\''+enc+'\')">★</button><button class="small-btn good" type="button" onclick="openUseFoodPopup(\''+enc+'\')">Use</button></div></div>'}
+  function savedRecipeRow(r){var item={name:r.name,cat:'Custom Recipe',serving:r.serving||'1 recipe',cal:r.cal,c:r.c,p:r.p,f:r.f,source:'custom_recipe'};var active=isFav(item)?'active':'';return '<div class="mb-v32-row"><div><b>'+esc(r.name||'Recipe')+'</b><div class="meta">'+Math.round(N(r.cal))+' cal • C '+R(r.c)+'g • P '+R(r.p)+'g • F '+R(r.f)+'g</div></div><div class="mb-v32-actions"><button class="mb-v32-fav '+active+'" type="button" onclick="mbV32ToggleRecipeFav(\''+esc(r.id)+'\')">★</button><button class="small-btn light" type="button" onclick="mbV32EditRecipeInBuilder(\''+esc(r.id)+'\')">Edit</button><button class="small-btn danger" type="button" onclick="mbV32DeleteRecipe(\''+esc(r.id)+'\')">Delete</button></div></div>'}
+  function savedMealRow(m){var item={name:m.name,cat:'Custom Meal',serving:m.serving||'1 meal',cal:m.cal,c:m.c,p:m.p,f:m.f,source:'custom_meal'};var active=isFav(item)?'active':'';return '<div class="mb-v32-row"><div><b>'+esc(m.name||'Meal')+'</b><div class="meta">'+Math.round(N(m.cal))+' cal • C '+R(m.c)+'g • P '+R(m.p)+'g • F '+R(m.f)+'g</div></div><div class="mb-v32-actions"><button class="mb-v32-fav '+active+'" type="button" onclick="mbV32ToggleMealFav(\''+esc(m.id)+'\')">★</button><button class="small-btn light" type="button" onclick="mbV32EditMealInBuilder(\''+esc(m.id)+'\')">Edit</button><button class="small-btn danger" type="button" onclick="mbV32DeleteMeal(\''+esc(m.id)+'\')">Delete</button></div></div>'}
+  function section(key,title,ico,html){return '<div class="mb-v32-section '+(openState[key]?'open':'')+'" data-hist="'+key+'"><button type="button" class="mb-v32-head"><span class="mb-v32-head-left"><span class="mb-v32-ico">'+ico+'</span>'+title+'</span><span class="mb-v32-chev">⌄</span></button><div class="mb-v32-body">'+html+'</div></div>'}
+  function renderHistory(){var card=q('mbAddHistoryCard');if(!card)return;card.innerHTML='<h2><span class="mb-history-title-text">History</span></h2><p class="note history-note">Favorites, recent foods, saved recipes, and saved meals appear here.</p><div id="mbAddHistoryContent"></div>';var c=q('mbAddHistoryContent');if(!c)return;var fh=favs().length?favs().slice(0,50).map(simpleRow).join(''):'<p class="note mb-v32-empty">No favorites yet.</p>';var rh=recents().length?recents().slice(0,50).map(simpleRow).join(''):'<p class="note mb-v32-empty">No recent foods yet.</p>';var cr=recipes().length?recipes().map(savedRecipeRow).join(''):'<p class="note mb-v32-empty">Saved recipes appear here.</p>';var cm=meals().length?meals().map(savedMealRow).join(''):'<p class="note mb-v32-empty">Saved custom meals appear here.</p>';c.innerHTML='<div class="mb-v32-history-wrap">'+section('fav','Favorites','★',fh)+section('recent','Recent Foods','▤',rh)+section('recipe','Saved Custom Recipes','▦',cr)+section('meal','Saved Custom Meals','▥',cm)+'</div>';}
+  document.addEventListener('click',function(e){var h=e.target.closest&&e.target.closest('.mb-v32-head');if(h){var s=h.closest('.mb-v32-section');if(s){openState[s.dataset.hist]=!openState[s.dataset.hist];renderHistory();e.preventDefault();e.stopPropagation();}}},true);
+  window.mbV32ToggleFav=function(encoded){var item=JSON.parse(decodeURIComponent(encoded));var arr=favs(),k=itemKey(item);arr=arr.some(function(x){return itemKey(x)===k})?arr.filter(function(x){return itemKey(x)!==k}):[item].concat(arr);setFavs(arr.slice(0,500));refreshAll();};
+  window.openUseFoodPopup=function(encoded){var item=JSON.parse(decodeURIComponent(encoded));try{if(typeof openFoodUsePopup==='function')openFoodUsePopup(item);else if(typeof chooseFood==='function')chooseFood(item);else alert('Use '+(item.name||'food'));}catch(e){alert('Use '+(item.name||'food'));}};
+  window.mbV32ToggleRecipeFav=function(id){var r=recipes().find(function(x){return String(x.id)===String(id)});if(r)mbV32ToggleFav(encodeURIComponent(JSON.stringify({name:r.name,cat:'Custom Recipe',serving:r.serving||'1 recipe',cal:r.cal,c:r.c,p:r.p,f:r.f,source:'custom_recipe'})));};
+  window.mbV32ToggleMealFav=function(id){var m=meals().find(function(x){return String(x.id)===String(id)});if(m)mbV32ToggleFav(encodeURIComponent(JSON.stringify({name:m.name,cat:'Custom Meal',serving:m.serving||'1 meal',cal:m.cal,c:m.c,p:m.p,f:m.f,source:'custom_meal'})));};
+  window.mbV32DeleteRecipe=function(id){setRecipes(recipes().filter(function(x){return String(x.id)!==String(id)}));refreshAll();};
+  window.mbV32DeleteMeal=function(id){setMeals(meals().filter(function(x){return String(x.id)!==String(id)}));refreshAll();};
 
-  /* History heading */
-  function fixHeading(){var h=document.querySelector('#mbAddHistoryCard h2');if(h && h.innerHTML.trim()!=='<span class="mb-history-title-text">History</span>'){h.innerHTML='<span class="mb-history-title-text">History</span>';}}
-
-  /* Stable History details: V27 was closing them after every click. This restores only the user-intended state. */
-  var ids=['favoriteDetails','recentDetails','savedRecipeDetails','savedMealDetails'];
-  var state={favoriteDetails:false,recentDetails:false,savedRecipeDetails:false,savedMealDetails:false};
-  var booted=false;
-  function readState(){ids.forEach(function(id){var d=q(id);if(d)state[id]=d.hasAttribute('open')});booted=true;}
-  function applyState(){ids.forEach(function(id){var d=q(id);if(!d)return;if(state[id])d.setAttribute('open','');else d.removeAttribute('open')});}
-  function keepStateSoon(){[0,40,120,280,650].forEach(function(t){setTimeout(function(){fixHeading();applyState();},t)});}
-  document.addEventListener('pointerdown',function(e){
-    var card=q('mbAddHistoryCard'); if(!card||!card.contains(e.target))return;
-    if(!booted)readState();
-    var summary=e.target.closest&&e.target.closest('details summary');
-    if(summary){var d=summary.closest('details'); if(d&&ids.indexOf(d.id)>=0){state[d.id]=!d.hasAttribute('open');}}
-    else{readState();}
-  },true);
-  document.addEventListener('click',function(e){
-    var card=q('mbAddHistoryCard'); if(!card||!card.contains(e.target))return;
-    keepStateSoon();
-  },true);
-  var mo=new MutationObserver(function(muts){
-    if(!q('mbAddHistoryCard')||q('mbAddHistoryCard').classList.contains('mb-folder-hidden'))return;
-    var touched=false; muts.forEach(function(m){if(m.type==='attributes'&&m.attributeName==='open'&&ids.indexOf(m.target.id)>=0)touched=true;});
-    if(touched)setTimeout(applyState,20);
-  });
-  function observe(){ids.forEach(function(id){var d=q(id);if(d&&!d.__mbV30Observed){d.__mbV30Observed=true;mo.observe(d,{attributes:true,attributeFilter:['open']});}})}
-
-  function listHtml(items){
-    if(!items||!items.length)return '<p class="note">No item breakdown saved.</p>';
-    return items.map(function(x){return '<div class="mb-v30-edit-list-row"><b>'+esc(x.name||'Item')+'</b><span>'+esc(x.serving||'1 serving')+' • '+Math.round(N(x.cal))+' cal • C '+R(x.c)+'g • P '+R(x.p)+'g • F '+R(x.f)+'g</span></div>'}).join('');
+  function ensureCancelButtons(){
+    var r=q('customRecipeCard'); if(r&&!q('mbCancelRecipeEdit')){var b=document.createElement('button');b.id='mbCancelRecipeEdit';b.type='button';b.className='light mb-builder-cancel-edit';b.textContent='Cancel Edit';b.onclick=function(){clearRecipeEdit(true)};var actions=r.querySelector('.recipe-action-row'); if(actions)actions.insertAdjacentElement('afterend',b);}
+    var m=q('customMealCard'); if(m&&!q('mbCancelMealEdit')){var b2=document.createElement('button');b2.id='mbCancelMealEdit';b2.type='button';b2.className='light mb-builder-cancel-edit';b2.textContent='Cancel Edit';b2.onclick=function(){clearMealEdit(true)};var actions2=m.querySelector('.meal-action-row'); if(actions2)actions2.insertAdjacentElement('afterend',b2);}
   }
-  function removeModal(id){var m=q(id);if(m)m.remove()}
-  function openRecipeEdit(id){
-    var r=recipes().find(function(x){return String(x.id)===String(id)}); if(!r)return;
-    removeModal('mbV30RecipeEditModal');
-    document.body.insertAdjacentHTML('beforeend','<div id="mbV30RecipeEditModal" class="mb-modal active"><div class="mb-modal-card">'+
-      '<h3>Edit Saved Recipe</h3><p class="note">Make changes here, then save. History and search update immediately.</p>'+ 
-      '<label>Recipe Name</label><input id="mbV30RecipeName" value="'+esc(r.name||'')+'">'+
-      '<div class="row"><div><label>Calories</label><input id="mbV30RecipeCal" type="number" step="1" value="'+esc(Math.round(N(r.cal)))+'"></div><div><label>Carbs (g)</label><input id="mbV30RecipeC" type="number" step="0.1" value="'+esc(R(r.c))+'"></div></div>'+ 
-      '<div class="row"><div><label>Protein (g)</label><input id="mbV30RecipeP" type="number" step="0.1" value="'+esc(R(r.p))+'"></div><div><label>Fat (g)</label><input id="mbV30RecipeF" type="number" step="0.1" value="'+esc(R(r.f))+'"></div></div>'+ 
-      '<div class="mb-v30-edit-list"><b style="color:#f8fafc">Recipe ingredients</b>'+listHtml(r.ingredients||[])+'</div>'+ 
-      '<div class="mb-v30-edit-actions"><button class="good" type="button" onclick="mbV30SaveRecipe(\''+esc(r.id)+'\')">Save Recipe</button><button class="light" type="button" onclick="document.getElementById(\'mbV30RecipeEditModal\').remove()">Cancel</button></div>'+ 
-      '</div></div>');
-  }
-  function openMealEdit(id){
-    var m=meals().find(function(x){return String(x.id)===String(id)}); if(!m)return;
-    removeModal('mbV30MealEditModal');
-    document.body.insertAdjacentHTML('beforeend','<div id="mbV30MealEditModal" class="mb-modal active"><div class="mb-modal-card">'+
-      '<h3>Edit Saved Meal</h3><p class="note">Make changes here, then save. History and search update immediately.</p>'+ 
-      '<label>Meal Name</label><input id="mbV30MealName" value="'+esc(m.name||'')+'">'+
-      '<div class="row"><div><label>Calories</label><input id="mbV30MealCal" type="number" step="1" value="'+esc(Math.round(N(m.cal)))+'"></div><div><label>Carbs (g)</label><input id="mbV30MealC" type="number" step="0.1" value="'+esc(R(m.c))+'"></div></div>'+ 
-      '<div class="row"><div><label>Protein (g)</label><input id="mbV30MealP" type="number" step="0.1" value="'+esc(R(m.p))+'"></div><div><label>Fat (g)</label><input id="mbV30MealF" type="number" step="0.1" value="'+esc(R(m.f))+'"></div></div>'+ 
-      '<div class="mb-v30-edit-list"><b style="color:#f8fafc">Meal items</b>'+listHtml(m.items||[])+'</div>'+ 
-      '<div class="mb-v30-edit-actions"><button class="good" type="button" onclick="mbV30SaveMeal(\''+esc(m.id)+'\')">Save Meal</button><button class="light" type="button" onclick="document.getElementById(\'mbV30MealEditModal\').remove()">Cancel</button></div>'+ 
-      '</div></div>');
-  }
-  window.mbV30SaveRecipe=function(id){var arr=recipes(),i=arr.findIndex(function(x){return String(x.id)===String(id)});if(i<0)return;arr[i]=Object.assign({},arr[i],{name:(q('mbV30RecipeName').value||'Recipe').trim(),serving:'1 recipe',cat:'Custom Recipe',source:'custom_recipe',cal:Math.round(N(q('mbV30RecipeCal').value)),c:R(q('mbV30RecipeC').value),p:R(q('mbV30RecipeP').value),f:R(q('mbV30RecipeF').value)});setRecipes(arr);removeModal('mbV30RecipeEditModal');refresh();notify('Custom recipe updated');};
-  window.mbV30SaveMeal=function(id){var arr=meals(),i=arr.findIndex(function(x){return String(x.id)===String(id)});if(i<0)return;arr[i]=Object.assign({},arr[i],{name:(q('mbV30MealName').value||'Meal').trim(),serving:'1 meal',cat:'Custom Meal',source:'custom_meal',cal:Math.round(N(q('mbV30MealCal').value)),c:R(q('mbV30MealC').value),p:R(q('mbV30MealP').value),f:R(q('mbV30MealF').value)});setMeals(arr);removeModal('mbV30MealEditModal');refresh();notify('Custom meal updated');};
+  function showEditBanner(cardId,msg){var card=q(cardId); if(!card)return; var old=card.querySelector('.mb-editing-banner'); if(old)old.remove(); var p=document.createElement('div');p.className='mb-editing-banner';p.textContent=msg; var h=card.querySelector('h2'); if(h)h.insertAdjacentElement('afterend',p);}
+  function clearRecipeEdit(alsoClear){window._mbEditingRecipeId=null;var b=q('mbCancelRecipeEdit');if(b)b.classList.remove('active');var banner=q('customRecipeCard')?.querySelector('.mb-editing-banner');if(banner)banner.remove(); if(alsoClear){if(q('recipeName'))q('recipeName').value='';window._mbRecipeIngredients=[];try{renderRecipe()}catch(e){}}}
+  function clearMealEdit(alsoClear){window._mbEditingMealId=null;var b=q('mbCancelMealEdit');if(b)b.classList.remove('active');var banner=q('customMealCard')?.querySelector('.mb-editing-banner');if(banner)banner.remove(); if(alsoClear){if(q('mealName'))q('mealName').value='';window._mbMealItems=[];try{renderMealItems()}catch(e){}}}
+  window.mbV32EditRecipeInBuilder=function(id){var r=recipes().find(function(x){return String(x.id)===String(id)});if(!r)return;ensureCancelButtons();window._mbEditingRecipeId=String(id);try{showScreen('Add')}catch(e){}try{mbShowAddFolder('recipe')}catch(e){}if(q('recipeName'))q('recipeName').value=r.name||'';if(q('recipeMeal'))q('recipeMeal').value=r.meal||'Lunch';window._mbRecipeIngredients=(r.ingredients||[]).map(function(x){return Object.assign({},x)});try{renderRecipe()}catch(e){}showEditBanner('customRecipeCard','Editing saved recipe. Press Save Custom Recipe to update it, or Cancel Edit.');var b=q('mbCancelRecipeEdit');if(b)b.classList.add('active');setTimeout(function(){q('customRecipeCard')?.scrollIntoView({behavior:'smooth',block:'start'});},120);};
+  window.mbV32EditMealInBuilder=function(id){var m=meals().find(function(x){return String(x.id)===String(id)});if(!m)return;ensureCancelButtons();window._mbEditingMealId=String(id);try{showScreen('Add')}catch(e){}try{mbShowAddFolder('meals')}catch(e){}if(q('mealName'))q('mealName').value=m.name||'';if(q('customMealType'))q('customMealType').value=m.meal||'Lunch';window._mbMealItems=(m.items||[]).map(function(x){return Object.assign({},x)});try{renderMealItems()}catch(e){}showEditBanner('customMealCard','Editing saved meal. Press Save Custom Meal to update it, or Cancel Edit.');var b=q('mbCancelMealEdit');if(b)b.classList.add('active');setTimeout(function(){q('customMealCard')?.scrollIntoView({behavior:'smooth',block:'start'});},120);};
 
-  /* Final render overrides so History buttons always open the correct popup editor. */
-  window.editSavedRecipeFinal=function(id){openRecipeEdit(id)};
-  window.editSavedMealFinal=function(id){openMealEdit(id)};
-  window.useSavedMeal=function(id){openMealEdit(id)};
-  window.renderSavedRecipes=function(){var box=q('savedRecipesList');if(!box)return;var arr=recipes();box.innerHTML=arr.length?arr.map(function(r){var fav='';try{fav=(typeof isSavedRecipeFavoriteFinal==='function'&&isSavedRecipeFavoriteFinal(r.id))?'active':'';}catch(e){}return '<div class="recipe-row"><div><b>'+esc(r.name||'Recipe')+'</b><div class="meta">'+Math.round(N(r.cal))+' cal • C '+R(r.c)+'g • P '+R(r.p)+'g • F '+R(r.f)+'g</div></div><div class="food-actions saved-recipe-actions-final"><button class="recipe-fav-btn '+fav+'" type="button" onclick="toggleSavedRecipeFavoriteFinal(\''+esc(r.id)+'\')">★</button><button class="small-btn light" type="button" onclick="editSavedRecipeFinal(\''+esc(r.id)+'\')">Edit</button><button class="small-btn danger" type="button" onclick="deleteSavedRecipe(\''+esc(r.id)+'\')">Delete</button></div></div>'}).join(''):'<p class="note">Saved recipes appear here.</p>';};
-  window.renderSavedMeals=function(){var box=q('savedMealsList');if(!box)return;var arr=meals();box.innerHTML=arr.length?arr.map(function(m){var item=Object.assign({},m,{cat:'Custom Meal',serving:m.serving||'1 meal',source:'custom_meal'});var active='';try{active=(typeof isFav==='function'&&isFav(item))?'active':'';}catch(e){}return '<div class="custom-meal-item"><div><b>'+esc(m.name||'Meal')+'</b><div class="meta">'+Math.round(N(m.cal))+' cal • C '+R(m.c)+'g • P '+R(m.p)+'g • F '+R(m.f)+'g</div></div><div class="custom-meal-actions"><button class="saved-meal-fav-btn '+active+'" type="button" onclick="toggleSavedMealFavorite(\''+esc(m.id)+'\')">★</button><button class="small-btn light" type="button" onclick="editSavedMealFinal(\''+esc(m.id)+'\')">Edit</button><button class="small-btn danger" type="button" onclick="deleteSavedMeal(\''+esc(m.id)+'\')">Delete</button></div></div>'}).join(''):'<p class="note">Saved custom meals appear here.</p>';};
+  var oldSaveRecipe=window.saveCustomRecipe;
+  window.saveCustomRecipe=function(){if(window._mbEditingRecipeId){var arr=recipes(),i=arr.findIndex(function(x){return String(x.id)===String(window._mbEditingRecipeId)});var name=(q('recipeName')?.value||'').trim();var items=window._mbRecipeIngredients||[];if(!name){alert('Enter recipe name');return}if(!items.length){alert('Add ingredients first');return}var t=items.reduce(function(a,x){a.cal+=N(x.cal);a.c+=N(x.c);a.p+=N(x.p);a.f+=N(x.f);return a;},{cal:0,c:0,p:0,f:0});var obj={id:window._mbEditingRecipeId,name:name,serving:'1 recipe',cat:'Custom Recipe',cal:Math.round(t.cal),c:R(t.c),p:R(t.p),f:R(t.f),ingredients:items,source:'custom_recipe'};if(i>=0)arr[i]=Object.assign({},arr[i],obj);else arr.unshift(obj);setRecipes(arr);clearRecipeEdit(false);refreshAll();notify('Custom recipe updated');try{mbShowAddFolder('history');openState.recipe=true;renderHistory()}catch(e){}return;} return oldSaveRecipe?oldSaveRecipe.apply(this,arguments):undefined;};
+  var oldSaveMeal=window.saveCustomMeal;
+  window.saveCustomMeal=function(){if(window._mbEditingMealId){var arr=meals(),i=arr.findIndex(function(x){return String(x.id)===String(window._mbEditingMealId)});var name=(q('mealName')?.value||'').trim();var items=window._mbMealItems||[];if(!name){alert('Enter meal name.');return}if(!items.length){alert('Add at least one food to the meal.');return}var t=items.reduce(function(a,x){a.cal+=N(x.cal);a.c+=N(x.c);a.p+=N(x.p);a.f+=N(x.f);return a;},{cal:0,c:0,p:0,f:0});var obj={id:window._mbEditingMealId,name:name,serving:'1 meal',cat:'Custom Meal',cal:Math.round(t.cal),c:R(t.c),p:R(t.p),f:R(t.f),items:items,source:'custom_meal'};if(i>=0)arr[i]=Object.assign({},arr[i],obj);else arr.unshift(obj);setMeals(arr);clearMealEdit(false);refreshAll();notify('Custom meal updated');try{mbShowAddFolder('history');openState.meal=true;renderHistory()}catch(e){}return;} return oldSaveMeal?oldSaveMeal.apply(this,arguments):undefined;};
 
-  function boot(){fixHeading();observe();if(!booted)readState();refresh();keepStateSoon();}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(boot,250);setTimeout(boot,1000);});else{setTimeout(boot,150);setTimeout(boot,900)}
-  setInterval(function(){fixHeading();observe();},1000);
+  window.editSavedRecipeFinal=window.mbV32EditRecipeInBuilder;
+  window.editSavedMealFinal=window.mbV32EditMealInBuilder;
+  window.useSavedMeal=window.mbV32EditMealInBuilder;
+  var oldRenderRecipes=window.renderSavedRecipes, oldRenderMeals=window.renderSavedMeals;
+  window.renderSavedRecipes=function(){try{oldRenderRecipes&&oldRenderRecipes()}catch(e){}renderHistory();};
+  window.renderSavedMeals=function(){try{oldRenderMeals&&oldRenderMeals()}catch(e){}renderHistory();};
+  function boot(){ensureCancelButtons();renderHistory();setTimeout(function(){ensureCancelButtons();renderHistory();},500);setTimeout(renderHistory,1500)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
 </script>
 
