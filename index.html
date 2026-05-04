@@ -1509,19 +1509,17 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
 <div class="hero bc-hero macro-butler-hero"><img src="macro-butler-logo.svg" alt="Macro Butler"></div>
 
 <div class="tab-bar">
-  <button class="tab-btn active" type="button" data-screen="Today"><span></span>Today</button>
-  <button class="tab-btn" type="button" data-screen="Add"><span></span>Add</button>
+  <button class="tab-btn active" type="button" data-screen="Today">
+    <span class="tab-home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3.5 11.2L12 4l8.5 7.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.8 10.5v8.2h4.2v-5h4v5h4.2v-8.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Home</button>
   <button class="tab-btn" type="button" data-screen="Log"><span></span>Log</button>
   <button class="tab-btn" type="button" data-screen="Progress"><span></span>Progress</button>
-  <button class="tab-btn" type="button" data-screen="Scan"><span></span>Scan</button>
   <button class="tab-btn" type="button" data-screen="Settings"><span></span>Settings</button>
 </div>
 
 <section id="screenToday" class="screen active">
   <div class="card card-blue">
-    <h2><span class="bc-icon">HM</span>Today</h2>
-    <label>Date</label>
-    <div class="date-box"><button id="dateDisplay" class="date-display" type="button">Today</button><input id="date" class="hidden-date" type="date"></div>
+    <h2><span class="bc-icon">HM</span><button id="homeDateTitle" class="home-date-title" type="button"><span id="homeDateTitleText">Today</span><span class="home-date-arrow">⌄</span></button></h2>
+    <input id="date" class="hidden-date" type="date">
     <div class="hero-stats" style="margin-top:16px">
       <div class="big-cal"><b id="leftCalBig">0</b><span>Calories left today</span></div>
       <div class="small-stat"><b id="score">0%</b><span>Daily progress</span></div>
@@ -9103,402 +9101,248 @@ body.mb-clean-modal-open{
 </script>
 
 
-<style id="mb-nav-home-popup-rebuild-v1">
-/* top app nav: Home, Log, Progress, Settings only */
-.tab-btn[data-screen="Add"],
-.tab-btn[data-screen="Scan"]{
-  display:none !important;
+<style id="mb-clean-master-nav-popup-v3">
+/* clean top nav */
+.tab-bar{
+  grid-template-columns:repeat(4,1fr)!important;
 }
-.tab-btn[data-screen="Today"]::before{content:"" !important;}
-.tab-btn[data-screen="Today"] .nav-icon{display:none !important;}
-.tab-btn[data-screen="Today"]::after{content:"";}
+.tab-btn[data-screen="Today"] .tab-home-icon{
+  display:block;
+  width:24px;
+  height:24px;
+  margin:0 auto 4px;
+  color:#bfdbfe;
+  filter:drop-shadow(0 0 8px rgba(56,189,248,.65));
+}
+.tab-btn[data-screen="Today"].active .tab-home-icon{
+  color:#fff;
+  filter:drop-shadow(0 0 12px rgba(255,255,255,.85));
+}
+.tab-btn[data-screen="Today"] > span:not(.tab-home-icon){
+  display:none!important;
+}
 
-/* Today card: date becomes the title button, no separate date row */
-#screenToday .today-date-label,
-#screenToday .date-box{
-  display:none !important;
+/* date is now the title */
+.home-date-title{
+  width:auto!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:var(--bc-text,#f8fafc)!important;
+  font:inherit!important;
+  font-size:inherit!important;
+  line-height:1!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  text-align:left!important;
 }
-#todayDynamicTitle{
-  width:auto !important;
-  margin:0 !important;
-  padding:0 !important;
-  background:transparent !important;
-  box-shadow:none !important;
-  border:0 !important;
-  color:var(--bc-text,#f8fafc) !important;
-  font-size:38px !important;
-  line-height:1.05 !important;
-  font-weight:950 !important;
-  text-align:left !important;
-  display:inline-flex !important;
-  align-items:center !important;
-  gap:8px !important;
-}
-#todayDynamicTitle .down-arrow{
-  font-size:22px;
+.home-date-arrow{
   color:#7dd3fc;
+  font-size:24px;
   filter:drop-shadow(0 0 8px rgba(56,189,248,.55));
   transform:translateY(2px);
 }
-body.light-mode #todayDynamicTitle{color:#0f172a !important}
+#date.hidden-date{
+  position:absolute!important;
+  opacity:0!important;
+  pointer-events:none!important;
+  width:1px!important;
+  height:1px!important;
+}
 
-/* full page popup */
-.mb-fullpage-backdrop{
-  position:fixed;
-  inset:0;
-  z-index:99990;
-  display:none;
-  background:rgba(2,6,23,.62);
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
-  padding:18px;
-  overflow:hidden;
+/* Add and Scan are popup screens, not top tabs */
+#screenAdd:not(.popup-screen),
+#screenScan:not(.popup-screen){
+  display:none!important;
 }
-.mb-fullpage-backdrop.active{
-  display:flex;
-  align-items:flex-start;
-  justify-content:center;
+.screen.popup-screen{
+  display:block!important;
+  position:fixed!important;
+  inset:0!important;
+  z-index:99990!important;
+  overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch!important;
+  padding:calc(22px + env(safe-area-inset-top,0px)) 18px 26px!important;
+  background:
+    radial-gradient(circle at 20% 10%,rgba(37,99,235,.20),transparent 28%),
+    radial-gradient(circle at 85% 18%,rgba(124,58,237,.18),transparent 26%),
+    rgba(2,6,23,.88)!important;
+  backdrop-filter:blur(14px)!important;
+  -webkit-backdrop-filter:blur(14px)!important;
 }
-.mb-fullpage-shell{
-  width:100%;
-  max-width:560px;
-  max-height:calc(100dvh - 36px);
-  overflow-y:auto;
-  -webkit-overflow-scrolling:touch;
-  overscroll-behavior:contain;
-  border-radius:30px;
-  background:linear-gradient(145deg,rgba(6,13,28,.98),rgba(9,18,35,.95));
-  border:1px solid rgba(59,130,246,.35);
-  box-shadow:0 28px 75px rgba(0,0,0,.62),0 0 42px rgba(37,99,235,.24);
-  padding:16px;
-}
-.mb-fullpage-header{
+.popup-topbar{
   position:sticky;
   top:0;
-  z-index:4;
+  z-index:20;
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:10px;
-  padding:4px 0 12px;
-  background:linear-gradient(180deg,rgba(6,13,28,.98),rgba(6,13,28,.84));
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
+  padding:6px 0 14px;
+  margin:0 auto 8px;
+  max-width:560px;
+  background:linear-gradient(180deg,rgba(2,6,23,.96),rgba(2,6,23,.76));
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
 }
-.mb-fullpage-title{
-  font-size:22px;
-  font-weight:950;
+.popup-topbar-title{
   color:#f8fafc;
+  font-size:28px;
+  font-weight:950;
+  line-height:1.05;
 }
-.mb-fullpage-actions{
+.popup-topbar-actions{
   display:flex;
-  gap:8px;
   align-items:center;
+  gap:8px;
 }
-.mb-fullpage-actions button{
-  width:auto !important;
-  margin:0 !important;
-  min-width:76px;
-  padding:11px 14px !important;
-  border-radius:16px !important;
-  font-size:14px !important;
+.popup-topbar-actions button{
+  width:auto!important;
+  min-width:76px!important;
+  margin:0!important;
+  padding:12px 14px!important;
+  border-radius:16px!important;
+  font-size:14px!important;
 }
-.mb-popup-page{
-  display:block !important;
-  animation:none !important;
+.screen.popup-screen > .card{
+  max-width:560px;
+  margin:0 auto!important;
 }
-.mb-popup-page > .card{
-  margin-top:0 !important;
-  margin-bottom:0 !important;
+/* avoid duplicate Add Food / Scan Product titles inside popup */
+#screenAdd.popup-screen > .card > .card-title-row,
+#screenScan.popup-screen > .card > h2{
+  display:none!important;
 }
-.mb-popup-page .creator-footer{
-  margin-bottom:6px;
-}
-
-/* when Add/Scan live in the normal page, keep them hidden */
-#screenAdd:not(.mb-popup-page),
-#screenScan:not(.mb-popup-page){
-  display:none !important;
-}
-
-/* add scan shortcut in add page header */
-#addPopupScanBtn{
-  margin-left:auto !important;
+#screenAdd.popup-screen .creator-footer,
+#screenScan.popup-screen .creator-footer{
+  display:none!important;
 }
 </style>
 
-<script id="mb-nav-home-popup-rebuild-v1-js">
+<script id="mb-clean-master-nav-popup-v3-js">
 (function(){
   function q(id){return document.getElementById(id)}
   function todayISO(){return new Date().toISOString().slice(0,10)}
-  function pretty(v){
-    try{
-      const d=new Date(v+"T00:00:00");
-      return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
-    }catch(e){return v||"Today"}
+  function prettyDate(v){
+    try{return new Date(v+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}
+    catch(e){return v || "Today"}
   }
-  function titleForDate(v){
-    return v===todayISO() ? "Today" : pretty(v);
-  }
-
-  function ensureFullpageModal(){
-    let modal=q('mbFullpageModal');
-    if(modal)return modal;
-    modal=document.createElement('div');
-    modal.id='mbFullpageModal';
-    modal.className='mb-fullpage-backdrop';
-    modal.innerHTML=`
-      <div class="mb-fullpage-shell">
-        <div class="mb-fullpage-header">
-          <div class="mb-fullpage-title" id="mbFullpageTitle">Page</div>
-          <div class="mb-fullpage-actions" id="mbFullpageActions">
-            <button class="light" type="button" id="mbFullpageScanBtn" style="display:none">Scan</button>
-            <button class="light" type="button" id="mbFullpageBackBtn">Back</button>
-          </div>
-        </div>
-        <div id="mbFullpageContent"></div>
-      </div>`;
-    document.body.appendChild(modal);
-    q('mbFullpageBackBtn').onclick=closeFullpageModal;
-    q('mbFullpageScanBtn').onclick=function(){openFullpageModal('Scan')};
-    modal.addEventListener('click',function(e){
-      if(e.target===modal)closeFullpageModal();
-    });
-    return modal;
+  function homeTitleFor(v){return v===todayISO() ? "Today" : prettyDate(v)}
+  function updateHomeDateTitle(){
+    const date=q('date')?.value || todayISO();
+    const el=q('homeDateTitleText');
+    if(el) el.textContent=homeTitleFor(date);
   }
 
-  function ensurePlaceholders(){
-    ['Add','Scan'].forEach(name=>{
-      const section=q('screen'+name);
-      if(section && !q('mbPlaceholder'+name)){
-        const ph=document.createComment('mbPlaceholder'+name);
-        ph.id='mbPlaceholder'+name; // harmless custom prop for JS only does not work on comment lookup
-        section.parentNode.insertBefore(ph,section);
-        window['__mbPlaceholder'+name]=ph;
-      }
-    });
-  }
+  window.updateDateDisplay=function(){updateHomeDateTitle()};
+  window.openDatePicker=function(){
+    const input=q('date');
+    if(!input)return;
+    if(typeof input.showPicker==='function') input.showPicker();
+    else { input.focus(); input.click(); }
+  };
+  window.dateChanged=function(){
+    updateHomeDateTitle();
+    try{if(typeof loadTargets==='function')loadTargets()}catch(e){}
+    try{if(typeof loadDailyNotes==='function')loadDailyNotes()}catch(e){}
+    try{if(typeof render==='function')render()}catch(e){}
+    try{if(typeof renderProgress==='function')renderProgress()}catch(e){}
+  };
 
-  function openFullpageModal(name){
-    ensurePlaceholders();
-    const modal=ensureFullpageModal();
-    const content=q('mbFullpageContent');
-    const section=q('screen'+name);
+  function ensurePopupBar(screenName){
+    const section=q('screen'+screenName);
     if(!section)return;
+    let bar=section.querySelector(':scope > .popup-topbar');
+    if(bar)return bar;
 
-    // return current page in modal to its placeholder before opening next
-    const current=content.querySelector('.screen');
-    if(current && current!==section){
-      const curName=current.id.replace('screen','');
-      const ph=window['__mbPlaceholder'+curName];
-      if(ph && ph.parentNode)ph.parentNode.insertBefore(current,ph.nextSibling);
-      current.classList.remove('mb-popup-page','active');
-    }
+    bar=document.createElement('div');
+    bar.className='popup-topbar';
+    const title=screenName==='Scan' ? 'Scan Product' : 'Add Food';
+    const scanButton=screenName==='Add'
+      ? '<button class="light popup-scan-btn" type="button">Scan</button>'
+      : '';
+    bar.innerHTML='<div class="popup-topbar-title">'+title+'</div><div class="popup-topbar-actions">'+scanButton+'<button class="light popup-back-btn" type="button">Back</button></div>';
+    section.insertBefore(bar,section.firstChild);
 
-    content.appendChild(section);
-    section.classList.add('active','mb-popup-page');
-    q('mbFullpageTitle').textContent = name==='Add' ? 'Add Food' : 'Scan Product';
-    q('mbFullpageScanBtn').style.display = name==='Add' ? '' : 'none';
-    q('mbFullpageBackBtn').textContent = 'Back';
-    modal.classList.add('active');
-    document.documentElement.style.overflow='hidden';
-    document.body.style.overflow='hidden';
+    const scan=bar.querySelector('.popup-scan-btn');
+    if(scan) scan.onclick=function(){openPopupScreen('Scan','Add')};
 
-    try{
-      if(name==='Add' && typeof renderFoodDatabase==='function')renderFoodDatabase();
-      if(name==='Scan' && typeof stopBarcodeCamera==='function'){} // no-op, keeps reference safe
-    }catch(e){}
+    const back=bar.querySelector('.popup-back-btn');
+    back.onclick=function(){
+      if(screenName==='Scan' && window.__popupReturnTo==='Add'){
+        openPopupScreen('Add','Home');
+      }else{
+        closePopupScreens();
+        showNormalScreen('Today');
+      }
+    };
+    return bar;
   }
 
-  function closeFullpageModal(){
-    const modal=q('mbFullpageModal');
-    const content=q('mbFullpageContent');
-    if(content){
-      const current=content.querySelector('.screen');
-      if(current){
-        const name=current.id.replace('screen','');
-        const ph=window['__mbPlaceholder'+name];
-        if(ph && ph.parentNode)ph.parentNode.insertBefore(current,ph.nextSibling);
-        current.classList.remove('mb-popup-page','active');
-      }
-    }
-    modal?.classList.remove('active');
+  function closePopupScreens(){
+    ['Add','Scan'].forEach(n=>{
+      const s=q('screen'+n);
+      if(s) s.classList.remove('active','popup-screen');
+    });
     document.documentElement.style.overflow='';
     document.body.style.overflow='';
     try{if(typeof stopBarcodeCamera==='function')stopBarcodeCamera()}catch(e){}
   }
-  window.openFullpageModal=openFullpageModal;
-  window.closeFullpageModal=closeFullpageModal;
 
-  function rebuildTopNav(){
-    const todayBtn=document.querySelector('.tab-btn[data-screen="Today"]');
-    if(todayBtn){
-      todayBtn.childNodes.forEach(n=>{if(n.nodeType===3)n.textContent='Home'});
-      if(!todayBtn.textContent.includes('Home')){
-        todayBtn.appendChild(document.createTextNode('Home'));
-      }
-      todayBtn.innerHTML='<span></span>Home';
-    }
-    document.querySelectorAll('.tab-btn[data-screen="Add"],.tab-btn[data-screen="Scan"]').forEach(b=>b.remove());
-  }
-
-  function rebuildTodayTitle(){
-    const card=q('screenToday')?.querySelector('.card');
-    if(!card)return;
-    const h2=card.querySelector('h2');
-    const dateLabel=Array.from(card.querySelectorAll('label')).find(l=>/date/i.test(l.textContent||''));
-    if(dateLabel)dateLabel.classList.add('today-date-label');
-    const dateBox=card.querySelector('.date-box');
-    if(dateBox)dateBox.style.display='none';
-
-    if(h2 && !q('todayDynamicTitle')){
-      h2.innerHTML='<span class="bc-icon">HM</span><button id="todayDynamicTitle" type="button"><span id="todayDynamicTitleText">Today</span><span class="down-arrow">⌄</span></button>';
-      q('todayDynamicTitle').onclick=function(e){
-        e.preventDefault();
-        if(typeof openDatePicker==='function')openDatePicker();
-        else q('date')?.showPicker?.();
-      };
-    }
-    updateHomeTitleDate();
-  }
-
-  function updateHomeTitleDate(){
-    const date=q('date')?.value || todayISO();
-    const title=q('todayDynamicTitleText');
-    const display=q('dateDisplay');
-    if(title)title.textContent=titleForDate(date);
-    if(display)display.textContent=titleForDate(date);
-  }
-
-  // Override old date display, but keep old dateChanged behavior.
-  const oldUpdate=window.updateDateDisplay;
-  window.updateDateDisplay=function(){
-    try{if(typeof oldUpdate==='function')oldUpdate()}catch(e){}
-    updateHomeTitleDate();
-  };
-
-  const oldDateChanged=window.dateChanged;
-  window.dateChanged=function(){
-    if(typeof oldDateChanged==='function')oldDateChanged();
-    updateHomeTitleDate();
-  };
-
-  // showScreen: Add/Scan are popups; Today is Home tab.
-  const oldShow=window.showScreen;
-  window.showScreen=function(name){
-    if(name==='Add' || name==='Scan'){
-      openFullpageModal(name);
-      return;
-    }
-    closeFullpageModal();
-    if(typeof oldShow==='function')oldShow(name);
-    rebuildTopNav();
-    updateHomeTitleDate();
-  };
-
-  function addScanShortcutInsideAdd(){
-    const addCard=q('screenAdd')?.querySelector('.card');
-    if(!addCard || q('addPopupScanBtn'))return;
-    const row=addCard.querySelector('.card-title-row') || addCard;
-    const btn=document.createElement('button');
-    btn.id='addPopupScanBtn';
-    btn.className='light';
-    btn.type='button';
-    btn.textContent='Scan';
-    btn.style.cssText='width:auto;min-width:82px;margin:0 0 0 auto;padding:11px 14px;border-radius:16px;font-size:14px;';
-    btn.onclick=function(){openFullpageModal('Scan')};
-    if(row.classList.contains('card-title-row')){
-      row.style.display='flex';
-      row.style.alignItems='center';
-      row.style.gap='10px';
-      row.appendChild(btn);
-    }else{
-      addCard.insertBefore(btn,addCard.firstChild);
-    }
-  }
-
-  function rewireAddButtons(){
-    document.querySelectorAll('button').forEach(btn=>{
-      const attr=btn.getAttribute('onclick')||'';
-      if(attr.includes("showScreen('Add')") || attr.includes('showScreen("Add")')){
-        btn.setAttribute('onclick',"openFullpageModal('Add')");
-      }
-      if(attr.includes("showScreen('Scan')") || attr.includes('showScreen("Scan")')){
-        btn.setAttribute('onclick',"openFullpageModal('Scan')");
-      }
+  function showNormalScreen(name){
+    closePopupScreens();
+    document.querySelectorAll('.screen').forEach(s=>{
+      if(s.id!=='screenAdd' && s.id!=='screenScan') s.classList.remove('active');
     });
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    const t=q('screen'+name);
+    const btn=document.querySelector('.tab-btn[data-screen="'+name+'"]');
+    if(t)t.classList.add('active');
+    if(btn)btn.classList.add('active');
+    if(name==='Progress'){try{renderProgress();calculateWeightGoal(false)}catch(e){}}
+    if(name==='Log'){try{render();loadDailyNotes()}catch(e){}}
+    try{window.scrollTo({top:0,behavior:'smooth'})}catch(e){}
   }
+
+  function openPopupScreen(name, returnTo){
+    closePopupScreens();
+    window.__popupReturnTo=returnTo || 'Home';
+    const s=q('screen'+name);
+    if(!s)return;
+    ensurePopupBar(name);
+    s.classList.add('active','popup-screen');
+    document.documentElement.style.overflow='hidden';
+    document.body.style.overflow='hidden';
+    if(name==='Add'){try{if(typeof renderFoodDatabase==='function')renderFoodDatabase()}catch(e){}}
+  }
+
+  window.openPopupScreen=openPopupScreen;
+  window.closePopupScreens=closePopupScreens;
+
+  window.showScreen=function(name){
+    if(name==='Add'){openPopupScreen('Add','Home');return}
+    if(name==='Scan'){openPopupScreen('Scan','Home');return}
+    showNormalScreen(name);
+  };
 
   function boot(){
-    ensurePlaceholders();
-    rebuildTopNav();
-    rebuildTodayTitle();
-    addScanShortcutInsideAdd();
-    rewireAddButtons();
-    updateHomeTitleDate();
+    const d=q('date');
+    if(d && !d.value)d.value=todayISO();
+    const h=q('homeDateTitle');
+    if(h)h.onclick=function(e){e.preventDefault();openDatePicker()};
+    if(d)d.addEventListener('change',dateChanged);
+    updateHomeDateTitle();
+    document.querySelectorAll('.tab-btn').forEach(btn=>{
+      btn.onclick=function(){showScreen(btn.dataset.screen)};
+    });
+    // main Add Food button remains onclick showScreen('Add'), this override handles it
   }
 
-  document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,80));
-  setTimeout(boot,500);
-})();
-</script>
-
-
-<style id="mb-nav-popup-fix-v2">
-.tab-btn[data-screen="Today"]{min-width:118px!important}
-.tab-btn[data-screen="Today"]::before{content:""!important;display:none!important}
-.tab-btn[data-screen="Today"] .nav-icon{display:inline-flex!important;width:24px!important;height:24px!important;margin-bottom:3px!important;color:#bfdbfe!important;filter:drop-shadow(0 0 8px rgba(56,189,248,.65))}
-.tab-btn[data-screen="Today"].active .nav-icon{color:#fff!important;filter:drop-shadow(0 0 12px rgba(255,255,255,.85))}
-#screenToday .today-date-label,#screenToday .date-box{display:none!important}
-#todayDynamicTitle{width:auto!important;margin:0!important;padding:0!important;background:transparent!important;box-shadow:none!important;border:0!important;color:var(--bc-text,#f8fafc)!important;font-size:38px!important;line-height:1.05!important;font-weight:950!important;text-align:left!important;display:inline-flex!important;align-items:center!important;gap:8px!important}
-#todayDynamicTitle .down-arrow{font-size:22px;color:#7dd3fc;filter:drop-shadow(0 0 8px rgba(56,189,248,.55));transform:translateY(2px)}
-.mb-fullpage-backdrop{padding-top:calc(18px + env(safe-area-inset-top,0px))!important}
-.mb-fullpage-shell{max-height:calc(100dvh - 36px - env(safe-area-inset-top,0px))!important}
-.mb-fullpage-header{padding-top:8px!important;margin-bottom:10px!important}
-#addPopupScanBtn{display:none!important}
-#mbFullpageModal[data-page="Scan"] #mbFullpageScanBtn{display:none!important}
-#mbFullpageModal[data-page="Add"] #mbFullpageScanBtn{display:inline-block!important}
-#mbFullpageContent>.screen.mb-popup-page>.card{margin-top:8px!important}
-</style>
-<script id="mb-nav-popup-fix-v2-js">
-(function(){
-  function q(id){return document.getElementById(id)}
-  function todayISO(){return new Date().toISOString().slice(0,10)}
-  function pretty(v){try{return new Date(v+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}catch(e){return v||"Today"}}
-  function titleForDate(v){return v===todayISO()?"Today":pretty(v)}
-  function homeSvg(){return '<span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3.5 11.2L12 4l8.5 7.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.8 10.5v8.2h4.2v-5h4v5h4.2v-8.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>'}
-  function rebuildHomeTab(){const btn=document.querySelector('.tab-btn[data-screen="Today"]');if(btn)btn.innerHTML=homeSvg()+"Home"}
-  function updateHomeTitleDate(){const date=q('date')?.value||todayISO();const t=q('todayDynamicTitleText');if(t)t.textContent=titleForDate(date);const d=q('dateDisplay');if(d)d.textContent=titleForDate(date)}
-  function rebuildTodayTitle(){
-    const card=q('screenToday')?.querySelector('.card');if(!card)return;
-    const h2=card.querySelector('h2');
-    const dateLabel=Array.from(card.querySelectorAll('label')).find(l=>/date/i.test(l.textContent||''));if(dateLabel)dateLabel.classList.add('today-date-label');
-    const dateBox=card.querySelector('.date-box');if(dateBox)dateBox.style.display='none';
-    if(h2 && !q('todayDynamicTitle'))h2.innerHTML='<span class="bc-icon">HM</span><button id="todayDynamicTitle" type="button"><span id="todayDynamicTitleText">Today</span><span class="down-arrow">⌄</span></button>';
-    const titleBtn=q('todayDynamicTitle');
-    if(titleBtn)titleBtn.onclick=function(e){e.preventDefault();const input=q('date');if(!input)return;if(typeof input.showPicker==='function')input.showPicker();else{input.focus();input.click()}};
-    updateHomeTitleDate();
-  }
-  function hideRemovedTabs(){document.querySelectorAll('.tab-btn[data-screen="Add"],.tab-btn[data-screen="Scan"]').forEach(b=>b.remove())}
-  window.updateDateDisplay=function(){updateHomeTitleDate()};
-  window.dateChanged=function(){try{if(typeof loadTargets==='function')loadTargets();if(typeof loadDailyNotes==='function')loadDailyNotes();if(typeof render==='function')render();if(typeof renderProgress==='function')renderProgress()}catch(e){}updateHomeTitleDate()};
-  document.addEventListener('change',function(e){if(e.target&&e.target.id==='date')window.dateChanged()},true);
-  function putBackCurrentPopup(){const content=q('mbFullpageContent');if(!content)return;const current=content.querySelector('.screen');if(!current)return;const name=current.id.replace('screen','');const ph=window['__mbPlaceholder'+name];if(ph&&ph.parentNode)ph.parentNode.insertBefore(current,ph.nextSibling);current.classList.remove('mb-popup-page','active')}
-  window.openFullpageModal=function(name){
-    const modal=q('mbFullpageModal'),content=q('mbFullpageContent'),section=q('screen'+name);if(!modal||!content||!section)return;
-    putBackCurrentPopup();content.appendChild(section);section.classList.add('active','mb-popup-page');modal.classList.add('active');modal.dataset.page=name;
-    document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';
-    const title=q('mbFullpageTitle');if(title)title.textContent=name==='Scan'?'Scan Product':'Add Food';
-    const scanBtn=q('mbFullpageScanBtn');if(scanBtn){scanBtn.style.display=name==='Add'?'':'none';scanBtn.onclick=function(){window.openFullpageModal('Scan')}}
-    const backBtn=q('mbFullpageBackBtn');if(backBtn){backBtn.textContent='Back';backBtn.onclick=function(){if(modal.dataset.page==='Scan')window.openFullpageModal('Add');else{window.closeFullpageModal();if(typeof showScreen==='function')showScreen('Today')}}}
-    try{if(name==='Add'&&typeof renderFoodDatabase==='function')renderFoodDatabase()}catch(e){}
-  };
-  window.closeFullpageModal=function(){const modal=q('mbFullpageModal');putBackCurrentPopup();modal?.classList.remove('active');if(modal)modal.dataset.page='';document.documentElement.style.overflow='';document.body.style.overflow='';try{if(typeof stopBarcodeCamera==='function')stopBarcodeCamera()}catch(e){}};
-  const oldShowScreen=window.showScreen;
-  window.showScreen=function(name){if(name==='Add'||name==='Scan'){window.openFullpageModal(name);return}if(name==='Today'||name==='Log'||name==='Progress'||name==='Settings')window.closeFullpageModal();if(typeof oldShowScreen==='function')oldShowScreen(name);hideRemovedTabs();rebuildHomeTab();rebuildTodayTitle()};
-  function rewireButtons(){document.querySelectorAll('button').forEach(btn=>{const attr=btn.getAttribute('onclick')||'';if(attr.includes("showScreen('Add')")||attr.includes('showScreen("Add")'))btn.setAttribute('onclick',"openFullpageModal('Add')");if(attr.includes("showScreen('Scan')")||attr.includes('showScreen("Scan")'))btn.setAttribute('onclick',"openFullpageModal('Scan')")});const redundant=q('addPopupScanBtn');if(redundant)redundant.remove()}
-  function boot(){hideRemovedTabs();rebuildHomeTab();rebuildTodayTitle();rewireButtons();const date=q('date');if(date&&!date.value)date.value=todayISO();updateHomeTitleDate()}
-  document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,100));setTimeout(boot,500);
+  document.addEventListener('DOMContentLoaded',boot);
+  setTimeout(boot,250);
 })();
 </script>
 
