@@ -1519,9 +1519,9 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
 
 <section id="screenToday" class="screen active">
   <div class="card card-blue">
-    <h2 id="todayDateHeading" class="today-date-heading-v62" onclick="window.mbOpenDateModal(event)">
+    <h2 id="todayDateHeading" class="today-date-heading-v62" onclick="window.mbOpenNativeDate(event)">
       <span class="bc-icon">HM</span>
-      <button id="dateDisplay" class="date-display today-title-date-btn" type="button" onclick="window.mbOpenDateModal(event)">Today</button>
+      <button id="dateDisplay" class="date-display today-title-date-btn" type="button" onclick="window.mbOpenNativeDate(event)">Today</button>
       <span class="today-title-arrow">⌄</span>
       <input id="date" class="today-title-date-input" type="date" aria-label="Select date">
     </h2>
@@ -10982,9 +10982,11 @@ body.mb-add-popup-active{overflow:hidden!important;}
 
 
 
-<!-- MB V62: force Today heading to be the calendar value and click target -->
-<style id="mb-v62-today-calendar-force">
-/* Top nav labels equal */
+
+
+<!-- MB V63: native calendar picker on Today heading, no popup modal -->
+<style id="mb-v63-native-date-heading">
+/* Top nav label sizing */
 .tab-bar{
   display:grid!important;
   grid-template-columns:repeat(4,minmax(0,1fr))!important;
@@ -11011,8 +11013,9 @@ body.mb-add-popup-active{overflow:hidden!important;}
   color:inherit;
 }
 
-/* Today heading = calendar button */
-#todayDateHeading.today-date-heading-v62{
+/* Heading is the actual date picker target */
+#todayDateHeading{
+  position:relative!important;
   display:flex!important;
   align-items:center!important;
   gap:10px!important;
@@ -11022,6 +11025,7 @@ body.mb-add-popup-active{overflow:hidden!important;}
   user-select:none!important;
   -webkit-tap-highlight-color:transparent!important;
 }
+
 #todayDateHeading .today-title-date-btn{
   width:auto!important;
   height:auto!important;
@@ -11036,9 +11040,9 @@ body.mb-add-popup-active{overflow:hidden!important;}
   font-weight:950!important;
   line-height:1!important;
   text-align:left!important;
-  pointer-events:auto!important;
-  cursor:pointer!important;
+  pointer-events:none!important;
 }
+
 #todayDateHeading .today-title-arrow{
   color:#fff!important;
   font-size:24px!important;
@@ -11047,60 +11051,28 @@ body.mb-add-popup-active{overflow:hidden!important;}
   transform:translateY(1px)!important;
   pointer-events:none!important;
 }
-#todayDateHeading .today-title-date-input{
-  display:none!important;
-}
 
-/* Modal calendar */
-#mbDateModal{
-  position:fixed;
-  inset:0;
-  z-index:100500;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-  background:rgba(2,6,23,.78);
-  backdrop-filter:blur(14px);
-  -webkit-backdrop-filter:blur(14px);
+/* This invisible input receives the tap and opens the phone/browser calendar directly */
+#todayDateHeading .today-title-date-input{
+  display:block!important;
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  opacity:0.001!important;
+  z-index:50!important;
+  pointer-events:auto!important;
+  cursor:pointer!important;
+  border:0!important;
+  padding:0!important;
+  margin:0!important;
+  background:transparent!important;
+  appearance:auto!important;
+  -webkit-appearance:auto!important;
 }
-#mbDateModal.active{display:flex}
-#mbDateModal .mb-date-card{
-  width:100%;
-  max-width:420px;
-  border-radius:28px;
-  padding:22px;
-  background:linear-gradient(145deg,rgba(6,13,28,.98),rgba(9,18,35,.96));
-  border:1px solid rgba(56,189,248,.36);
-  box-shadow:0 28px 70px rgba(0,0,0,.65),0 0 38px rgba(37,99,235,.28);
-  color:#f8fafc;
-}
-#mbDateModal h3{
-  margin:0 0 14px;
-  font-size:28px;
-  font-weight:950;
-}
-#mbDatePickerInput{
-  width:100%;
-  height:58px;
-  border-radius:18px;
-  padding:0 14px;
-  font-size:18px;
-  font-weight:850;
-  background:rgba(2,6,23,.72);
-  color:#f8fafc;
-  border:1.5px solid rgba(59,130,246,.42);
-}
-.mb-date-actions{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-top:14px;
-}
-.mb-date-actions button{margin:0!important}
 </style>
 
-<script id="mb-v62-today-calendar-force-js">
+<script id="mb-v63-native-date-heading-js">
 (function(){
   function byId(id){ return document.getElementById(id); }
 
@@ -11119,76 +11091,31 @@ body.mb-add-popup-active{overflow:hidden!important;}
   window.mbUpdateTodayText = function(){
     var input = byId('date');
     var display = byId('dateDisplay');
-    if(!input || !display) return;
-    display.textContent = prettyDate(input.value);
+    if(input && display) display.textContent = prettyDate(input.value);
   };
 
-  function ensureModal(){
-    if(byId('mbDateModal')) return;
-
-    var modal = document.createElement('div');
-    modal.id = 'mbDateModal';
-    modal.innerHTML =
-      '<div class="mb-date-card" role="dialog" aria-modal="true" aria-label="Select date">' +
-        '<h3>Select Date</h3>' +
-        '<input id="mbDatePickerInput" type="date">' +
-        '<div class="mb-date-actions">' +
-          '<button type="button" class="light" id="mbDateCancel">Cancel</button>' +
-          '<button type="button" class="good" id="mbDateApply">Use Date</button>' +
-        '</div>' +
-      '</div>';
-
-    document.body.appendChild(modal);
-
-    modal.addEventListener('click', function(e){
-      if(e.target === modal) modal.classList.remove('active');
-    });
-
-    byId('mbDateCancel').addEventListener('click', function(){
-      modal.classList.remove('active');
-    });
-
-    byId('mbDateApply').addEventListener('click', function(){
-      var mainInput = byId('date');
-      var modalInput = byId('mbDatePickerInput');
-      if(!mainInput || !modalInput) return;
-
-      mainInput.value = modalInput.value || localTodayKey();
-
-      /* This line is the exact behavior requested:
-         Today only when current date, otherwise the selected date. */
-      window.mbUpdateTodayText();
-
-      try{
-        if(typeof window.dateChanged === 'function') window.dateChanged();
-      }catch(e){}
-
-      window.mbUpdateTodayText();
-      modal.classList.remove('active');
-    });
-  }
-
-  window.mbOpenDateModal = function(e){
+  window.mbOpenNativeDate = function(e){
     if(e){
       e.preventDefault();
       e.stopPropagation();
-      if(e.stopImmediatePropagation) e.stopImmediatePropagation();
     }
+    var input = byId('date');
+    if(!input) return;
+    if(!input.value) input.value = localTodayKey();
 
-    ensureModal();
+    input.style.display = 'block';
 
-    var mainInput = byId('date');
-    var modalInput = byId('mbDatePickerInput');
+    try{
+      if(input.showPicker){
+        input.showPicker();
+        return;
+      }
+    }catch(err){}
 
-    if(mainInput && !mainInput.value) mainInput.value = localTodayKey();
-    modalInput.value = mainInput && mainInput.value ? mainInput.value : localTodayKey();
-
-    byId('mbDateModal').classList.add('active');
-
-    setTimeout(function(){
-      try{ modalInput.focus(); }catch(err){}
-      try{ if(modalInput.showPicker) modalInput.showPicker(); }catch(err){}
-    }, 80);
+    try{
+      input.focus();
+      input.click();
+    }catch(err){}
   };
 
   function install(){
@@ -11200,15 +11127,20 @@ body.mb-add-popup-active{overflow:hidden!important;}
 
     if(!input.value) input.value = localTodayKey();
 
-    input.style.display = 'none';
+    input.style.display = 'block';
 
-    /* Remove older broken listeners by overriding the visible handler directly */
-    heading.onclick = window.mbOpenDateModal;
-    display.onclick = window.mbOpenDateModal;
+    heading.onclick = window.mbOpenNativeDate;
+    display.onclick = window.mbOpenNativeDate;
 
-    if(!input.__mbV62Bound){
-      input.addEventListener('change', window.mbUpdateTodayText);
-      input.__mbV62Bound = true;
+    if(!input.__mbV63Bound){
+      input.addEventListener('change', function(){
+        window.mbUpdateTodayText();
+        try{
+          if(typeof window.dateChanged === 'function') window.dateChanged();
+        }catch(e){}
+        window.mbUpdateTodayText();
+      });
+      input.__mbV63Bound = true;
     }
 
     window.updateDateDisplay = window.mbUpdateTodayText;
@@ -11218,9 +11150,8 @@ body.mb-add-popup-active{overflow:hidden!important;}
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install);
   else install();
 
-  setTimeout(install, 100);
-  setTimeout(install, 500);
-  setTimeout(install, 1200);
+  setTimeout(install, 150);
+  setTimeout(install, 800);
 })();
 </script>
 
