@@ -10491,5 +10491,153 @@ body.mb-goal-popup-lock .tab-bar{
 })();
 </script>
 
+
+
+<!-- MB V38: fix popup scrolling + close placement polish -->
+<style id="mb-v38-scroll-close-fix">
+/* The popup itself must receive touch events so iPhone can scroll normally. */
+#screenAdd.mb-add-popup-open{
+  pointer-events:auto!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain!important;
+  -webkit-overflow-scrolling:touch!important;
+  padding-top:calc(env(safe-area-inset-top,0px) + 84px)!important;
+  padding-bottom:calc(env(safe-area-inset-bottom,0px) + 42px)!important;
+}
+#screenAdd.mb-add-popup-open > *{pointer-events:auto!important;}
+
+/* Keep the main nav above the Add popup, so Home / Log / Progress / Settings remain usable. */
+body.mb-add-popup-lock .macro-butler-hero,
+body.mb-add-popup-lock .tab-bar{
+  position:relative!important;
+  z-index:100100!important;
+}
+body.mb-add-popup-lock .tab-bar{
+  position:sticky!important;
+  top:8px!important;
+}
+
+/* Subtle floating close button for Add workspace. */
+#screenAdd.mb-add-popup-open #mbAddPopupClose{
+  position:sticky!important;
+  top:calc(env(safe-area-inset-top,0px) + 10px)!important;
+  z-index:100120!important;
+  max-width:560px!important;
+  width:100%!important;
+  margin:0 auto 10px!important;
+  padding:0 10px!important;
+  justify-content:flex-end!important;
+  pointer-events:none!important;
+}
+#screenAdd.mb-add-popup-open #mbAddPopupClose button,
+#mbGoalPopup .mb-goal-close-row button{
+  pointer-events:auto!important;
+  width:40px!important;
+  min-width:40px!important;
+  height:40px!important;
+  padding:0!important;
+  margin:0!important;
+  border-radius:15px!important;
+  font-size:0!important;
+  background:linear-gradient(145deg,rgba(15,23,42,.96),rgba(2,6,23,.92))!important;
+  border:1px solid rgba(125,211,252,.38)!important;
+  color:#7dd3fc!important;
+  box-shadow:0 0 14px rgba(56,189,248,.28), inset 0 1px 0 rgba(255,255,255,.10)!important;
+}
+#screenAdd.mb-add-popup-open #mbAddPopupClose button::before,
+#mbGoalPopup .mb-goal-close-row button::before{
+  content:'×'!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:100%!important;
+  height:100%!important;
+  font-size:28px!important;
+  line-height:1!important;
+  font-weight:800!important;
+  color:#7dd3fc!important;
+  text-shadow:0 0 12px rgba(56,189,248,.72)!important;
+  transform:translateY(-1px)!important;
+}
+
+/* Macro Calculator popup: scrollable, slightly lower, close inside the safe area. */
+#mbGoalPopup{
+  pointer-events:auto!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain!important;
+  -webkit-overflow-scrolling:touch!important;
+  padding-top:calc(env(safe-area-inset-top,0px) + 52px)!important;
+  padding-bottom:calc(env(safe-area-inset-bottom,0px) + 42px)!important;
+}
+#mbGoalPopup.active .mb-goal-shell{pointer-events:auto!important;}
+#mbGoalPopup .mb-goal-shell{
+  margin:0 auto 32px!important;
+  max-width:560px!important;
+}
+#mbGoalPopup .mb-goal-close-row{
+  position:sticky!important;
+  top:calc(env(safe-area-inset-top,0px) + 8px)!important;
+  z-index:100130!important;
+  justify-content:flex-end!important;
+  margin:0 0 8px!important;
+  padding:0 10px!important;
+  pointer-events:none!important;
+}
+#mbGoalPopup .mb-goal-close-row button{pointer-events:auto!important;}
+#mbGoalPopup #mbGoalContent > .card{margin-top:0!important;}
+
+/* Do not freeze the page permanently on iOS; the fixed popup handles its own scroll. */
+body.mb-add-popup-lock,
+body.mb-goal-popup-lock{
+  overflow:hidden!important;
+  touch-action:auto!important;
+}
+
+/* Center the top nav after removing Add. */
+.tab-bar{
+  justify-content:center!important;
+  align-items:center!important;
+}
+.tab-bar .tab-btn[data-screen="Today"] .nav-label{font-size:0!important;}
+.tab-bar .tab-btn[data-screen="Today"] .nav-label::after{content:'Home';font-size:inherit!important;}
+
+@media(max-width:430px){
+  #screenAdd.mb-add-popup-open{padding-top:calc(env(safe-area-inset-top,0px) + 78px)!important;}
+  #mbGoalPopup{padding-top:calc(env(safe-area-inset-top,0px) + 56px)!important;}
+  #screenAdd.mb-add-popup-open #mbAddPopupClose button,
+  #mbGoalPopup .mb-goal-close-row button{
+    width:38px!important;min-width:38px!important;height:38px!important;border-radius:14px!important;
+  }
+}
+</style>
+<script id="mb-v38-scroll-close-fix-js">
+(function(){
+  function ensureLabels(){
+    document.querySelectorAll('.tab-btn[data-screen="Today"]').forEach(function(btn){
+      var label=btn.querySelector('.nav-label');
+      if(label) label.textContent='Home';
+      btn.setAttribute('aria-label','Home');
+    });
+    var addClose=document.querySelector('#mbAddPopupClose button');
+    if(addClose){addClose.textContent='';addClose.setAttribute('aria-label','Close Add Food');}
+    var goalClose=document.querySelector('#mbGoalPopup .mb-goal-close-row button');
+    if(goalClose){goalClose.textContent='';goalClose.setAttribute('aria-label','Close Macro Calculator');}
+  }
+  function stopRubberBand(){
+    // Keep modal scrolling within the popup, not the horizontal app stage.
+    ['screenAdd','mbGoalPopup'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(!el || el.dataset.v38ScrollFix==='1') return;
+      el.dataset.v38ScrollFix='1';
+      el.addEventListener('touchmove',function(e){e.stopPropagation();},{passive:true});
+      el.addEventListener('wheel',function(e){e.stopPropagation();},{passive:true});
+    });
+  }
+  function boot(){ensureLabels();stopRubberBand();setTimeout(ensureLabels,300);setTimeout(stopRubberBand,300);setTimeout(ensureLabels,1200);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+  document.addEventListener('click',function(){setTimeout(boot,30)},true);
+})();
+</script>
+
 </body>
 </html>
