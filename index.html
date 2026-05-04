@@ -11268,82 +11268,90 @@ body.mb-add-popup-active{
 
 
 
-<!-- MB V43: Home heading becomes calendar selector; remove separate Date field -->
-<style id="mb-v43-heading-date-selector">
-#screenToday .today-date-label-v43,
-#screenToday .date-box{
+<!-- MB V45: stable Today-as-date heading without breaking Add popup -->
+<style id="mb-v45-stable-date-heading">
+/* Hide the separate Date label/box visually, but keep the real date input usable for showPicker() */
+#screenToday > .card > label:first-of-type{
   display:none!important;
 }
 
-#screenToday .today-date-heading{
+#screenToday .date-box{
+  height:0!important;
+  min-height:0!important;
+  padding:0!important;
+  margin:0!important;
+  overflow:hidden!important;
+  opacity:0!important;
+  pointer-events:none!important;
+}
+
+/* Turn the heading into the calendar selector */
+#screenToday h2.today-date-heading-v45{
+  width:max-content!important;
+  max-width:100%!important;
   cursor:pointer!important;
   user-select:none!important;
   -webkit-tap-highlight-color:transparent!important;
-  display:flex!important;
-  align-items:center!important;
-  gap:12px!important;
-  width:max-content!important;
-  max-width:100%!important;
   margin-bottom:18px!important;
 }
 
-#screenToday .today-date-heading .today-date-text{
+#screenToday h2.today-date-heading-v45 #dateDisplay{
   display:inline-flex!important;
-  align-items:center!important;
-  gap:8px!important;
+  width:auto!important;
+  height:auto!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:inherit!important;
+  font:inherit!important;
+  font-weight:950!important;
   line-height:1!important;
+  text-align:left!important;
+  appearance:none!important;
+  -webkit-appearance:none!important;
 }
 
-#screenToday .today-date-heading .today-date-text::after{
+#screenToday h2.today-date-heading-v45 #dateDisplay::after{
   content:"⌄";
-  font-size:.58em;
+  display:inline-block;
+  margin-left:10px;
+  font-size:.55em;
   line-height:1;
   color:#7dd3fc;
   transform:translateY(2px);
-  text-shadow:0 0 12px rgba(56,189,248,.65);
-}
-
-#screenToday .today-date-heading:active{
-  transform:scale(.985);
-}
-
-#screenToday #date{
-  position:fixed!important;
-  opacity:0!important;
-  pointer-events:none!important;
-  width:1px!important;
-  height:1px!important;
-  left:-9999px!important;
-  top:-9999px!important;
+  text-shadow:0 0 12px rgba(56,189,248,.7);
 }
 
 #screenToday .hero-stats{
   margin-top:4px!important;
 }
 
-@media(max-width:430px){
-  #screenToday .today-date-heading{
-    gap:10px!important;
-    margin-bottom:16px!important;
-  }
+/* Keep Add popup layout from previous working version */
+#screenAdd.mb-add-popup-open{
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  -webkit-overflow-scrolling:touch!important;
 }
 </style>
 
-<script id="mb-v43-heading-date-selector-js">
+<script id="mb-v45-stable-date-heading-js">
 (function(){
   function byId(id){return document.getElementById(id)}
-  function todayKey(){
+  function localTodayKey(){
     var d=new Date();
-    return d.toISOString().slice(0,10);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   }
   function pretty(v){
-    if(!v) return 'Today';
-    if(v===todayKey()) return 'Today';
+    if(!v || v===localTodayKey()) return 'Today';
     try{
       return new Date(v+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-    }catch(e){
-      return v;
-    }
+    }catch(e){return v || 'Today'}
+  }
+  function setHeadingText(){
+    var input=byId('date'), display=byId('dateDisplay');
+    if(input && display) display.textContent=pretty(input.value);
   }
   function openPicker(e){
     if(e){e.preventDefault();e.stopPropagation();}
@@ -11355,70 +11363,67 @@ body.mb-add-popup-active{
     input.focus();
     input.click();
   }
-  function installHeading(){
-    var screen=byId('screenToday');
+  function install(){
+    var card=document.querySelector('#screenToday > .card');
+    var h2=card ? card.querySelector('h2') : null;
+    var display=byId('dateDisplay');
     var input=byId('date');
-    if(!screen || !input) return;
+    if(!h2 || !display || !input) return;
 
-    var oldH2=screen.querySelector('h2');
-    if(oldH2 && !oldH2.classList.contains('today-date-heading')){
-      oldH2.classList.add('today-date-heading');
-      var icon=oldH2.querySelector('.bc-icon');
-      oldH2.innerHTML='';
-      if(icon) oldH2.appendChild(icon);
-      var span=document.createElement('span');
-      span.id='todayDateTitle';
-      span.className='today-date-text';
-      oldH2.appendChild(span);
-      oldH2.addEventListener('click',openPicker);
-      oldH2.addEventListener('touchend',openPicker,{passive:false});
+    h2.classList.add('today-date-heading-v45');
+
+    /* Move the existing dateDisplay button into the heading.
+       This preserves the original app logic that already updates #dateDisplay. */
+    if(display.parentElement !== h2){
+      h2.appendChild(display);
     }
 
-    var label=[].slice.call(screen.querySelectorAll('label')).find(function(l){return l.textContent.trim()==='Date'});
-    if(label) label.classList.add('today-date-label-v43');
+    /* Remove only the old text node "Today"; keep icon + date button */
+    Array.from(h2.childNodes).forEach(function(n){
+      if(n.nodeType===3 && n.textContent.trim()==='Today') n.textContent='';
+    });
 
-    updateTitle();
-  }
-  function updateTitle(){
-    var input=byId('date'), title=byId('todayDateTitle'), display=byId('dateDisplay');
-    if(!input) return;
-    var txt=pretty(input.value);
-    if(title) title.textContent=txt;
-    if(display) display.textContent=txt;
+    if(!h2.__mbV45Click){
+      h2.addEventListener('click',openPicker);
+      h2.addEventListener('touchend',openPicker,{passive:false});
+      h2.__mbV45Click=true;
+    }
+
+    if(!input.__mbV45Date){
+      input.addEventListener('change',function(){
+        setTimeout(setHeadingText,0);
+      });
+      input.__mbV45Date=true;
+    }
+
+    setHeadingText();
   }
 
   var oldUpdate=window.updateDateDisplay;
-  if(typeof oldUpdate==='function' && !window.__mbV43UpdateWrapped){
+  if(typeof oldUpdate==='function' && !window.__mbV45UpdateWrapped){
     window.updateDateDisplay=function(){
       try{oldUpdate.apply(this,arguments)}catch(e){}
-      updateTitle();
+      setHeadingText();
     };
-    window.__mbV43UpdateWrapped=true;
+    window.__mbV45UpdateWrapped=true;
   }
 
   var oldDateChanged=window.dateChanged;
-  if(typeof oldDateChanged==='function' && !window.__mbV43DateChangedWrapped){
+  if(typeof oldDateChanged==='function' && !window.__mbV45DateChangedWrapped){
     window.dateChanged=function(){
-      var res=oldDateChanged.apply(this,arguments);
-      updateTitle();
-      return res;
+      var r;
+      try{r=oldDateChanged.apply(this,arguments)}catch(e){}
+      setHeadingText();
+      return r;
     };
-    window.__mbV43DateChangedWrapped=true;
+    window.__mbV45DateChangedWrapped=true;
   }
 
-  function boot(){
-    installHeading();
-    var input=byId('date');
-    if(input && !input.__mbV43Bound){
-      input.addEventListener('change',function(){setTimeout(updateTitle,0)});
-      input.__mbV43Bound=true;
-    }
-    setTimeout(updateTitle,50);
-    setTimeout(updateTitle,400);
-  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',install);
+  else install();
 
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
-  document.addEventListener('click',function(){setTimeout(boot,50)},true);
+  setTimeout(install,100);
+  setTimeout(install,600);
 })();
 </script>
 
