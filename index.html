@@ -10978,8 +10978,10 @@ body.mb-add-popup-active{overflow:hidden!important;}
 
 
 
-<!-- MB MASTER PATCH v3: equal top-nav text + reliable Today calendar modal -->
-<style id="mb-master-nav-date-v3">
+
+
+<!-- MB MASTER PATCH v4: top nav text + Today heading becomes selected date -->
+<style id="mb-master-nav-date-v4">
 /* Equal top tab label size/spacing */
 .tab-bar{
   display:grid!important;
@@ -11010,7 +11012,7 @@ body.mb-add-popup-active{overflow:hidden!important;}
   color:inherit;
 }
 
-/* Today heading is the calendar trigger */
+/* The Home card heading is the date trigger */
 #todayDateHeading{
   position:relative!important;
   cursor:pointer!important;
@@ -11075,7 +11077,7 @@ body.mb-add-popup-active{overflow:hidden!important;}
 }
 </style>
 
-<script id="mb-master-nav-date-v3-js">
+<script id="mb-master-nav-date-v4-js">
 (function(){
   function byId(id){ return document.getElementById(id); }
 
@@ -11097,10 +11099,10 @@ body.mb-add-popup-active{overflow:hidden!important;}
     }
   }
 
-  function updateDateHeading(){
+  function updateDateText(){
     var input = byId('date');
     var display = byId('dateDisplay');
-    if(input && display) display.textContent = prettyDate(input.value);
+    if(display && input) display.textContent = prettyDate(input.value);
   }
 
   function ensureDateModal(){
@@ -11161,7 +11163,8 @@ body.mb-add-popup-active{overflow:hidden!important;}
     if(!mainInput || !modalInput) return;
 
     mainInput.value = modalInput.value || localTodayKey();
-    updateDateHeading();
+
+    updateDateText();
 
     try{
       if(typeof window.dateChanged === 'function') window.dateChanged();
@@ -11170,6 +11173,7 @@ body.mb-add-popup-active{overflow:hidden!important;}
       try{ mainInput.dispatchEvent(new Event('change', {bubbles:true})); }catch(err){}
     }
 
+    updateDateText();
     closeDateModal();
   }
 
@@ -11183,11 +11187,11 @@ body.mb-add-popup-active{overflow:hidden!important;}
     if(!input.value) input.value = localTodayKey();
 
     input.style.display = 'none';
-    updateDateHeading();
+    updateDateText();
 
-    if(!input.__mbV3DateChange){
-      input.addEventListener('change', updateDateHeading);
-      input.__mbV3DateChange = true;
+    if(!input.__mbV4DateChange){
+      input.addEventListener('change', updateDateText);
+      input.__mbV4DateChange = true;
     }
   }
 
@@ -11206,16 +11210,9 @@ body.mb-add-popup-active{overflow:hidden!important;}
     }
   }, {capture:true, passive:false});
 
-  var oldUpdateDateDisplay = window.updateDateDisplay;
-  if(typeof oldUpdateDateDisplay === 'function' && !window.__mbNavDateV3UpdateWrapped){
-    window.updateDateDisplay = function(){
-      var result;
-      try{ result = oldUpdateDateDisplay.apply(this, arguments); }catch(e){}
-      updateDateHeading();
-      return result;
-    };
-    window.__mbNavDateV3UpdateWrapped = true;
-  }
+  /* Override the app's original updater. This is the key behavior:
+     Today stays "Today" only for the real current date. Otherwise it shows the chosen date. */
+  window.updateDateDisplay = updateDateText;
 
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install);
   else install();
