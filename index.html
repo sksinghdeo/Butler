@@ -9102,5 +9102,144 @@ body.mb-clean-modal-open{
 })();
 </script>
 
+
+
+<!-- MB ADD FOOD PATCH: saved recipes in search, collapsed lists, scan popup -->
+<style id="mb-add-food-scan-popup-and-recipes-patch">
+  #screenScan{display:none!important;}
+  #scanPopupModal{
+    position:fixed;inset:0;z-index:999999;display:none;align-items:center;justify-content:center;
+    padding:16px;background:rgba(2,6,23,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  }
+  #scanPopupModal.active{display:flex!important;}
+  #scanPopupModal .scan-popup-shell{width:100%;max-width:560px;max-height:92dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;}
+  #scanPopupModal .scan-clean-card{margin:0!important;padding-top:64px!important;}
+  .scan-popup-back{
+    position:absolute;right:16px;top:16px;z-index:3;width:auto!important;min-width:82px!important;margin:0!important;
+    padding:10px 14px!important;border-radius:14px!important;font-size:15px!important;
+    background:rgba(15,23,42,.86)!important;color:#bfdbfe!important;border:1px solid rgba(96,165,250,.35)!important;
+    box-shadow:0 0 16px rgba(37,99,235,.22)!important;
+  }
+  .add-title-actions{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;margin-bottom:10px!important;}
+  .add-title-actions h2{margin:0!important;}
+  #openScanPopupBtn{
+    width:auto!important;min-width:58px!important;height:58px!important;margin:0!important;padding:0 16px!important;border-radius:18px!important;
+    display:inline-flex!important;align-items:center!important;justify-content:center!important;
+    background:linear-gradient(135deg,#0072ff,#7c3aed)!important;
+    box-shadow:0 0 20px rgba(37,99,235,.55)!important;
+  }
+  #openScanPopupBtn svg{width:28px;height:28px;stroke:white;fill:none;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 8px rgba(255,255,255,.55));}
+  #favoriteDetails:not([open]) .compact-list,#recentDetails:not([open]) .compact-list{display:none!important;}
+  @media(max-width:430px){#scanPopupModal{padding:10px}.scan-popup-back{right:12px;top:12px}.add-title-actions{gap:8px}#openScanPopupBtn{min-width:54px!important;height:54px!important}}
+</style>
+<script id="mb-add-food-scan-popup-and-recipes-patch-js">
+(function(){
+  function byId(id){return document.getElementById(id)}
+  function norm(v){return String(v||'').trim().toLowerCase().replace(/\s+/g,' ')}
+  function num(v){var n=parseFloat(v);return Number.isFinite(n)?n:0}
+  function r1(v){return Math.round(num(v)*10)/10}
+  var RECIPE_KEYS=['macro_custom_recipes_v3','macro_custom_recipes_v1','customRecipes','macro_custom_recipes'];
+  function readRecipes(){
+    var out=[],seen={};
+    RECIPE_KEYS.forEach(function(k){
+      try{(JSON.parse(localStorage.getItem(k)||'[]')||[]).forEach(function(r){
+        if(!r||!r.name)return;
+        var key=norm(r.name)+'|'+norm(r.serving||'1 recipe');
+        if(seen[key])return; seen[key]=1;
+        out.push({
+          id:'saved_recipe_'+(r.id||key), name:r.name, serving:r.serving||'1 recipe', cat:'Custom Recipe',
+          cal:Math.round(num(r.cal)), c:r1(r.c), p:r1(r.p), f:r1(r.f), source:'custom_recipe', ingredients:r.ingredients||[]
+        });
+      })}catch(e){}
+    });
+    return out;
+  }
+  function mergeSavedRecipesIntoDatabase(){
+    var recipes=readRecipes();
+    if(!recipes.length)return;
+    try{
+      if(typeof foodDatabase!=='undefined' && Array.isArray(foodDatabase)){
+        var seen={};
+        foodDatabase=[].concat(recipes,foodDatabase).filter(function(x){var k=norm(x.name)+'|'+norm(x.serving||''); if(seen[k])return false; seen[k]=1; return true;});
+      }
+    }catch(e){}
+    try{
+      if(Array.isArray(window.foodDatabase)){
+        var seen2={};
+        window.foodDatabase=[].concat(recipes,window.foodDatabase).filter(function(x){var k=norm(x.name)+'|'+norm(x.serving||''); if(seen2[k])return false; seen2[k]=1; return true;});
+      }
+    }catch(e){}
+  }
+  function wrapRenderFoodDatabase(){
+    if(window.__mbRecipesSearchWrapped)return;
+    var old=window.renderFoodDatabase;
+    if(typeof old!=='function')return;
+    window.__mbRecipesSearchWrapped=true;
+    window.renderFoodDatabase=function(){mergeSavedRecipesIntoDatabase();return old.apply(this,arguments)};
+  }
+  function collapseFavRecent(){
+    var f=byId('favoriteDetails'), r=byId('recentDetails');
+    if(f)f.removeAttribute('open');
+    if(r)r.removeAttribute('open');
+  }
+  function ensureAddScanButton(){
+    var h=document.querySelector('#screenAdd .card-green h2');
+    if(!h||byId('openScanPopupBtn'))return;
+    var row=h.closest('.card-title-row')||h.parentElement;
+    if(row)row.classList.add('add-title-actions');
+    var btn=document.createElement('button');
+    btn.id='openScanPopupBtn'; btn.type='button'; btn.setAttribute('aria-label','Open scan popup');
+    btn.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3"/><path d="M16 4h3a1 1 0 0 1 1 1v3"/><path d="M20 16v3a1 1 0 0 1-1 1h-3"/><path d="M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M7 12h10"/><path d="M9 8v8M15 8v8"/></svg>';
+    btn.onclick=function(e){e.preventDefault();window.openScanPopup()};
+    row.appendChild(btn);
+  }
+  function ensureScanPopup(){
+    if(byId('scanPopupModal'))return;
+    var scan=byId('screenScan'); if(!scan)return;
+    var card=scan.querySelector('.card'); if(!card)return;
+    var modal=document.createElement('div'); modal.id='scanPopupModal'; modal.className='scan-popup-modal';
+    modal.innerHTML='<div class="scan-popup-shell"><button class="scan-popup-back" type="button">Back</button></div>';
+    document.body.appendChild(modal);
+    modal.querySelector('.scan-popup-shell').appendChild(card);
+    modal.querySelector('.scan-popup-back').onclick=function(){window.closeScanPopup()};
+    modal.addEventListener('click',function(e){if(e.target===modal)window.closeScanPopup()});
+  }
+  window.openScanPopup=function(){
+    ensureScanPopup();
+    var m=byId('scanPopupModal'); if(m)m.classList.add('active');
+    document.body.style.overflow='hidden';
+  };
+  window.closeScanPopup=function(){
+    var m=byId('scanPopupModal'); if(m)m.classList.remove('active');
+    document.body.style.overflow='';
+    try{ if(typeof stopBarcodeCamera==='function') stopBarcodeCamera(); }catch(e){}
+    try{ if(typeof showScreen==='function') showScreen('Add'); }catch(e){}
+  };
+  function interceptScanTab(){
+    document.querySelectorAll('.tab-btn[data-screen="Scan"]').forEach(function(btn){
+      if(btn.__mbScanIntercept)return; btn.__mbScanIntercept=true;
+      btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();window.openScanPopup();},true);
+    });
+    if(!window.__mbShowScanWrapped && typeof window.showScreen==='function'){
+      var oldShow=window.showScreen; window.__mbShowScanWrapped=true;
+      window.showScreen=function(name){ if(name==='Scan'){window.openScanPopup();return;} return oldShow.apply(this,arguments); };
+    }
+  }
+  function refreshAll(){
+    mergeSavedRecipesIntoDatabase();wrapRenderFoodDatabase();ensureAddScanButton();ensureScanPopup();interceptScanTab();
+    try{if(typeof renderFoodDatabase==='function')renderFoodDatabase()}catch(e){}
+    try{if(typeof renderFavorites==='function')renderFavorites()}catch(e){}
+    try{if(typeof renderRecentFoods==='function')renderRecentFoods()}catch(e){}
+  }
+  document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){collapseFavRecent();refreshAll();},250);setTimeout(refreshAll,1000)});
+  window.addEventListener('storage',refreshAll);
+  var oldSave=window.saveCustomRecipe;
+  if(typeof oldSave==='function'){
+    window.saveCustomRecipe=function(){var res=oldSave.apply(this,arguments);setTimeout(refreshAll,80);return res;};
+  }
+  setTimeout(refreshAll,1500);
+})();
+</script>
+
 </body>
 </html>
