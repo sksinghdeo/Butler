@@ -10374,5 +10374,122 @@ body.mb-v36-ready #screenSettings > .card.card-red:first-child{display:none!impo
 })();
 </script>
 
+
+<!-- MB V37: popup close polish, clickable top nav, Home label, calculator lower -->
+<style id="mb-v37-popup-nav-polish">
+/* Keep the main navigation usable while Add workspace is open */
+body.mb-add-popup-lock .tab-bar,
+body.mb-goal-popup-lock .tab-bar{
+  position:sticky!important;
+  z-index:100050!important;
+  justify-content:center!important;
+}
+.tab-bar{justify-content:center!important;}
+
+/* Add popup should not block taps on the fixed/sticky navigation behind it */
+#screenAdd.mb-add-popup-open{
+  pointer-events:none!important;
+  padding-top:10px!important;
+}
+#screenAdd.mb-add-popup-open > *{
+  pointer-events:auto!important;
+}
+#screenAdd.mb-add-popup-open #mbAddPopupClose{
+  top:10px!important;
+  margin:0 auto 8px!important;
+  padding-right:6px!important;
+}
+#screenAdd.mb-add-popup-open #mbAddPopupClose button{
+  width:44px!important;
+  min-width:44px!important;
+  height:44px!important;
+  padding:0!important;
+  border-radius:16px!important;
+  font-size:0!important;
+  line-height:1!important;
+  background:linear-gradient(145deg,rgba(15,23,42,.92),rgba(2,6,23,.92))!important;
+  border:1px solid rgba(96,165,250,.35)!important;
+  color:#7dd3fc!important;
+  box-shadow:0 0 18px rgba(37,99,235,.24), inset 0 1px 0 rgba(255,255,255,.08)!important;
+}
+#screenAdd.mb-add-popup-open #mbAddPopupClose button::before{
+  content:'×';
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  height:100%;
+  font-size:30px;
+  font-weight:700;
+  color:#7dd3fc;
+  text-shadow:0 0 12px rgba(56,189,248,.75);
+  transform:translateY(-1px);
+}
+
+/* Macro calculator popup starts lower so the close icon is reachable below the status bar */
+#mbGoalPopup{
+  padding-top:62px!important;
+  pointer-events:none!important;
+}
+#mbGoalPopup.active .mb-goal-shell{
+  pointer-events:auto!important;
+}
+#mbGoalPopup .mb-goal-close-row{
+  top:18px!important;
+  padding-right:6px!important;
+}
+#mbGoalPopup .mb-goal-close-row button{
+  width:44px!important;
+  min-width:44px!important;
+  height:44px!important;
+  padding:0!important;
+  border-radius:16px!important;
+  font-size:0!important;
+  background:linear-gradient(145deg,rgba(15,23,42,.92),rgba(2,6,23,.92))!important;
+  border:1px solid rgba(96,165,250,.35)!important;
+  box-shadow:0 0 18px rgba(37,99,235,.24), inset 0 1px 0 rgba(255,255,255,.08)!important;
+}
+#mbGoalPopup .mb-goal-close-row button::before{
+  content:'×';
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  height:100%;
+  font-size:30px;
+  font-weight:700;
+  color:#7dd3fc;
+  text-shadow:0 0 12px rgba(56,189,248,.75);
+  transform:translateY(-1px);
+}
+
+@media(max-width:430px){
+  #mbGoalPopup{padding-top:70px!important;}
+  #screenAdd.mb-add-popup-open #mbAddPopupClose button,
+  #mbGoalPopup .mb-goal-close-row button{width:42px!important;min-width:42px!important;height:42px!important;border-radius:15px!important;}
+}
+</style>
+<script id="mb-v37-popup-nav-polish-js">
+(function(){
+  function renameTodayToHome(){
+    document.querySelectorAll('.tab-btn[data-screen="Today"]').forEach(function(btn){
+      const lbl=btn.querySelector('.nav-label') || btn.querySelector('span:last-child');
+      if(lbl) lbl.textContent='Home';
+      else btn.childNodes.forEach(function(n){ if(n.nodeType===3 && /Today/.test(n.textContent)) n.textContent=n.textContent.replace('Today','Home'); });
+      btn.setAttribute('aria-label','Home');
+    });
+  }
+  function polishCloseButtons(){
+    const addBtn=document.querySelector('#mbAddPopupClose button');
+    if(addBtn){addBtn.textContent='';addBtn.setAttribute('aria-label','Close Add Food');addBtn.title='Close';}
+    const goalBtn=document.querySelector('#mbGoalPopup .mb-goal-close-row button');
+    if(goalBtn){goalBtn.textContent='';goalBtn.setAttribute('aria-label','Close Macro Calculator');goalBtn.title='Close';}
+  }
+  function boot(){renameTodayToHome();polishCloseButtons();setTimeout(renameTodayToHome,300);setTimeout(polishCloseButtons,300);setTimeout(renameTodayToHome,1200);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+  document.addEventListener('click',function(){setTimeout(function(){renameTodayToHome();polishCloseButtons();},30)},true);
+})();
+</script>
+
 </body>
 </html>
