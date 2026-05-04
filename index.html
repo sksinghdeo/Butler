@@ -9837,5 +9837,148 @@ body.mb-clean-modal-open{
 })();
 </script>
 
+
+<!-- MB V28: folder scan placement + history accordions fix -->
+<style id="mb-v28-folder-history-fix-css">
+  /* Scan now lives only in the folder bar, not inside the Add Food card header */
+  #screenAdd > .mb-folder-add #openScanPopupBtn{
+    display:none!important;
+  }
+
+  /* Make the folder bar behave like clean folder tabs */
+  #mbAddFolderBar{
+    scroll-padding-left:8px!important;
+    align-items:center!important;
+  }
+  #mbFolderScanBtn{
+    min-width:72px!important;
+    height:auto!important;
+  }
+  #mbFolderScanBtn span{
+    display:none!important;
+  }
+  #mbFolderScanBtn .mb-scan-folder-icon{
+    width:24px!important;
+    height:24px!important;
+    display:block!important;
+    stroke:#fff!important;
+    fill:none!important;
+    stroke-width:2.7!important;
+    stroke-linecap:round!important;
+    stroke-linejoin:round!important;
+    filter:drop-shadow(0 0 10px rgba(255,255,255,.75));
+  }
+
+  /* Proper History heading spacing */
+  #mbAddHistoryCard h2{
+    display:flex!important;
+    align-items:center!important;
+    gap:12px!important;
+    white-space:normal!important;
+  }
+  #mbAddHistoryCard h2 .bc-icon{
+    margin-right:0!important;
+    flex:0 0 auto!important;
+  }
+  #mbAddHistoryCard h2 .mb-history-title-text{
+    display:inline-block!important;
+    line-height:1.05!important;
+  }
+
+  /* History accordion rows must stay tappable and visually separated */
+  #mbAddHistoryCard .compact-details{
+    display:block!important;
+    margin:12px 0!important;
+    overflow:hidden!important;
+  }
+  #mbAddHistoryCard .compact-details summary{
+    cursor:pointer!important;
+    user-select:none!important;
+    -webkit-user-select:none!important;
+    touch-action:manipulation!important;
+  }
+  #mbAddHistoryCard .compact-details[open] .compact-list{
+    display:block!important;
+  }
+  #mbAddHistoryCard .compact-details:not([open]) .compact-list{
+    display:none!important;
+  }
+  @media(max-width:430px){
+    #mbFolderScanBtn{min-width:58px!important;}
+    #mbFolderScanBtn .mb-scan-folder-icon{width:22px!important;height:22px!important;}
+  }
+</style>
+<script id="mb-v28-folder-history-fix-js">
+(function(){
+  function q(id){return document.getElementById(id)}
+  var historyOpenState={favoriteDetails:false,recentDetails:false,savedRecipeDetails:false,savedMealDetails:false};
+  var initialized=false;
+  var ids=Object.keys(historyOpenState);
+  function scanSvg(){return '<svg class="mb-scan-folder-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3"/><path d="M16 4h3a1 1 0 0 1 1 1v3"/><path d="M20 16v3a1 1 0 0 1-1 1h-3"/><path d="M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M7 12h10"/><path d="M9 8v8"/><path d="M15 8v8"/></svg>';}
+  function beautifyFolderBar(){
+    var scan=q('mbFolderScanBtn');
+    if(scan && !scan.querySelector('.mb-scan-folder-icon')) scan.innerHTML=scanSvg();
+    var bar=q('mbAddFolderBar');
+    if(bar){
+      bar.querySelectorAll('.mb-folder-tab').forEach(function(btn){
+        btn.addEventListener('click',function(){setTimeout(function(){try{btn.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});}catch(e){}},60);},{once:false});
+      });
+      var active=bar.querySelector('.mb-folder-tab.active');
+      if(active){try{active.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});}catch(e){}}
+    }
+  }
+  function fixHistoryHeading(){
+    var h=document.querySelector('#mbAddHistoryCard h2');
+    if(h && !h.querySelector('.mb-history-title-text')){
+      var icon=h.querySelector('.bc-icon');
+      h.innerHTML='';
+      if(icon)h.appendChild(icon);else h.insertAdjacentHTML('beforeend','<span class="bc-icon">▤</span>');
+      var t=document.createElement('span'); t.className='mb-history-title-text'; t.textContent='History'; h.appendChild(t);
+    }
+  }
+  function captureState(){
+    ids.forEach(function(id){var el=q(id); if(el)historyOpenState[id]=el.hasAttribute('open');});
+    initialized=true;
+  }
+  function applyState(){
+    ids.forEach(function(id){var el=q(id); if(!el)return; if(historyOpenState[id])el.setAttribute('open',''); else el.removeAttribute('open');});
+  }
+  function wireHistoryDetails(){
+    ids.forEach(function(id){
+      var el=q(id); if(!el || el.__mbV28Wired)return;
+      el.__mbV28Wired=true;
+      if(!initialized) historyOpenState[id]=el.hasAttribute('open');
+      var summary=el.querySelector('summary');
+      if(summary){
+        summary.addEventListener('click',function(e){
+          /* The old folder script closes these after every click. Restore the user's intended state after it runs. */
+          var willOpen=!el.hasAttribute('open');
+          historyOpenState[id]=willOpen;
+          setTimeout(function(){historyOpenState[id]=willOpen; applyState();},120);
+          setTimeout(function(){historyOpenState[id]=willOpen; applyState();},260);
+        },true);
+      }
+    });
+    if(!initialized) captureState();
+  }
+  function fix(){
+    beautifyFolderBar();
+    fixHistoryHeading();
+    wireHistoryDetails();
+    applyState();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(fix,250);setTimeout(fix,900);setTimeout(fix,1800);});
+  else{setTimeout(fix,120);setTimeout(fix,700);setTimeout(fix,1600)}
+  document.addEventListener('click',function(e){
+    var s=e.target.closest && e.target.closest('#mbAddHistoryCard .compact-details summary');
+    if(s){
+      var d=s.closest('details');
+      if(d && d.id && historyOpenState.hasOwnProperty(d.id)) historyOpenState[d.id]=!d.hasAttribute('open');
+    }
+    setTimeout(fix,180);
+  },true);
+})();
+</script>
+
 </body>
 </html>
