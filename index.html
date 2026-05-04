@@ -10927,448 +10927,136 @@ body.mb-add-popup-active{overflow:hidden!important;}
 
 
 <!-- MB V53: Add pages start before rings + fixed Add top bar + fixed scaling -->
-<style id="mb-v53-add-pages-final-layout">
-/* Final Add workspace geometry */
+<!-- MB V54: exact start under daily progress card + right-safe add pages -->
+
+
+<!-- MB V55: compact Add sheet, fixed scale, reduced top overlap region -->
+<style id="mb-v55-compact-add-sheet">
+/* Add sheet starts exactly at the bottom of the daily-progress card */
 #screenAdd.mb-add-popup-open{
   position:fixed!important;
   left:0!important;
   right:0!important;
   bottom:0!important;
-  top:var(--mb-add-v53-top, 430px)!important;
+  top:var(--mb-add-v55-top, 420px)!important;
   z-index:99980!important;
   display:block!important;
   width:100vw!important;
   max-width:100vw!important;
   margin:0!important;
-  padding:0 8px calc(env(safe-area-inset-bottom,0px) + 36px)!important;
+  padding:0 12px calc(env(safe-area-inset-bottom,0px) + 36px)!important;
   overflow-y:auto!important;
   overflow-x:hidden!important;
   -webkit-overflow-scrolling:touch!important;
   overscroll-behavior:contain!important;
-  background:
-    radial-gradient(circle at 25% 0%,rgba(37,99,235,.20),transparent 32%),
-    linear-gradient(180deg,#06142b 0%,#031024 46%,#020617 100%)!important;
-  border-top:1px solid rgba(56,189,248,.32)!important;
-  box-shadow:0 -14px 34px rgba(0,0,0,.50)!important;
+  background:linear-gradient(180deg,#06142b 0%,#031024 48%,#020617 100%)!important;
+  border-top:1px solid rgba(56,189,248,.38)!important;
+  box-shadow:0 -10px 30px rgba(0,0,0,.45)!important;
   backdrop-filter:none!important;
   -webkit-backdrop-filter:none!important;
 }
 
-/* kill all previous pseudo overlays/seams */
 #screenAdd.mb-add-popup-open::before,
 #screenAdd.mb-add-popup-open::after{
   content:none!important;
   display:none!important;
 }
 
-/* safe width for all Add pages */
+/* Keep everything a little narrower so the right side does not clip */
 #screenAdd.mb-add-popup-open > *,
 #screenAdd.mb-add-popup-open #mbAddFolderBar,
 #screenAdd.mb-add-popup-open .card{
-  width:min(560px, calc(100vw - 16px))!important;
-  max-width:min(560px, calc(100vw - 16px))!important;
+  width:min(536px, calc(100vw - 28px))!important;
+  max-width:min(536px, calc(100vw - 28px))!important;
   margin-left:auto!important;
   margin-right:auto!important;
   box-sizing:border-box!important;
 }
 
-/* Top folder bar: clean, centered, same scale as page */
+/* Compact top folder bar */
 #screenAdd.mb-add-popup-open #mbAddFolderBar{
   position:sticky!important;
   top:0!important;
   z-index:99991!important;
-  height:auto!important;
-  min-height:58px!important;
-  margin:0 auto 14px!important;
-  padding:8px!important;
+  margin:0 auto 10px!important;
+  padding:6px!important;
+  min-height:50px!important;
   display:flex!important;
   align-items:center!important;
-  gap:8px!important;
+  gap:7px!important;
   overflow-x:auto!important;
   overflow-y:hidden!important;
   scrollbar-width:none!important;
-  border-radius:0 0 24px 24px!important;
+  border-radius:0 0 22px 22px!important;
   background:linear-gradient(145deg,rgba(4,14,32,.99),rgba(8,22,49,.99))!important;
   border:1px solid rgba(59,130,246,.38)!important;
   border-top:0!important;
-  box-shadow:0 14px 32px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.06)!important;
+  box-shadow:0 10px 24px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.06)!important;
 }
 #screenAdd.mb-add-popup-open #mbAddFolderBar::-webkit-scrollbar{display:none!important;}
 
 #screenAdd.mb-add-popup-open #mbAddFolderBar .mb-folder-tab,
 #screenAdd.mb-add-popup-open #mbAddFolderBar .mb-folder-scan{
   flex:0 0 auto!important;
-  height:42px!important;
-  min-height:42px!important;
+  height:38px!important;
+  min-height:38px!important;
   margin:0!important;
-  padding:0 14px!important;
-  border-radius:16px!important;
+  padding:0 12px!important;
+  border-radius:14px!important;
   display:inline-flex!important;
   align-items:center!important;
   justify-content:center!important;
   white-space:nowrap!important;
   line-height:1!important;
-  font-size:15px!important;
+  font-size:14px!important;
 }
 
-/* X button in line with folder bar */
 #screenAdd.mb-add-popup-open #mbAddFolderCloseBtn{
   position:sticky!important;
   right:0!important;
   top:auto!important;
-  margin:0 0 0 6px!important;
-  flex:0 0 42px!important;
-  width:42px!important;
-  min-width:42px!important;
-  max-width:42px!important;
-  height:42px!important;
-  min-height:42px!important;
+  margin:0 0 0 4px!important;
+  flex:0 0 38px!important;
+  width:38px!important;
+  min-width:38px!important;
+  max-width:38px!important;
+  height:38px!important;
+  min-height:38px!important;
   padding:0!important;
-  border-radius:16px!important;
-  z-index:40!important;
-  display:inline-flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  background:linear-gradient(145deg,rgba(15,23,42,.98),rgba(2,6,23,.96))!important;
-  border:1px solid rgba(125,211,252,.42)!important;
-  box-shadow:0 0 16px rgba(56,189,248,.34), inset 0 1px 0 rgba(255,255,255,.10)!important;
+  border-radius:14px!important;
+  z-index:50!important;
 }
 
-/* Cards: start under top bar, properly scaled */
+/* Card scaling */
 #screenAdd.mb-add-popup-open .card{
-  margin:0 auto 20px!important;
-  padding:20px!important;
-  border-radius:28px!important;
+  margin:0 auto 18px!important;
+  padding:18px!important;
+  border-radius:26px!important;
   overflow:hidden!important;
-  position:relative!important;
 }
 
-/* On the recipe/meal pages the heading should not collide with the folder bar */
+/* Reduce heading size slightly inside Add pages */
 #screenAdd.mb-add-popup-open .card h2{
+  font-size:34px!important;
+  line-height:1.1!important;
   margin-top:0!important;
-  line-height:1.12!important;
+  margin-bottom:14px!important;
 }
 
-/* All two-column rows fit the card */
+/* Fix all right-side overflow */
 #screenAdd.mb-add-popup-open .row{
   display:grid!important;
   grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
-  gap:12px!important;
-  width:100%!important;
-  max-width:100%!important;
-  box-sizing:border-box!important;
-}
-
-/* Search + plus rows fit the card */
-#screenAdd.mb-add-popup-open .db-search-plus-row,
-#screenAdd.mb-add-popup-open .meal-builder-search-row{
-  display:grid!important;
-  grid-template-columns:minmax(0,1fr) 62px!important;
-  gap:8px!important;
-  width:100%!important;
-  max-width:100%!important;
-  box-sizing:border-box!important;
-  align-items:stretch!important;
-}
-
-#screenAdd.mb-add-popup-open .add-custom-plus-btn,
-#screenAdd.mb-add-popup-open .meal-builder-search-row button,
-#screenAdd.mb-add-popup-open #openCustomFoodBtn{
-  width:62px!important;
-  min-width:62px!important;
-  max-width:62px!important;
-  margin:0!important;
-}
-
-/* Inputs never overflow */
-#screenAdd.mb-add-popup-open input,
-#screenAdd.mb-add-popup-open textarea,
-#screenAdd.mb-add-popup-open select{
-  min-width:0!important;
-  max-width:100%!important;
-  box-sizing:border-box!important;
-}
-
-/* horizontal pill rows stay scrollable, not clipped */
-#screenAdd.mb-add-popup-open .pill-row{
-  max-width:100%!important;
-  overflow-x:auto!important;
-  overflow-y:hidden!important;
-  -webkit-overflow-scrolling:touch!important;
-}
-
-/* result rows and buttons fit inside card */
-#screenAdd.mb-add-popup-open .saved-food{
-  display:grid!important;
-  grid-template-columns:minmax(0,1fr) auto!important;
   gap:10px!important;
   width:100%!important;
   max-width:100%!important;
   box-sizing:border-box!important;
 }
-#screenAdd.mb-add-popup-open .saved-food > div:first-child,
-#screenAdd.mb-add-popup-open .food-row-left{
-  min-width:0!important;
-  max-width:100%!important;
-}
-#screenAdd.mb-add-popup-open .small-btn{
-  width:auto!important;
-  min-width:82px!important;
-  max-width:96px!important;
-  padding-left:10px!important;
-  padding-right:10px!important;
-}
-#screenAdd.mb-add-popup-open .star-btn{
-  width:50px!important;
-  min-width:50px!important;
-  max-width:50px!important;
-  flex:0 0 50px!important;
-}
 
-/* hide old floating close row */
-#screenAdd.mb-add-popup-open #mbAddPopupClose,
-#screenAdd.mb-add-popup-open .mb-add-close-row,
-#screenAdd.mb-add-popup-open .floating-add-close{
-  display:none!important;
-}
-
-body.mb-add-popup-lock,
-body.mb-add-popup-active{overflow:hidden!important;}
-
-@media(max-width:430px){
-  #screenAdd.mb-add-popup-open{
-    padding-left:8px!important;
-    padding-right:8px!important;
-  }
-
-  #screenAdd.mb-add-popup-open > *,
-  #screenAdd.mb-add-popup-open #mbAddFolderBar,
-  #screenAdd.mb-add-popup-open .card{
-    width:calc(100vw - 16px)!important;
-    max-width:calc(100vw - 16px)!important;
-  }
-
-  #screenAdd.mb-add-popup-open .card{
-    padding:18px!important;
-  }
-
-  #screenAdd.mb-add-popup-open #mbAddFolderBar .mb-folder-tab,
-  #screenAdd.mb-add-popup-open #mbAddFolderBar .mb-folder-scan{
-    height:40px!important;
-    min-height:40px!important;
-    padding:0 12px!important;
-    font-size:14px!important;
-  }
-
-  #screenAdd.mb-add-popup-open #mbAddFolderCloseBtn{
-    flex-basis:40px!important;
-    width:40px!important;
-    min-width:40px!important;
-    max-width:40px!important;
-    height:40px!important;
-  }
-
-  #screenAdd.mb-add-popup-open .row{
-    gap:10px!important;
-  }
-
-  #screenAdd.mb-add-popup-open .db-search-plus-row,
-  #screenAdd.mb-add-popup-open .meal-builder-search-row{
-    grid-template-columns:minmax(0,1fr) 58px!important;
-  }
-
-  #screenAdd.mb-add-popup-open .add-custom-plus-btn,
-  #screenAdd.mb-add-popup-open .meal-builder-search-row button,
-  #screenAdd.mb-add-popup-open #openCustomFoodBtn{
-    width:58px!important;
-    min-width:58px!important;
-    max-width:58px!important;
-  }
-}
-</style>
-
-<script id="mb-v53-add-pages-final-layout-js">
-(function(){
-  function setAddTopBeforeRings(){
-    var grid=document.querySelector('#screenToday .progress-grid');
-    var top=0;
-
-    if(grid){
-      var r=grid.getBoundingClientRect();
-      top=Math.ceil(r.top - 6);
-    }
-
-    if(top < 240){
-      var stats=document.querySelector('#screenToday .hero-stats');
-      if(stats) top=Math.ceil(stats.getBoundingClientRect().bottom + 2);
-    }
-
-    if(top < 240) top=430;
-
-    document.documentElement.style.setProperty('--mb-add-v53-top', top + 'px');
-    document.documentElement.style.setProperty('--mb-add-top', top + 'px');
-    document.documentElement.style.setProperty('--mb-add-sheet-start-v51', top + 'px');
-    document.documentElement.style.setProperty('--mb-add-sheet-start', top + 'px');
-    document.documentElement.style.setProperty('--mb-add-modal-top', top + 'px');
-    document.documentElement.style.setProperty('--mb-add-clean-top', top + 'px');
-    document.documentElement.style.setProperty('--mb-add-popup-top', top + 'px');
-  }
-
-  function ensureClose(){
-    var bar=document.getElementById('mbAddFolderBar');
-    if(!bar) return;
-    var btn=document.getElementById('mbAddFolderCloseBtn');
-    if(!btn){
-      btn=document.createElement('button');
-      btn.type='button';
-      btn.id='mbAddFolderCloseBtn';
-      btn.setAttribute('aria-label','Close Add Food');
-      btn.addEventListener('click',function(e){
-        e.preventDefault();
-        e.stopPropagation();
-        if(typeof window.closeAddWorkspacePopup==='function') window.closeAddWorkspacePopup();
-      });
-      bar.appendChild(btn);
-    }
-  }
-
-  function normalize(){
-    setAddTopBeforeRings();
-    ensureClose();
-    var add=document.getElementById('screenAdd');
-    if(add && add.classList.contains('mb-add-popup-open')){
-      add.scrollLeft=0;
-      if(add.scrollTop<4) add.scrollTop=0;
-    }
-  }
-
-  var oldOpen=window.openAddWorkspacePopup;
-  if(typeof oldOpen==='function' && !window.__mbV53OpenWrapped){
-    window.openAddWorkspacePopup=function(){
-      setAddTopBeforeRings();
-      ensureClose();
-      var res=oldOpen.apply(this,arguments);
-      document.body.classList.add('mb-add-popup-lock','mb-add-popup-active');
-      setTimeout(normalize,30);
-      setTimeout(normalize,160);
-      setTimeout(normalize,500);
-      return res;
-    };
-    window.__mbV53OpenWrapped=true;
-  }
-
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',normalize);
-  else normalize();
-
-  window.addEventListener('resize',setAddTopBeforeRings);
-  window.addEventListener('orientationchange',function(){setTimeout(setAddTopBeforeRings,300)});
-})();
-</script>
-
-
-
-<!-- MB V54: exact start under daily progress card + right-safe add pages -->
-<style id="mb-v54-exact-start-right-safe">
-/* Add sheet starts at the bottom of the daily-progress blue panel, covering the rings. */
-#screenAdd.mb-add-popup-open{
-  top:var(--mb-add-v54-top, 430px)!important;
-  left:0!important;
-  right:0!important;
-  bottom:0!important;
-  width:100vw!important;
-  max-width:100vw!important;
-  padding:0 12px calc(env(safe-area-inset-bottom,0px) + 42px)!important;
-  overflow-y:auto!important;
-  overflow-x:hidden!important;
-  background:
-    linear-gradient(180deg,#06142b 0%,#031024 46%,#020617 100%)!important;
-  border-top:1px solid rgba(56,189,248,.34)!important;
-  box-shadow:0 -14px 34px rgba(0,0,0,.50)!important;
-}
-
-/* no previous seam layers */
-#screenAdd.mb-add-popup-open::before,
-#screenAdd.mb-add-popup-open::after{
-  content:none!important;
-  display:none!important;
-}
-
-/* safer centered inner container */
-#screenAdd.mb-add-popup-open > *,
-#screenAdd.mb-add-popup-open #mbAddFolderBar,
-#screenAdd.mb-add-popup-open .card{
-  width:100%!important;
-  max-width:540px!important;
-  margin-left:auto!important;
-  margin-right:auto!important;
-  box-sizing:border-box!important;
-}
-
-/* top tab row is aligned, not clipped */
-#screenAdd.mb-add-popup-open #mbAddFolderBar{
-  position:sticky!important;
-  top:0!important;
-  z-index:99991!important;
-  margin:0 auto 14px!important;
-  padding:8px!important;
-  display:flex!important;
-  align-items:center!important;
-  gap:8px!important;
-  overflow-x:auto!important;
-  overflow-y:hidden!important;
-  scrollbar-width:none!important;
-  border-radius:0 0 24px 24px!important;
-  background:linear-gradient(145deg,rgba(4,14,32,.99),rgba(8,22,49,.99))!important;
-  border:1px solid rgba(59,130,246,.38)!important;
-  border-top:0!important;
-  box-shadow:0 14px 32px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.06)!important;
-}
-#screenAdd.mb-add-popup-open #mbAddFolderBar::-webkit-scrollbar{display:none!important;}
-
-#screenAdd.mb-add-popup-open #mbAddFolderBar .mb-folder-tab,
-#screenAdd.mb-add-popup-open #mbAddFolderBar .mb-folder-scan{
-  flex:0 0 auto!important;
-  height:42px!important;
-  min-height:42px!important;
-  margin:0!important;
-  padding:0 14px!important;
-  border-radius:16px!important;
-  display:inline-flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  white-space:nowrap!important;
-  line-height:1!important;
-  font-size:15px!important;
-}
-
-/* X button stays inside the row on the right */
-#screenAdd.mb-add-popup-open #mbAddFolderCloseBtn{
-  position:sticky!important;
-  right:0!important;
-  margin:0 0 0 6px!important;
-  flex:0 0 40px!important;
-  width:40px!important;
-  min-width:40px!important;
-  max-width:40px!important;
-  height:40px!important;
-  min-height:40px!important;
-  border-radius:15px!important;
-  z-index:50!important;
-}
-
-/* card content no right clipping */
-#screenAdd.mb-add-popup-open .card{
-  margin:0 auto 20px!important;
-  padding:18px!important;
-  border-radius:28px!important;
-  overflow:hidden!important;
-}
-
-/* tighter rows to keep buttons inside */
 #screenAdd.mb-add-popup-open .db-search-plus-row,
 #screenAdd.mb-add-popup-open .meal-builder-search-row{
   display:grid!important;
-  grid-template-columns:minmax(0,1fr) 58px!important;
+  grid-template-columns:minmax(0,1fr) 56px!important;
   gap:8px!important;
   width:100%!important;
   max-width:100%!important;
@@ -11379,34 +11067,18 @@ body.mb-add-popup-active{overflow:hidden!important;}
 #screenAdd.mb-add-popup-open .add-custom-plus-btn,
 #screenAdd.mb-add-popup-open .meal-builder-search-row button,
 #screenAdd.mb-add-popup-open #openCustomFoodBtn{
-  width:58px!important;
-  min-width:58px!important;
-  max-width:58px!important;
+  width:56px!important;
+  min-width:56px!important;
+  max-width:56px!important;
   margin:0!important;
-}
-
-#screenAdd.mb-add-popup-open .saved-food{
-  grid-template-columns:minmax(0,1fr) auto!important;
-  gap:8px!important;
-  max-width:100%!important;
-  box-sizing:border-box!important;
-}
-#screenAdd.mb-add-popup-open .small-btn{
-  min-width:76px!important;
-  max-width:90px!important;
-  padding-left:8px!important;
-  padding-right:8px!important;
-}
-#screenAdd.mb-add-popup-open .star-btn{
-  width:48px!important;
-  min-width:48px!important;
-  max-width:48px!important;
-  flex-basis:48px!important;
+  padding-left:0!important;
+  padding-right:0!important;
 }
 
 #screenAdd.mb-add-popup-open input,
 #screenAdd.mb-add-popup-open select,
 #screenAdd.mb-add-popup-open textarea,
+#screenAdd.mb-add-popup-open .pill-row,
 #screenAdd.mb-add-popup-open .compact-details,
 #screenAdd.mb-add-popup-open .search-scroll-box,
 #screenAdd.mb-add-popup-open .mini-result-list{
@@ -11415,34 +11087,80 @@ body.mb-add-popup-active{overflow:hidden!important;}
   box-sizing:border-box!important;
 }
 
+/* Result rows: smaller buttons so they fit cleanly */
+#screenAdd.mb-add-popup-open .saved-food{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:8px!important;
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+
+#screenAdd.mb-add-popup-open .small-btn{
+  width:auto!important;
+  min-width:74px!important;
+  max-width:88px!important;
+  padding:12px 8px!important;
+  font-size:15px!important;
+}
+
+#screenAdd.mb-add-popup-open .star-btn{
+  width:46px!important;
+  min-width:46px!important;
+  max-width:46px!important;
+  flex:0 0 46px!important;
+}
+
+/* Hide older floating close */
+#screenAdd.mb-add-popup-open #mbAddPopupClose,
+#screenAdd.mb-add-popup-open .mb-add-close-row,
+#screenAdd.mb-add-popup-open .floating-add-close{
+  display:none!important;
+}
+
 @media(max-width:430px){
   #screenAdd.mb-add-popup-open{
     padding-left:10px!important;
     padding-right:10px!important;
   }
+
   #screenAdd.mb-add-popup-open > *,
   #screenAdd.mb-add-popup-open #mbAddFolderBar,
   #screenAdd.mb-add-popup-open .card{
-    max-width:calc(100vw - 20px)!important;
+    width:calc(100vw - 24px)!important;
+    max-width:calc(100vw - 24px)!important;
+  }
+
+  #screenAdd.mb-add-popup-open .card{
+    padding:16px!important;
+  }
+
+  #screenAdd.mb-add-popup-open .card h2{
+    font-size:31px!important;
   }
 }
 </style>
 
-<script id="mb-v54-exact-start-right-safe-js">
+<script id="mb-v55-compact-add-sheet-js">
 (function(){
-  function setV54Top(){
+  function setV55Top(){
     var stats=document.querySelector('#screenToday .hero-stats');
     var top=0;
+
     if(stats){
       var r=stats.getBoundingClientRect();
       top=Math.ceil(r.bottom + 1);
     }
+
     if(top < 240){
       var nav=document.querySelector('.tab-bar');
-      if(nav) top=Math.ceil(nav.getBoundingClientRect().bottom + 18);
+      if(nav) top=Math.ceil(nav.getBoundingClientRect().bottom + 16);
     }
-    if(top < 240) top=410;
 
+    if(top < 240) top=420;
+
+    document.documentElement.style.setProperty('--mb-add-v55-top', top+'px');
     document.documentElement.style.setProperty('--mb-add-v54-top', top+'px');
     document.documentElement.style.setProperty('--mb-add-v53-top', top+'px');
     document.documentElement.style.setProperty('--mb-add-top', top+'px');
@@ -11450,27 +11168,33 @@ body.mb-add-popup-active{overflow:hidden!important;}
     document.documentElement.style.setProperty('--mb-add-sheet-start', top+'px');
   }
 
-  var oldOpen=window.openAddWorkspacePopup;
-  if(typeof oldOpen==='function' && !window.__mbV54OpenWrapped){
-    window.openAddWorkspacePopup=function(){
-      setV54Top();
-      var res=oldOpen.apply(this,arguments);
-      setTimeout(function(){
-        setV54Top();
-        var add=document.getElementById('screenAdd');
-        if(add){add.scrollLeft=0; if(add.scrollTop<4)add.scrollTop=0;}
-      },40);
-      setTimeout(setV54Top,250);
-      return res;
-    };
-    window.__mbV54OpenWrapped=true;
+  function normalize(){
+    setV55Top();
+    var add=document.getElementById('screenAdd');
+    if(add && add.classList.contains('mb-add-popup-open')){
+      add.scrollLeft=0;
+      if(add.scrollTop < 4) add.scrollTop=0;
+    }
   }
 
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',setV54Top);
-  else setV54Top();
+  var oldOpen=window.openAddWorkspacePopup;
+  if(typeof oldOpen==='function' && !window.__mbV55OpenWrapped){
+    window.openAddWorkspacePopup=function(){
+      setV55Top();
+      var res=oldOpen.apply(this,arguments);
+      setTimeout(normalize,30);
+      setTimeout(normalize,180);
+      setTimeout(normalize,500);
+      return res;
+    };
+    window.__mbV55OpenWrapped=true;
+  }
 
-  window.addEventListener('resize',setV54Top);
-  window.addEventListener('orientationchange',function(){setTimeout(setV54Top,300)});
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',setV55Top);
+  else setV55Top();
+
+  window.addEventListener('resize',setV55Top);
+  window.addEventListener('orientationchange',function(){setTimeout(setV55Top,300)});
 })();
 </script>
 
