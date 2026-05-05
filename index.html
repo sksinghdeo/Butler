@@ -1503,6 +1503,29 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
 }
 </style>
 
+
+<style id="mb-final-logo-footer-cleanup">
+/* Final cleanup: remove visible rectangle around logo image and hide creator footer on home */
+.macro-butler-hero,
+.hero.bc-hero.macro-butler-hero{
+  background:transparent!important;
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+.macro-butler-hero img{
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+}
+#screenToday .creator-footer,
+.creator-footer.today-footer,
+.creator-footer.global-footer{
+  display:none!important;
+}
+</style>
+
 </head>
 
 <body>
@@ -1544,7 +1567,6 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
     </div>
     <button class="purple" onclick="showScreen('Settings')">Edit Goals</button>
   </div>
-  <div class="creator-footer today-footer">Created by Shashank Singh Deo</div>
 </section>
 
 <section id="screenAdd" class="screen">
@@ -1818,7 +1840,6 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
   </div>
 </div>
 
-<div class="creator-footer global-footer">Created by Shashank Singh Deo</div>
 </div>
 
 <script>
