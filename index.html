@@ -11165,7 +11165,7 @@ body.mb-add-popup-active{overflow:hidden!important;}
     if(!v || v === todayKey()) return 'Today';
     try{
       return new Date(v + 'T00:00:00').toLocaleDateString('en-US', {
-        month:'long',
+        month:'short',
         day:'numeric',
         year:'numeric'
       });
@@ -12497,38 +12497,36 @@ body.mb-add-popup-lock #screenAdd > .card,
 
 
 
-<!-- MB V95: short month date label + clean sliding X in Add folder bar -->
-<style id="mb-v95-short-date-sliding-x">
-/* Date: use compact scale for abbreviated months */
+<!-- MB V96: direct function-level final fixes for short date and right-pinned X -->
+<style id="mb-v96-final-date-x">
 #todayDateHeading #dateDisplay,
 #todayDateHeading .today-date-label-v83,
 #todayDateHeading .today-date-label-v80,
 #todayDateHeading .today-date-label-v79{
-  font-size:clamp(26px, 7vw, 34px)!important;
-  letter-spacing:-0.5px!important;
-  padding:0 14px!important;
+  font-size:clamp(25px,6.7vw,33px)!important;
+  letter-spacing:-0.7px!important;
+  padding-left:14px!important;
+  padding-right:14px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
 }
 
-/* Folder bar: tabs slide horizontally, X stays at right edge */
+/* Reserve right-side space and let folder tabs scroll under fixed X */
 #screenAdd.mb-add-popup-open #mbAddFolderBar{
   position:relative!important;
-  display:flex!important;
-  align-items:center!important;
+  padding-right:66px!important;
   overflow-x:auto!important;
   overflow-y:hidden!important;
-  padding-right:64px!important;
   scrollbar-width:none!important;
 }
-#screenAdd.mb-add-popup-open #mbAddFolderBar::-webkit-scrollbar{
-  display:none!important;
-}
+#screenAdd.mb-add-popup-open #mbAddFolderBar::-webkit-scrollbar{display:none!important;}
 
 #screenAdd.mb-add-popup-open #mbAddFolderCloseBtn{
   position:absolute!important;
   top:8px!important;
   right:8px!important;
-  z-index:120!important;
-  flex:none!important;
+  z-index:99999!important;
   width:46px!important;
   min-width:46px!important;
   max-width:46px!important;
@@ -12536,22 +12534,20 @@ body.mb-add-popup-lock #screenAdd > .card,
   min-height:46px!important;
   margin:0!important;
   padding:0!important;
+  flex:none!important;
   border-radius:17px!important;
   display:flex!important;
   align-items:center!important;
   justify-content:center!important;
-  background:
-    radial-gradient(circle at 35% 25%,rgba(125,211,252,.30),transparent 36%),
-    linear-gradient(145deg,#10203a,#020617)!important;
-  border:1px solid rgba(125,211,252,.48)!important;
-  box-shadow:
-    -16px 0 18px rgba(3,7,18,.82),
-    0 0 18px rgba(56,189,248,.35),
-    inset 0 1px 0 rgba(255,255,255,.10)!important;
   color:transparent!important;
   font-size:0!important;
   line-height:0!important;
   overflow:hidden!important;
+  background:
+    radial-gradient(circle at 35% 25%,rgba(125,211,252,.30),transparent 36%),
+    linear-gradient(145deg,#10203a,#020617)!important;
+  border:1px solid rgba(125,211,252,.48)!important;
+  box-shadow:-16px 0 18px rgba(3,7,18,.82),0 0 18px rgba(56,189,248,.35),inset 0 1px 0 rgba(255,255,255,.10)!important;
 }
 #screenAdd.mb-add-popup-open #mbAddFolderCloseBtn::after{
   content:none!important;
@@ -12559,16 +12555,16 @@ body.mb-add-popup-lock #screenAdd > .card,
 }
 #screenAdd.mb-add-popup-open #mbAddFolderCloseBtn::before{
   content:""!important;
+  display:block!important;
   width:23px!important;
   height:23px!important;
-  display:block!important;
   background:no-repeat center/23px 23px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237dd3fc' stroke-width='3.2' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E")!important;
   filter:drop-shadow(0 0 7px rgba(56,189,248,.8))!important;
   transform:none!important;
 }
 </style>
 
-<script id="mb-v95-short-date-sliding-x-js">
+<script id="mb-v96-final-date-x-js">
 (function(){
   function todayKey(){
     var d=new Date();
@@ -12588,37 +12584,32 @@ body.mb-add-popup-lock #screenAdd > .card,
     }
   }
 
-  function currentDateValue(){
+  function getDateValue(){
     var input=document.getElementById('date');
     if(input && input.value) return input.value;
-    try{
-      return localStorage.getItem('mb_selected_date_v83') ||
-             localStorage.getItem('mb_selected_date_v80') ||
-             localStorage.getItem('mb_selected_date_v79') ||
-             todayKey();
-    }catch(e){
-      return todayKey();
+    var keys=['mb_selected_date_v83','mb_selected_date_v80','mb_selected_date_v79','mb_selected_date_v95'];
+    for(var i=0;i<keys.length;i++){
+      try{
+        var v=localStorage.getItem(keys[i]);
+        if(v) return v;
+      }catch(e){}
     }
+    return todayKey();
   }
 
-  function applyShortDate(){
+  function forceShortDate(){
     var label=document.getElementById('dateDisplay');
-    if(label) label.textContent=shortLabel(currentDateValue());
-  }
-
-  function bindDate(){
     var input=document.getElementById('date');
-    if(input && !input.__mbV95Bound){
-      input.addEventListener('input',function(){setTimeout(applyShortDate,0)});
-      input.addEventListener('change',function(){setTimeout(applyShortDate,0); setTimeout(applyShortDate,150)});
-      input.__mbV95Bound=true;
-    }
-    applyShortDate();
+    var value=getDateValue();
+
+    if(label) label.textContent=shortLabel(value);
+    if(input && input.value!==value) input.value=value;
   }
 
-  function ensureSlidingX(){
+  function forceX(){
     var bar=document.getElementById('mbAddFolderBar');
     if(!bar) return;
+
     var btn=document.getElementById('mbAddFolderCloseBtn');
     if(!btn){
       btn=document.createElement('button');
@@ -12631,36 +12622,58 @@ body.mb-add-popup-lock #screenAdd > .card,
         if(typeof window.closeAddWorkspacePopup==='function') window.closeAddWorkspacePopup();
       });
     }
-    if(btn.parentElement!==bar) bar.appendChild(btn);
+
+    if(btn.parentNode!==bar) bar.appendChild(btn);
     btn.textContent='';
+    btn.innerHTML='';
+
+    // make sure it is the last child so absolute positioning is predictable
+    if(bar.lastElementChild!==btn) bar.appendChild(btn);
   }
 
+  // Patch the global update function itself if present
+  window.updateDateDisplay = function(){
+    forceShortDate();
+  };
+
   var oldOpen=window.openAddWorkspacePopup;
-  if(typeof oldOpen==='function' && !window.__mbV95OpenWrapped){
+  if(typeof oldOpen==='function' && !window.__mbV96OpenWrapped){
     window.openAddWorkspacePopup=function(){
       var result=oldOpen.apply(this,arguments);
-      setTimeout(ensureSlidingX,20);
-      setTimeout(ensureSlidingX,150);
-      setTimeout(ensureSlidingX,500);
+      setTimeout(forceX,0);
+      setTimeout(forceX,50);
+      setTimeout(forceX,200);
       return result;
     };
-    window.__mbV95OpenWrapped=true;
+    window.__mbV96OpenWrapped=true;
   }
+
+  document.addEventListener('input',function(e){
+    if(e.target && e.target.id==='date') setTimeout(forceShortDate,0);
+  },true);
+
+  document.addEventListener('change',function(e){
+    if(e.target && e.target.id==='date') setTimeout(forceShortDate,0);
+  },true);
 
   if(document.readyState==='loading'){
     document.addEventListener('DOMContentLoaded',function(){
-      bindDate();
-      ensureSlidingX();
+      forceShortDate();
+      forceX();
     });
   }else{
-    bindDate();
-    ensureSlidingX();
+    forceShortDate();
+    forceX();
   }
 
+  setTimeout(forceShortDate,100);
+  setTimeout(forceShortDate,500);
+  setTimeout(forceShortDate,1200);
+
   setInterval(function(){
-    bindDate();
-    applyShortDate();
-  },1200);
+    forceShortDate();
+    forceX();
+  },500);
 })();
 </script>
 
