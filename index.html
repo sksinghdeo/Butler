@@ -1852,7 +1852,7 @@ const targetKey=()=> "macro_targets_"+$('date').value;
 const favKey="favorite_foods_v3",recentKey="recent_foods_v3",profileKey="macro_profile_settings",settingsKey="macro_app_settings",weightKey="macro_weight_entries",goalPlanKey="macro_weight_goal_plan";
 
 function showScreen(name){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));const t=$("screen"+name),btn=document.querySelector(`.tab-btn[data-screen="${name}"]`);if(t)t.classList.add("active");if(btn)btn.classList.add("active");window.scrollTo({top:0,behavior:"smooth"});if(name==="Progress"){renderProgress();calculateWeightGoal(false)}if(name==="Log"){render();loadDailyNotes()}}
-function formatDatePretty(v){const d=new Date(v+"T00:00:00");return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}
+function formatDatePretty(v){const d=new Date(v+"T00:00:00");return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"2-digit"})}
 function updateDateDisplay(){
   const input = $('date');
   const display = $('dateDisplay');
@@ -11187,9 +11187,9 @@ body.mb-add-popup-active{overflow:hidden!important;}
     if(!v || v === todayKey()) return 'Today';
     try{
       return new Date(v + 'T00:00:00').toLocaleDateString('en-US', {
-        month:'long',
+        month:'short',
         day:'numeric',
-        year:'numeric'
+        year:'2-digit'
       });
     }catch(e){
       return v || 'Today';
@@ -12373,6 +12373,105 @@ body.mb-add-popup-lock #screenAdd > .card,
 
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
   else boot();
+})();
+</script>
+
+
+
+<!-- MB FINAL USER FIX: short date + horizontal use-popup buttons -->
+<style id="mb-final-user-fixes-date-use-popup">
+  /* Use button popup on Add Food page: Add Item + Cancel must stay horizontal */
+  #mbFoodUseModal .mb-modal-actions{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:10px!important;
+    align-items:stretch!important;
+    margin-top:14px!important;
+  }
+  #mbFoodUseModal .mb-modal-actions button{
+    width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+    grid-row:1!important;
+    padding:14px 8px!important;
+    border-radius:16px!important;
+  }
+  #mbFoodUseModal .mb-modal-actions button:first-child{grid-column:1!important;}
+  #mbFoodUseModal .mb-modal-actions button:last-child{grid-column:2!important;}
+
+  /* Keep older food portion popup horizontal too */
+  #portionMealModal .mb-modal-actions{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:10px!important;
+  }
+  #portionMealModal .mb-modal-actions button:first-child{grid-column:1!important;}
+  #portionMealModal .mb-modal-actions button:last-child{grid-column:2!important;}
+</style>
+<script id="mb-final-user-fixes-date-use-popup-js">
+(function(){
+  function shortDate(v){
+    if(!v) return 'Today';
+    try{
+      return new Date(v + 'T00:00:00').toLocaleDateString('en-US', {
+        month:'short', day:'numeric', year:'2-digit'
+      });
+    }catch(e){ return v; }
+  }
+
+  /* Force the home date label to show like Aug 15, 26 */
+  function fixDateLabel(){
+    var input=document.getElementById('date');
+    var label=document.getElementById('dateDisplay');
+    if(input && label && input.value){
+      label.textContent = shortDate(input.value);
+    }
+  }
+
+  /* Make sure Add Item + Cancel are horizontal even after modal is created dynamically */
+  function fixUsePopupButtons(){
+    ['mbFoodUseModal','portionMealModal'].forEach(function(id){
+      var modal=document.getElementById(id);
+      if(!modal) return;
+      var actions=modal.querySelector('.mb-modal-actions');
+      if(!actions) return;
+      actions.style.setProperty('display','grid','important');
+      actions.style.setProperty('grid-template-columns','minmax(0,1fr) minmax(0,1fr)','important');
+      actions.style.setProperty('gap','10px','important');
+      Array.prototype.forEach.call(actions.querySelectorAll('button'),function(btn,i){
+        btn.style.setProperty('width','100%','important');
+        btn.style.setProperty('margin','0','important');
+        btn.style.setProperty('grid-row','1','important');
+        btn.style.setProperty('grid-column',String(i+1),'important');
+      });
+    });
+  }
+
+  var oldUpdate=window.updateDateDisplay;
+  window.updateDateDisplay=function(){
+    if(typeof oldUpdate==='function') oldUpdate.apply(this,arguments);
+    setTimeout(fixDateLabel,0);
+  };
+
+  var oldOpen=window.mbOpenFoodUse;
+  if(typeof oldOpen==='function'){
+    window.mbOpenFoodUse=function(){
+      var result=oldOpen.apply(this,arguments);
+      setTimeout(fixUsePopupButtons,0);
+      setTimeout(fixUsePopupButtons,80);
+      return result;
+    };
+  }
+
+  document.addEventListener('input',function(e){if(e.target && e.target.id==='date')setTimeout(fixDateLabel,0)},true);
+  document.addEventListener('change',function(e){if(e.target && e.target.id==='date')setTimeout(fixDateLabel,0)},true);
+
+  var obs=new MutationObserver(function(){fixDateLabel();fixUsePopupButtons();});
+  if(document.body) obs.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']});
+
+  document.addEventListener('DOMContentLoaded',function(){fixDateLabel();fixUsePopupButtons();});
+  setTimeout(fixDateLabel,100); setTimeout(fixDateLabel,600); setInterval(fixDateLabel,1200);
+  setTimeout(fixUsePopupButtons,100); setTimeout(fixUsePopupButtons,600);
 })();
 </script>
 
