@@ -12354,5 +12354,123 @@ body.mb-add-popup-lock #screenAdd > .card,
 })();
 </script>
 
+
+
+
+
+<!-- MB V93: fixed right X inside Add folder bar -->
+<style id="mb-v93-fixed-right-x-folder-bar">
+/* The folder bar scrolls horizontally, but the X remains fixed at the right edge */
+#screenAdd.mb-add-popup-open #mbAddFolderBar{
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  padding-right:62px!important;
+  scrollbar-width:none!important;
+}
+#screenAdd.mb-add-popup-open #mbAddFolderBar::-webkit-scrollbar{
+  display:none!important;
+}
+
+/* Make sure tabs do not disappear under the X too abruptly */
+#screenAdd.mb-add-popup-open #mbAddFolderBar::after{
+  content:""!important;
+  position:sticky!important;
+  right:42px!important;
+  flex:0 0 20px!important;
+  width:20px!important;
+  min-width:20px!important;
+  height:42px!important;
+  background:linear-gradient(90deg,transparent,rgba(6,20,43,.96))!important;
+  pointer-events:none!important;
+  z-index:48!important;
+}
+
+/* X is no longer part of the scrollable tab sequence */
+#screenAdd.mb-add-popup-open #mbAddFolderCloseBtn{
+  position:absolute!important;
+  top:8px!important;
+  right:8px!important;
+  z-index:80!important;
+  width:46px!important;
+  min-width:46px!important;
+  max-width:46px!important;
+  height:46px!important;
+  min-height:46px!important;
+  margin:0!important;
+  padding:0!important;
+  border-radius:17px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:
+    radial-gradient(circle at 35% 25%,rgba(125,211,252,.30),transparent 36%),
+    linear-gradient(145deg,#10203a,#020617)!important;
+  border:1px solid rgba(125,211,252,.48)!important;
+  box-shadow:
+    -14px 0 18px rgba(3,7,18,.78),
+    0 0 18px rgba(56,189,248,.35),
+    inset 0 1px 0 rgba(255,255,255,.10)!important;
+  font-size:0!important;
+}
+
+#screenAdd.mb-add-popup-open #mbAddFolderCloseBtn::before{
+  content:"×"!important;
+  font-size:34px!important;
+  line-height:1!important;
+  font-weight:850!important;
+  color:#7dd3fc!important;
+  text-shadow:0 0 12px rgba(56,189,248,.78)!important;
+  transform:translateY(-1px)!important;
+}
+</style>
+
+<script id="mb-v93-fixed-right-x-folder-bar-js">
+(function(){
+  function ensureCloseOnRight(){
+    const bar=document.getElementById('mbAddFolderBar');
+    if(!bar) return;
+
+    let btn=document.getElementById('mbAddFolderCloseBtn');
+    if(!btn){
+      btn=document.createElement('button');
+      btn.type='button';
+      btn.id='mbAddFolderCloseBtn';
+      btn.setAttribute('aria-label','Close Add Food');
+      btn.addEventListener('click',function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        if(typeof window.closeAddWorkspacePopup==='function') window.closeAddWorkspacePopup();
+      });
+    }
+
+    /* Put it inside the bar, but absolute-positioned so it stays at the right */
+    if(btn.parentElement!==bar){
+      bar.appendChild(btn);
+    }
+  }
+
+  const oldOpen=window.openAddWorkspacePopup;
+  if(typeof oldOpen==='function' && !window.__mbV93OpenWrapped){
+    window.openAddWorkspacePopup=function(){
+      const result=oldOpen.apply(this,arguments);
+      setTimeout(ensureCloseOnRight,20);
+      setTimeout(ensureCloseOnRight,150);
+      setTimeout(ensureCloseOnRight,500);
+      return result;
+    };
+    window.__mbV93OpenWrapped=true;
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',ensureCloseOnRight);
+  }else{
+    ensureCloseOnRight();
+  }
+})();
+</script>
+
 </body>
 </html>
