@@ -11618,5 +11618,363 @@ body.mb-add-popup-active{
 })();
 </script>
 
+
+
+<!-- MB V89: force Add pages into real popup + clean recipe builder junk -->
+<style id="mb-v89-add-popup-rebuild">
+/* Force Add to be a popup even if older code activates it like a normal page */
+body.mb-add-popup-active #screenAdd,
+body.mb-add-popup-lock #screenAdd,
+#screenAdd.mb-add-popup-open{
+  position:fixed!important;
+  left:50%!important;
+  right:auto!important;
+  top:calc(env(safe-area-inset-top,0px) + 128px)!important;
+  bottom:0!important;
+  transform:translateX(-50%)!important;
+  width:min(560px, calc(100vw - 20px))!important;
+  max-width:min(560px, calc(100vw - 20px))!important;
+  height:auto!important;
+  min-height:0!important;
+  z-index:2147483000!important;
+  display:block!important;
+  margin:0!important;
+  padding:10px 10px calc(env(safe-area-inset-bottom,0px) + 28px)!important;
+  box-sizing:border-box!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  -webkit-overflow-scrolling:touch!important;
+  background:linear-gradient(180deg,#07152c 0%,#031024 48%,#020617 100%)!important;
+  border:1px solid rgba(56,189,248,.40)!important;
+  border-bottom:0!important;
+  border-radius:26px 26px 0 0!important;
+  box-shadow:0 -18px 44px rgba(0,0,0,.62),0 0 30px rgba(37,99,235,.25)!important;
+  filter:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+
+/* No blur overlays; they caused the fully blurred broken screen */
+body.mb-add-popup-active::after,
+body.mb-add-popup-lock::after{
+  content:none!important;
+  display:none!important;
+}
+
+body.mb-add-popup-active,
+body.mb-add-popup-lock{
+  overflow:hidden!important;
+}
+
+/* Folder bar is the popup header */
+body.mb-add-popup-active #screenAdd #mbAddFolderBar,
+body.mb-add-popup-lock #screenAdd #mbAddFolderBar,
+#screenAdd.mb-add-popup-open #mbAddFolderBar{
+  position:sticky!important;
+  top:0!important;
+  z-index:2147483001!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin:0 0 14px!important;
+  padding:8px!important;
+  min-height:58px!important;
+  box-sizing:border-box!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  scrollbar-width:none!important;
+  border-radius:23px!important;
+  background:linear-gradient(145deg,#06142b,#081631)!important;
+  border:1px solid rgba(59,130,246,.42)!important;
+  box-shadow:0 12px 26px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.07)!important;
+}
+#screenAdd #mbAddFolderBar::-webkit-scrollbar{display:none!important;}
+
+body.mb-add-popup-active #screenAdd #mbAddFolderBar .mb-folder-tab,
+body.mb-add-popup-active #screenAdd #mbAddFolderBar .mb-folder-scan,
+body.mb-add-popup-lock #screenAdd #mbAddFolderBar .mb-folder-tab,
+body.mb-add-popup-lock #screenAdd #mbAddFolderBar .mb-folder-scan,
+#screenAdd.mb-add-popup-open #mbAddFolderBar .mb-folder-tab,
+#screenAdd.mb-add-popup-open #mbAddFolderBar .mb-folder-scan{
+  flex:0 0 auto!important;
+  height:42px!important;
+  min-height:42px!important;
+  padding:0 13px!important;
+  border-radius:15px!important;
+  font-size:14px!important;
+  line-height:1!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  white-space:nowrap!important;
+  box-sizing:border-box!important;
+}
+
+/* X button */
+body.mb-add-popup-active #screenAdd #mbAddFolderCloseBtn,
+body.mb-add-popup-lock #screenAdd #mbAddFolderCloseBtn,
+#screenAdd.mb-add-popup-open #mbAddFolderCloseBtn{
+  position:relative!important;
+  right:auto!important;
+  top:auto!important;
+  flex:0 0 42px!important;
+  width:42px!important;
+  min-width:42px!important;
+  max-width:42px!important;
+  height:42px!important;
+  min-height:42px!important;
+  margin:0 0 0 auto!important;
+  padding:0!important;
+  border-radius:16px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  font-size:0!important;
+  color:#7dd3fc!important;
+  background:linear-gradient(145deg,#101c33,#020617)!important;
+  border:1px solid rgba(125,211,252,.44)!important;
+  box-shadow:0 0 16px rgba(56,189,248,.34), inset 0 1px 0 rgba(255,255,255,.10)!important;
+}
+#screenAdd #mbAddFolderCloseBtn::before{
+  content:"×"!important;
+  font-size:31px!important;
+  line-height:1!important;
+  font-weight:850!important;
+  color:#7dd3fc!important;
+  text-shadow:0 0 12px rgba(56,189,248,.75)!important;
+  transform:translateY(-1px)!important;
+}
+
+/* Cards cleanly inside popup */
+body.mb-add-popup-active #screenAdd > .card,
+body.mb-add-popup-lock #screenAdd > .card,
+#screenAdd.mb-add-popup-open > .card,
+#screenAdd.mb-add-popup-open #mbAddHistoryCard{
+  width:100%!important;
+  max-width:100%!important;
+  margin:0 0 18px!important;
+  padding:18px!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+  border-radius:26px!important;
+}
+
+/* remove duplicate footer in popup */
+#screenAdd .creator-footer{display:none!important;}
+
+/* Remove old close row */
+#mbAddPopupClose,.mb-add-close-row,.floating-add-close{display:none!important;}
+
+/* Clean Custom Recipe Builder: remove old junk amount/unit controls */
+#customRecipeCard #ingredientAmount,
+#customRecipeCard #ingredientUnit{
+  display:none!important;
+}
+#customRecipeCard .mb-v89-remove-junk{
+  display:none!important;
+}
+
+/* Search rows fit */
+#screenAdd .db-search-plus-row,
+#screenAdd .recipe-ingredient-search-row,
+#screenAdd .recipe-search-row,
+#screenAdd .meal-search-row,
+#screenAdd .meal-builder-search-row,
+#screenAdd .search-plus-row{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 58px!important;
+  gap:10px!important;
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  align-items:center!important;
+}
+
+#screenAdd input,#screenAdd select,#screenAdd textarea{
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+
+#screenAdd .add-custom-plus-btn,
+#screenAdd .recipe-ingredient-search-row button,
+#screenAdd .recipe-search-row button,
+#screenAdd .meal-search-row button,
+#screenAdd .meal-builder-search-row button,
+#screenAdd .search-plus-row button,
+#screenAdd #openCustomFoodBtn{
+  width:58px!important;
+  min-width:58px!important;
+  max-width:58px!important;
+  height:58px!important;
+  padding:0!important;
+  margin:0!important;
+}
+
+#screenAdd .pill-row,
+#recipeCategoryPills,
+#mealCategoryPills{
+  width:100%!important;
+  max-width:100%!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  scrollbar-width:none!important;
+  box-sizing:border-box!important;
+}
+#screenAdd .pill-row::-webkit-scrollbar,
+#recipeCategoryPills::-webkit-scrollbar,
+#mealCategoryPills::-webkit-scrollbar{display:none!important;}
+</style>
+
+<script id="mb-v89-add-popup-rebuild-js">
+(function(){
+  function byId(id){return document.getElementById(id);}
+
+  function ensureClose(){
+    const bar=byId('mbAddFolderBar');
+    if(!bar) return;
+    let btn=byId('mbAddFolderCloseBtn');
+    if(!btn){
+      btn=document.createElement('button');
+      btn.type='button';
+      btn.id='mbAddFolderCloseBtn';
+      btn.setAttribute('aria-label','Close Add Food');
+      btn.addEventListener('click',function(e){
+        e.preventDefault(); e.stopPropagation();
+        if(typeof window.closeAddWorkspacePopup==='function') window.closeAddWorkspacePopup();
+      });
+      bar.appendChild(btn);
+    }
+  }
+
+  function cleanRecipeBuilder(){
+    const card=byId('customRecipeCard');
+    if(!card) return;
+
+    const input=byId('ingredientSearch');
+    let block=byId('recipeIngredientSearchBlock');
+
+    if(input){
+      if(!block){
+        block=document.createElement('div');
+        block.id='recipeIngredientSearchBlock';
+        block.className='recipe-ingredient-search-block';
+        block.innerHTML='<label>Ingredient Search</label><div class="recipe-ingredient-search-row" id="recipeIngredientSearchRow"></div>';
+        const before=byId('ingredientResults') || card.querySelector('.section-titlebar');
+        if(before) card.insertBefore(block,before);
+        else card.appendChild(block);
+      }
+      const row=byId('recipeIngredientSearchRow');
+      if(row && input.parentElement!==row) row.appendChild(input);
+      input.placeholder='Search all foods and ingredients...';
+
+      if(row && !byId('recipeIngredientPlusBtn')){
+        const btn=document.createElement('button');
+        btn.id='recipeIngredientPlusBtn';
+        btn.type='button';
+        btn.textContent='+';
+        btn.setAttribute('aria-label','Add custom ingredient');
+        btn.onclick=function(){
+          if(typeof window.openCustomIngredientModal==='function') window.openCustomIngredientModal();
+        };
+        row.appendChild(btn);
+      }
+    }
+
+    // Remove the junk amount and unit controls without touching Meal.
+    ['ingredientAmount','ingredientUnit'].forEach(id=>{
+      const el=byId(id);
+      if(el){
+        const holder=el.closest('div');
+        if(holder){
+          holder.classList.add('mb-v89-remove-junk');
+          holder.style.display='none';
+        }
+      }
+    });
+
+    // Remove empty label-only containers left behind from the old Search Ingredient field.
+    card.querySelectorAll('label').forEach(label=>{
+      const txt=(label.textContent||'').trim().toLowerCase();
+      if(txt==='search ingredient' || txt==='ingredient amount' || txt==='amount unit'){
+        const holder=label.closest('div');
+        if(holder && !holder.querySelector('input:not(#ingredientSearch),select:not(#recipeMeal),textarea')){
+          holder.classList.add('mb-v89-remove-junk');
+          holder.style.display='none';
+        }
+      }
+    });
+
+    try{ if(typeof window.renderIngredientResults==='function') window.renderIngredientResults(); }catch(e){}
+  }
+
+  function forcePopup(){
+    const add=byId('screenAdd');
+    if(!add) return;
+
+    if(add.classList.contains('active') || add.classList.contains('mb-add-popup-open') || document.body.classList.contains('mb-add-popup-active')){
+      add.classList.add('mb-add-popup-open');
+      document.body.classList.add('mb-add-popup-active','mb-add-popup-lock');
+      ensureClose();
+      cleanRecipeBuilder();
+      try{ if(typeof window.renderFoodDatabase==='function') window.renderFoodDatabase(); }catch(e){}
+    }
+  }
+
+  const oldOpen=window.openAddWorkspacePopup;
+  if(typeof oldOpen==='function' && !window.__mbV89OpenWrapped){
+    window.openAddWorkspacePopup=function(){
+      const result=oldOpen.apply(this,arguments);
+      const add=byId('screenAdd');
+      if(add) add.classList.add('mb-add-popup-open');
+      document.body.classList.add('mb-add-popup-active','mb-add-popup-lock');
+      setTimeout(forcePopup,20);
+      setTimeout(forcePopup,150);
+      setTimeout(forcePopup,500);
+      return result;
+    };
+    window.__mbV89OpenWrapped=true;
+  }
+
+  const oldClose=window.closeAddWorkspacePopup;
+  if(typeof oldClose==='function' && !window.__mbV89CloseWrapped){
+    window.closeAddWorkspacePopup=function(){
+      const result=oldClose.apply(this,arguments);
+      const add=byId('screenAdd');
+      if(add) add.classList.remove('mb-add-popup-open');
+      document.body.classList.remove('mb-add-popup-active','mb-add-popup-lock');
+      return result;
+    };
+    window.__mbV89CloseWrapped=true;
+  }
+
+  const oldShow=window.showScreen;
+  if(typeof oldShow==='function' && !window.__mbV89ShowWrapped){
+    window.showScreen=function(name){
+      if(name==='Add'){
+        if(typeof window.openAddWorkspacePopup==='function') return window.openAddWorkspacePopup();
+      }
+      return oldShow.apply(this,arguments);
+    };
+    window.__mbV89ShowWrapped=true;
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){
+      cleanRecipeBuilder();
+      ensureClose();
+    });
+  }else{
+    cleanRecipeBuilder();
+    ensureClose();
+  }
+
+  setTimeout(cleanRecipeBuilder,300);
+  setTimeout(cleanRecipeBuilder,1200);
+})();
+</script>
+
 </body>
 </html>
