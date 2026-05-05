@@ -12495,5 +12495,174 @@ body.mb-add-popup-lock #screenAdd > .card,
 })();
 </script>
 
+
+
+<!-- MB V95: short month date label + clean sliding X in Add folder bar -->
+<style id="mb-v95-short-date-sliding-x">
+/* Date: use compact scale for abbreviated months */
+#todayDateHeading #dateDisplay,
+#todayDateHeading .today-date-label-v83,
+#todayDateHeading .today-date-label-v80,
+#todayDateHeading .today-date-label-v79{
+  font-size:clamp(26px, 7vw, 34px)!important;
+  letter-spacing:-0.5px!important;
+  padding:0 14px!important;
+}
+
+/* Folder bar: tabs slide horizontally, X stays at right edge */
+#screenAdd.mb-add-popup-open #mbAddFolderBar{
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  padding-right:64px!important;
+  scrollbar-width:none!important;
+}
+#screenAdd.mb-add-popup-open #mbAddFolderBar::-webkit-scrollbar{
+  display:none!important;
+}
+
+#screenAdd.mb-add-popup-open #mbAddFolderCloseBtn{
+  position:absolute!important;
+  top:8px!important;
+  right:8px!important;
+  z-index:120!important;
+  flex:none!important;
+  width:46px!important;
+  min-width:46px!important;
+  max-width:46px!important;
+  height:46px!important;
+  min-height:46px!important;
+  margin:0!important;
+  padding:0!important;
+  border-radius:17px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:
+    radial-gradient(circle at 35% 25%,rgba(125,211,252,.30),transparent 36%),
+    linear-gradient(145deg,#10203a,#020617)!important;
+  border:1px solid rgba(125,211,252,.48)!important;
+  box-shadow:
+    -16px 0 18px rgba(3,7,18,.82),
+    0 0 18px rgba(56,189,248,.35),
+    inset 0 1px 0 rgba(255,255,255,.10)!important;
+  color:transparent!important;
+  font-size:0!important;
+  line-height:0!important;
+  overflow:hidden!important;
+}
+#screenAdd.mb-add-popup-open #mbAddFolderCloseBtn::after{
+  content:none!important;
+  display:none!important;
+}
+#screenAdd.mb-add-popup-open #mbAddFolderCloseBtn::before{
+  content:""!important;
+  width:23px!important;
+  height:23px!important;
+  display:block!important;
+  background:no-repeat center/23px 23px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237dd3fc' stroke-width='3.2' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E")!important;
+  filter:drop-shadow(0 0 7px rgba(56,189,248,.8))!important;
+  transform:none!important;
+}
+</style>
+
+<script id="mb-v95-short-date-sliding-x-js">
+(function(){
+  function todayKey(){
+    var d=new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+
+  function shortLabel(v){
+    if(!v || v===todayKey()) return 'Today';
+    try{
+      return new Date(v+'T00:00:00').toLocaleDateString('en-US',{
+        month:'short',
+        day:'numeric',
+        year:'numeric'
+      });
+    }catch(e){
+      return v || 'Today';
+    }
+  }
+
+  function currentDateValue(){
+    var input=document.getElementById('date');
+    if(input && input.value) return input.value;
+    try{
+      return localStorage.getItem('mb_selected_date_v83') ||
+             localStorage.getItem('mb_selected_date_v80') ||
+             localStorage.getItem('mb_selected_date_v79') ||
+             todayKey();
+    }catch(e){
+      return todayKey();
+    }
+  }
+
+  function applyShortDate(){
+    var label=document.getElementById('dateDisplay');
+    if(label) label.textContent=shortLabel(currentDateValue());
+  }
+
+  function bindDate(){
+    var input=document.getElementById('date');
+    if(input && !input.__mbV95Bound){
+      input.addEventListener('input',function(){setTimeout(applyShortDate,0)});
+      input.addEventListener('change',function(){setTimeout(applyShortDate,0); setTimeout(applyShortDate,150)});
+      input.__mbV95Bound=true;
+    }
+    applyShortDate();
+  }
+
+  function ensureSlidingX(){
+    var bar=document.getElementById('mbAddFolderBar');
+    if(!bar) return;
+    var btn=document.getElementById('mbAddFolderCloseBtn');
+    if(!btn){
+      btn=document.createElement('button');
+      btn.type='button';
+      btn.id='mbAddFolderCloseBtn';
+      btn.setAttribute('aria-label','Close Add Food');
+      btn.addEventListener('click',function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        if(typeof window.closeAddWorkspacePopup==='function') window.closeAddWorkspacePopup();
+      });
+    }
+    if(btn.parentElement!==bar) bar.appendChild(btn);
+    btn.textContent='';
+  }
+
+  var oldOpen=window.openAddWorkspacePopup;
+  if(typeof oldOpen==='function' && !window.__mbV95OpenWrapped){
+    window.openAddWorkspacePopup=function(){
+      var result=oldOpen.apply(this,arguments);
+      setTimeout(ensureSlidingX,20);
+      setTimeout(ensureSlidingX,150);
+      setTimeout(ensureSlidingX,500);
+      return result;
+    };
+    window.__mbV95OpenWrapped=true;
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){
+      bindDate();
+      ensureSlidingX();
+    });
+  }else{
+    bindDate();
+    ensureSlidingX();
+  }
+
+  setInterval(function(){
+    bindDate();
+    applyShortDate();
+  },1200);
+})();
+</script>
+
 </body>
 </html>
