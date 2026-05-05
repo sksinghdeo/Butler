@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>MACRO BUTLER</title>
-<!-- logo-updated-option5-png -->
 <!-- BC-v8-barcode-ocr-openfoodfacts -->
 <!-- BC-vNext-premium-neon-edit-modal -->
 <!-- BC-v3-noemoji-final -->
@@ -1503,34 +1502,11 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
 }
 </style>
 
-
-<style id="mb-final-logo-footer-cleanup">
-/* Final cleanup: remove visible rectangle around logo image and hide creator footer on home */
-.macro-butler-hero,
-.hero.bc-hero.macro-butler-hero{
-  background:transparent!important;
-  border:0!important;
-  outline:0!important;
-  box-shadow:none!important;
-  overflow:visible!important;
-}
-.macro-butler-hero img{
-  border:0!important;
-  outline:0!important;
-  box-shadow:none!important;
-}
-#screenToday .creator-footer,
-.creator-footer.today-footer,
-.creator-footer.global-footer{
-  display:none!important;
-}
-</style>
-
 </head>
 
 <body>
 <div class="app">
-<div class="hero bc-hero macro-butler-hero"><img src="macro-butler-logo-option5.png?v=1" alt="Macro Butler"></div>
+<div class="hero bc-hero macro-butler-hero"><img src="macro-butler-logo.svg" alt="Macro Butler"></div>
 
 <div class="tab-bar">
   <button class="tab-btn active" type="button" data-screen="Today"><span></span>Today</button>
@@ -1567,6 +1543,7 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
     </div>
     <button class="purple" onclick="showScreen('Settings')">Edit Goals</button>
   </div>
+  <div class="creator-footer today-footer">Created by Shashank Singh Deo</div>
 </section>
 
 <section id="screenAdd" class="screen">
@@ -1840,6 +1817,7 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
   </div>
 </div>
 
+<div class="creator-footer global-footer">Created by Shashank Singh Deo</div>
 </div>
 
 <script>
@@ -11184,12 +11162,12 @@ body.mb-add-popup-active{overflow:hidden!important;}
   }
 
   function labelFor(v){
-    if(!v) return 'Today';
+    if(!v || v === todayKey()) return 'Today';
     try{
       return new Date(v + 'T00:00:00').toLocaleDateString('en-US', {
         month:'short',
         day:'numeric',
-        year:'2-digit'
+        year:'numeric'
       });
     }catch(e){
       return v || 'Today';
@@ -12377,91 +12355,325 @@ body.mb-add-popup-lock #screenAdd > .card,
 </script>
 
 
-<!-- MB FINAL FIX: short date + horizontal Add Food use popup buttons -->
-<style id="mb-final-short-date-horizontal-use-popup">
-/* Keep the Add Food > Use popup buttons side by side */
-#mbFoodUseModal .mb-modal-actions,
-#mealQuantityModal .mb-modal-actions,
-#portionMealModal .mb-modal-actions{
-  display:grid!important;
-  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
-  gap:10px!important;
-  align-items:stretch!important;
+
+
+
+
+
+<!-- MB V94: clean fixed X button + scaled date text -->
+<style id="mb-v94-clean-x-and-date-scale">
+/* Scale the date row so long dates do not get clipped */
+#todayDateHeading.today-date-heading-v83,
+#todayDateHeading.today-date-heading-v80,
+#todayDateHeading.today-date-heading-v79{
+  grid-template-columns:52px minmax(0,1fr) 58px!important;
+  column-gap:10px!important;
 }
-#mbFoodUseModal .mb-modal-actions button,
-#mealQuantityModal .mb-modal-actions button,
-#portionMealModal .mb-modal-actions button{
-  width:100%!important;
+
+#todayDateHeading #dateDisplay,
+#todayDateHeading .today-date-label-v83,
+#todayDateHeading .today-date-label-v80,
+#todayDateHeading .today-date-label-v79{
+  font-size:clamp(24px, 6.8vw, 32px)!important;
+  padding:0 14px!important;
   min-width:0!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+
+/* Folder bar scrolls, close button stays fixed on the right */
+#screenAdd.mb-add-popup-open #mbAddFolderBar{
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  padding-right:64px!important;
+  scrollbar-width:none!important;
+}
+#screenAdd.mb-add-popup-open #mbAddFolderBar::-webkit-scrollbar{
+  display:none!important;
+}
+
+/* Fixed right close button */
+#screenAdd.mb-add-popup-open #mbAddFolderCloseBtn{
+  position:absolute!important;
+  top:8px!important;
+  right:8px!important;
+  z-index:90!important;
+  flex:none!important;
+  width:46px!important;
+  min-width:46px!important;
+  max-width:46px!important;
+  height:46px!important;
+  min-height:46px!important;
   margin:0!important;
-  grid-row:auto!important;
+  padding:0!important;
+  border-radius:17px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:
+    radial-gradient(circle at 35% 25%,rgba(125,211,252,.30),transparent 36%),
+    linear-gradient(145deg,#10203a,#020617)!important;
+  border:1px solid rgba(125,211,252,.48)!important;
+  box-shadow:
+    -14px 0 18px rgba(3,7,18,.80),
+    0 0 18px rgba(56,189,248,.35),
+    inset 0 1px 0 rgba(255,255,255,.10)!important;
+  color:transparent!important;
+  font-size:0!important;
+  line-height:0!important;
+  overflow:hidden!important;
 }
-#mbFoodUseModal .mb-modal-actions button:first-child,
-#mealQuantityModal .mb-modal-actions button:first-child,
-#portionMealModal .mb-modal-actions button:first-child{
-  grid-column:1!important;
+
+/* Remove old pseudo effects that caused the weird icon */
+#screenAdd.mb-add-popup-open #mbAddFolderCloseBtn::after{
+  content:none!important;
+  display:none!important;
 }
-#mbFoodUseModal .mb-modal-actions button:last-child,
-#mealQuantityModal .mb-modal-actions button:last-child,
-#portionMealModal .mb-modal-actions button:last-child{
-  grid-column:2!important;
+
+/* Draw one clean X */
+#screenAdd.mb-add-popup-open #mbAddFolderCloseBtn::before{
+  content:""!important;
+  width:22px!important;
+  height:22px!important;
+  display:block!important;
+  background:no-repeat center/22px 22px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237dd3fc' stroke-width='3.2' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E")!important;
+  filter:drop-shadow(0 0 7px rgba(56,189,248,.8))!important;
+  transform:none!important;
 }
 </style>
-<script id="mb-final-short-date-horizontal-use-popup-js">
+
+<script id="mb-v94-clean-x-and-date-scale-js">
 (function(){
-  function shortDate(v){
-    if(!v) return 'Today';
-    try{
-      return new Date(v + 'T00:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric', year:'2-digit'});
-    }catch(e){ return v || 'Today'; }
+  function ensureCleanClose(){
+    const bar=document.getElementById('mbAddFolderBar');
+    if(!bar) return;
+
+    let btn=document.getElementById('mbAddFolderCloseBtn');
+    if(!btn){
+      btn=document.createElement('button');
+      btn.type='button';
+      btn.id='mbAddFolderCloseBtn';
+      btn.setAttribute('aria-label','Close Add Food');
+      btn.addEventListener('click',function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        if(typeof window.closeAddWorkspacePopup==='function') window.closeAddWorkspacePopup();
+      });
+    }
+
+    // Keep inside folder bar, but CSS fixes it to the right edge.
+    if(btn.parentElement!==bar){
+      bar.appendChild(btn);
+    }
+
+    // Remove any old text/icon content so only the SVG pseudo icon appears.
+    btn.textContent='';
   }
-  function applyShortDate(){
-    var input=document.getElementById('date');
-    var label=document.getElementById('dateDisplay');
-    if(label){
-      var value=(input && input.value) || window.__mbSelectedDateV83 || '';
-      if(value) label.textContent=shortDate(value);
+
+  const oldOpen=window.openAddWorkspacePopup;
+  if(typeof oldOpen==='function' && !window.__mbV94OpenWrapped){
+    window.openAddWorkspacePopup=function(){
+      const result=oldOpen.apply(this,arguments);
+      setTimeout(ensureCleanClose,20);
+      setTimeout(ensureCleanClose,150);
+      setTimeout(ensureCleanClose,500);
+      return result;
+    };
+    window.__mbV94OpenWrapped=true;
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',ensureCleanClose);
+  }else{
+    ensureCleanClose();
+  }
+})();
+</script>
+
+
+
+<!-- MB V96: direct function-level final fixes for short date and right-pinned X -->
+<style id="mb-v96-final-date-x">
+#todayDateHeading #dateDisplay,
+#todayDateHeading .today-date-label-v83,
+#todayDateHeading .today-date-label-v80,
+#todayDateHeading .today-date-label-v79{
+  font-size:clamp(25px,6.7vw,33px)!important;
+  letter-spacing:-0.7px!important;
+  padding-left:14px!important;
+  padding-right:14px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+
+/* Reserve right-side space and let folder tabs scroll under fixed X */
+#screenAdd.mb-add-popup-open #mbAddFolderBar{
+  position:relative!important;
+  padding-right:66px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  scrollbar-width:none!important;
+}
+#screenAdd.mb-add-popup-open #mbAddFolderBar::-webkit-scrollbar{display:none!important;}
+
+#screenAdd.mb-add-popup-open #mbAddFolderCloseBtn{
+  position:absolute!important;
+  top:8px!important;
+  right:8px!important;
+  z-index:99999!important;
+  width:46px!important;
+  min-width:46px!important;
+  max-width:46px!important;
+  height:46px!important;
+  min-height:46px!important;
+  margin:0!important;
+  padding:0!important;
+  flex:none!important;
+  border-radius:17px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  color:transparent!important;
+  font-size:0!important;
+  line-height:0!important;
+  overflow:hidden!important;
+  background:
+    radial-gradient(circle at 35% 25%,rgba(125,211,252,.30),transparent 36%),
+    linear-gradient(145deg,#10203a,#020617)!important;
+  border:1px solid rgba(125,211,252,.48)!important;
+  box-shadow:-16px 0 18px rgba(3,7,18,.82),0 0 18px rgba(56,189,248,.35),inset 0 1px 0 rgba(255,255,255,.10)!important;
+}
+#screenAdd.mb-add-popup-open #mbAddFolderCloseBtn::after{
+  content:none!important;
+  display:none!important;
+}
+#screenAdd.mb-add-popup-open #mbAddFolderCloseBtn::before{
+  content:""!important;
+  display:block!important;
+  width:23px!important;
+  height:23px!important;
+  background:no-repeat center/23px 23px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237dd3fc' stroke-width='3.2' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E")!important;
+  filter:drop-shadow(0 0 7px rgba(56,189,248,.8))!important;
+  transform:none!important;
+}
+</style>
+
+<script id="mb-v96-final-date-x-js">
+(function(){
+  function todayKey(){
+    var d=new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+
+  function shortLabel(v){
+    if(!v || v===todayKey()) return 'Today';
+    try{
+      return new Date(v+'T00:00:00').toLocaleDateString('en-US',{
+        month:'short',
+        day:'numeric',
+        year:'numeric'
+      });
+    }catch(e){
+      return v || 'Today';
     }
   }
-  function fixPopupButtons(){
-    ['mbFoodUseModal','mealQuantityModal','portionMealModal'].forEach(function(id){
-      var modal=document.getElementById(id);
-      if(!modal) return;
-      var actions=modal.querySelector('.mb-modal-actions');
-      if(!actions) return;
-      actions.style.setProperty('display','grid','important');
-      actions.style.setProperty('grid-template-columns','minmax(0,1fr) minmax(0,1fr)','important');
-      actions.style.setProperty('gap','10px','important');
-      Array.prototype.forEach.call(actions.querySelectorAll('button'),function(btn,i){
-        btn.style.setProperty('width','100%','important');
-        btn.style.setProperty('min-width','0','important');
-        btn.style.setProperty('margin','0','important');
-        btn.style.setProperty('grid-column', String(i+1), 'important');
+
+  function getDateValue(){
+    var input=document.getElementById('date');
+    if(input && input.value) return input.value;
+    var keys=['mb_selected_date_v83','mb_selected_date_v80','mb_selected_date_v79','mb_selected_date_v95'];
+    for(var i=0;i<keys.length;i++){
+      try{
+        var v=localStorage.getItem(keys[i]);
+        if(v) return v;
+      }catch(e){}
+    }
+    return todayKey();
+  }
+
+  function forceShortDate(){
+    var label=document.getElementById('dateDisplay');
+    var input=document.getElementById('date');
+    var value=getDateValue();
+
+    if(label) label.textContent=shortLabel(value);
+    if(input && input.value!==value) input.value=value;
+  }
+
+  function forceX(){
+    var bar=document.getElementById('mbAddFolderBar');
+    if(!bar) return;
+
+    var btn=document.getElementById('mbAddFolderCloseBtn');
+    if(!btn){
+      btn=document.createElement('button');
+      btn.type='button';
+      btn.id='mbAddFolderCloseBtn';
+      btn.setAttribute('aria-label','Close Add Food');
+      btn.addEventListener('click',function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        if(typeof window.closeAddWorkspacePopup==='function') window.closeAddWorkspacePopup();
       });
-    });
+    }
+
+    if(btn.parentNode!==bar) bar.appendChild(btn);
+    btn.textContent='';
+    btn.innerHTML='';
+
+    // make sure it is the last child so absolute positioning is predictable
+    if(bar.lastElementChild!==btn) bar.appendChild(btn);
   }
-  var oldUpdate=window.updateDateDisplay;
-  window.updateDateDisplay=function(){
-    if(typeof oldUpdate==='function') oldUpdate.apply(this, arguments);
-    setTimeout(applyShortDate,0);
+
+  // Patch the global update function itself if present
+  window.updateDateDisplay = function(){
+    forceShortDate();
   };
-  var oldOpen=window.mbOpenFoodUse;
-  if(typeof oldOpen==='function'){
-    window.mbOpenFoodUse=function(){
-      var r=oldOpen.apply(this, arguments);
-      setTimeout(fixPopupButtons,0);
-      setTimeout(fixPopupButtons,80);
-      return r;
+
+  var oldOpen=window.openAddWorkspacePopup;
+  if(typeof oldOpen==='function' && !window.__mbV96OpenWrapped){
+    window.openAddWorkspacePopup=function(){
+      var result=oldOpen.apply(this,arguments);
+      setTimeout(forceX,0);
+      setTimeout(forceX,50);
+      setTimeout(forceX,200);
+      return result;
     };
+    window.__mbV96OpenWrapped=true;
   }
-  document.addEventListener('input', function(e){ if(e.target && e.target.id==='date') setTimeout(applyShortDate,0); }, true);
-  document.addEventListener('change', function(e){ if(e.target && e.target.id==='date') setTimeout(applyShortDate,0); }, true);
-  if(document.body){
-    new MutationObserver(function(){ applyShortDate(); fixPopupButtons(); }).observe(document.body,{childList:true,subtree:true});
+
+  document.addEventListener('input',function(e){
+    if(e.target && e.target.id==='date') setTimeout(forceShortDate,0);
+  },true);
+
+  document.addEventListener('change',function(e){
+    if(e.target && e.target.id==='date') setTimeout(forceShortDate,0);
+  },true);
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){
+      forceShortDate();
+      forceX();
+    });
+  }else{
+    forceShortDate();
+    forceX();
   }
-  document.addEventListener('DOMContentLoaded',function(){applyShortDate();fixPopupButtons();});
-  setTimeout(applyShortDate,100); setTimeout(applyShortDate,600); setInterval(applyShortDate,1500);
-  setTimeout(fixPopupButtons,100); setTimeout(fixPopupButtons,600);
+
+  setTimeout(forceShortDate,100);
+  setTimeout(forceShortDate,500);
+  setTimeout(forceShortDate,1200);
+
+  setInterval(function(){
+    forceShortDate();
+    forceX();
+  },500);
 })();
 </script>
 
