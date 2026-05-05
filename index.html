@@ -11498,5 +11498,240 @@ body.mb-add-popup-active{overflow:hidden!important;}
 })();
 </script>
 
+
+
+<!-- MB V82: fix Add popup breaking caused by fixed-sheet + footer + top calculation conflicts -->
+<style id="mb-v82-add-break-fix">
+/* The Add workspace should be a real sheet, not a clipped/empty page */
+#screenAdd.mb-add-popup-open{
+  position:fixed!important;
+  left:50%!important;
+  right:auto!important;
+  transform:translateX(-50%)!important;
+  width:min(560px, calc(100vw - 24px))!important;
+  max-width:min(560px, calc(100vw - 24px))!important;
+  top:var(--mb-add-sheet-top, 500px)!important;
+  bottom:0!important;
+  height:auto!important;
+  min-height:0!important;
+  z-index:99980!important;
+  display:block!important;
+  margin:0!important;
+  padding:0 10px calc(env(safe-area-inset-bottom,0px) + 26px)!important;
+  box-sizing:border-box!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  -webkit-overflow-scrolling:touch!important;
+  background:linear-gradient(180deg,#07152c 0%,#031024 48%,#020617 100%)!important;
+  border:1px solid rgba(56,189,248,.35)!important;
+  border-bottom:0!important;
+  border-radius:22px 22px 0 0!important;
+  box-shadow:0 -16px 38px rgba(0,0,0,.52)!important;
+}
+
+/* Do not show the creator footer inside the Add sheet. It was making the page look empty/broken */
+#screenAdd.mb-add-popup-open .creator-footer{
+  display:none!important;
+}
+
+/* Folder bar remains solid, contained, and scrollable */
+#screenAdd.mb-add-popup-open #mbAddFolderBar{
+  position:sticky!important;
+  top:0!important;
+  z-index:99991!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin:0 0 12px!important;
+  padding:8px!important;
+  box-sizing:border-box!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  border-radius:22px!important;
+  background:linear-gradient(145deg,#06142b,#081631)!important;
+  border:1px solid rgba(59,130,246,.42)!important;
+  box-shadow:0 12px 26px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.07)!important;
+}
+#screenAdd.mb-add-popup-open #mbAddFolderBar::-webkit-scrollbar{display:none!important;}
+
+#screenAdd.mb-add-popup-open #mbAddFolderBar .mb-folder-tab,
+#screenAdd.mb-add-popup-open #mbAddFolderBar .mb-folder-scan{
+  flex:0 0 auto!important;
+  height:40px!important;
+  min-height:40px!important;
+  padding:0 12px!important;
+  border-radius:15px!important;
+  font-size:14px!important;
+  box-sizing:border-box!important;
+}
+
+/* Keep X in the row but prevent it from covering page content */
+#screenAdd.mb-add-popup-open #mbAddFolderCloseBtn{
+  position:sticky!important;
+  right:0!important;
+  flex:0 0 40px!important;
+  width:40px!important;
+  min-width:40px!important;
+  max-width:40px!important;
+  height:40px!important;
+  margin-left:auto!important;
+  padding:0!important;
+  border-radius:15px!important;
+  z-index:99992!important;
+}
+
+/* Cards fully fit the sheet */
+#screenAdd.mb-add-popup-open > .card,
+#screenAdd.mb-add-popup-open #mbAddHistoryCard{
+  width:100%!important;
+  max-width:100%!important;
+  margin:0 0 16px!important;
+  padding:18px!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+  border-radius:24px!important;
+}
+
+/* Fix the right edge overflow from the search-plus rows */
+#screenAdd.mb-add-popup-open .db-search-plus-row,
+#screenAdd.mb-add-popup-open .recipe-search-row,
+#screenAdd.mb-add-popup-open .meal-search-row,
+#screenAdd.mb-add-popup-open .meal-builder-search-row,
+#screenAdd.mb-add-popup-open .search-plus-row{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 58px!important;
+  gap:10px!important;
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  align-items:center!important;
+}
+
+#screenAdd.mb-add-popup-open input,
+#screenAdd.mb-add-popup-open select,
+#screenAdd.mb-add-popup-open textarea{
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+
+#screenAdd.mb-add-popup-open .add-custom-plus-btn,
+#screenAdd.mb-add-popup-open .recipe-search-row button,
+#screenAdd.mb-add-popup-open .meal-search-row button,
+#screenAdd.mb-add-popup-open .meal-builder-search-row button,
+#screenAdd.mb-add-popup-open .search-plus-row button,
+#screenAdd.mb-add-popup-open #openCustomFoodBtn{
+  width:58px!important;
+  min-width:58px!important;
+  max-width:58px!important;
+  height:58px!important;
+  padding:0!important;
+  margin:0!important;
+}
+
+/* Search results should remain visible in Add Food */
+#screenAdd.mb-add-popup-open #foodDatabaseList{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  overflow-x:hidden!important;
+}
+
+/* Pills stay inside card */
+#screenAdd.mb-add-popup-open .pill-row{
+  width:100%!important;
+  max-width:100%!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  box-sizing:border-box!important;
+  scrollbar-width:none!important;
+}
+#screenAdd.mb-add-popup-open .pill-row::-webkit-scrollbar{display:none!important;}
+</style>
+
+<script id="mb-v82-add-break-fix-js">
+(function(){
+  function q(sel){return document.querySelector(sel)}
+  function byId(id){return document.getElementById(id)}
+
+  function computeAddTop(){
+    var stats=q('#screenToday .hero-stats');
+    var rings=q('#screenToday .progress-grid');
+    var top=0;
+
+    // Start just before the 6 rings, per your requested layout.
+    if(rings){
+      var rr=rings.getBoundingClientRect();
+      if(rr.top > 0) top=Math.ceil(rr.top - 2);
+    }
+
+    // Fallback: under daily progress card.
+    if(!top && stats){
+      var sr=stats.getBoundingClientRect();
+      top=Math.ceil(sr.bottom + 6);
+    }
+
+    if(!top || top < 320) top=500;
+
+    document.documentElement.style.setProperty('--mb-add-sheet-top', top+'px');
+    document.documentElement.style.setProperty('--mb-add-final-top', top+'px');
+  }
+
+  function fixAddSheet(){
+    computeAddTop();
+
+    var add=byId('screenAdd');
+    if(!add || !add.classList.contains('mb-add-popup-open')) return;
+
+    // Keep folder page active; never let the footer appear as the main content.
+    var footer=add.querySelector('.creator-footer');
+    if(footer) footer.style.display='none';
+
+    // Ensure the folder system is rebuilt if another patch removed it.
+    if(typeof window.mbShowAddFolder === 'function' && !window._mbAddFolder){
+      window._mbAddFolder='add';
+      window.mbShowAddFolder('add');
+    }
+
+    try{
+      if(typeof window.renderFoodDatabase==='function') window.renderFoodDatabase();
+    }catch(e){}
+
+    add.scrollLeft=0;
+  }
+
+  // Re-wrap openAddWorkspacePopup after all earlier wrappers.
+  var oldOpen=window.openAddWorkspacePopup;
+  if(typeof oldOpen==='function' && !window.__mbV82OpenWrapped){
+    window.openAddWorkspacePopup=function(){
+      computeAddTop();
+      var result=oldOpen.apply(this,arguments);
+      setTimeout(fixAddSheet,20);
+      setTimeout(fixAddSheet,120);
+      setTimeout(fixAddSheet,450);
+      setTimeout(fixAddSheet,900);
+      return result;
+    };
+    window.__mbV82OpenWrapped=true;
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){
+      computeAddTop();
+      setTimeout(fixAddSheet,500);
+    });
+  }else{
+    computeAddTop();
+    setTimeout(fixAddSheet,500);
+  }
+
+  window.addEventListener('resize',function(){setTimeout(fixAddSheet,100)});
+  window.addEventListener('orientationchange',function(){setTimeout(fixAddSheet,350)});
+})();
+</script>
+
 </body>
 </html>
