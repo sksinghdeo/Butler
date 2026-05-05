@@ -12358,42 +12358,52 @@ body.mb-add-popup-lock #screenAdd > .card,
 
 
 
-<!-- MB V93: fixed right X inside Add folder bar -->
-<style id="mb-v93-fixed-right-x-folder-bar">
-/* The folder bar scrolls horizontally, but the X remains fixed at the right edge */
+
+
+<!-- MB V94: clean fixed X button + scaled date text -->
+<style id="mb-v94-clean-x-and-date-scale">
+/* Scale the date row so long dates do not get clipped */
+#todayDateHeading.today-date-heading-v83,
+#todayDateHeading.today-date-heading-v80,
+#todayDateHeading.today-date-heading-v79{
+  grid-template-columns:52px minmax(0,1fr) 58px!important;
+  column-gap:10px!important;
+}
+
+#todayDateHeading #dateDisplay,
+#todayDateHeading .today-date-label-v83,
+#todayDateHeading .today-date-label-v80,
+#todayDateHeading .today-date-label-v79{
+  font-size:clamp(24px, 6.8vw, 32px)!important;
+  padding:0 14px!important;
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+
+/* Folder bar scrolls, close button stays fixed on the right */
 #screenAdd.mb-add-popup-open #mbAddFolderBar{
   position:relative!important;
   display:flex!important;
   align-items:center!important;
   overflow-x:auto!important;
   overflow-y:hidden!important;
-  padding-right:62px!important;
+  padding-right:64px!important;
   scrollbar-width:none!important;
 }
 #screenAdd.mb-add-popup-open #mbAddFolderBar::-webkit-scrollbar{
   display:none!important;
 }
 
-/* Make sure tabs do not disappear under the X too abruptly */
-#screenAdd.mb-add-popup-open #mbAddFolderBar::after{
-  content:""!important;
-  position:sticky!important;
-  right:42px!important;
-  flex:0 0 20px!important;
-  width:20px!important;
-  min-width:20px!important;
-  height:42px!important;
-  background:linear-gradient(90deg,transparent,rgba(6,20,43,.96))!important;
-  pointer-events:none!important;
-  z-index:48!important;
-}
-
-/* X is no longer part of the scrollable tab sequence */
+/* Fixed right close button */
 #screenAdd.mb-add-popup-open #mbAddFolderCloseBtn{
   position:absolute!important;
   top:8px!important;
   right:8px!important;
-  z-index:80!important;
+  z-index:90!important;
+  flex:none!important;
   width:46px!important;
   min-width:46px!important;
   max-width:46px!important;
@@ -12410,26 +12420,36 @@ body.mb-add-popup-lock #screenAdd > .card,
     linear-gradient(145deg,#10203a,#020617)!important;
   border:1px solid rgba(125,211,252,.48)!important;
   box-shadow:
-    -14px 0 18px rgba(3,7,18,.78),
+    -14px 0 18px rgba(3,7,18,.80),
     0 0 18px rgba(56,189,248,.35),
     inset 0 1px 0 rgba(255,255,255,.10)!important;
+  color:transparent!important;
   font-size:0!important;
+  line-height:0!important;
+  overflow:hidden!important;
 }
 
+/* Remove old pseudo effects that caused the weird icon */
+#screenAdd.mb-add-popup-open #mbAddFolderCloseBtn::after{
+  content:none!important;
+  display:none!important;
+}
+
+/* Draw one clean X */
 #screenAdd.mb-add-popup-open #mbAddFolderCloseBtn::before{
-  content:"×"!important;
-  font-size:34px!important;
-  line-height:1!important;
-  font-weight:850!important;
-  color:#7dd3fc!important;
-  text-shadow:0 0 12px rgba(56,189,248,.78)!important;
-  transform:translateY(-1px)!important;
+  content:""!important;
+  width:22px!important;
+  height:22px!important;
+  display:block!important;
+  background:no-repeat center/22px 22px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237dd3fc' stroke-width='3.2' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E")!important;
+  filter:drop-shadow(0 0 7px rgba(56,189,248,.8))!important;
+  transform:none!important;
 }
 </style>
 
-<script id="mb-v93-fixed-right-x-folder-bar-js">
+<script id="mb-v94-clean-x-and-date-scale-js">
 (function(){
-  function ensureCloseOnRight(){
+  function ensureCleanClose(){
     const bar=document.getElementById('mbAddFolderBar');
     if(!bar) return;
 
@@ -12446,28 +12466,31 @@ body.mb-add-popup-lock #screenAdd > .card,
       });
     }
 
-    /* Put it inside the bar, but absolute-positioned so it stays at the right */
+    // Keep inside folder bar, but CSS fixes it to the right edge.
     if(btn.parentElement!==bar){
       bar.appendChild(btn);
     }
+
+    // Remove any old text/icon content so only the SVG pseudo icon appears.
+    btn.textContent='';
   }
 
   const oldOpen=window.openAddWorkspacePopup;
-  if(typeof oldOpen==='function' && !window.__mbV93OpenWrapped){
+  if(typeof oldOpen==='function' && !window.__mbV94OpenWrapped){
     window.openAddWorkspacePopup=function(){
       const result=oldOpen.apply(this,arguments);
-      setTimeout(ensureCloseOnRight,20);
-      setTimeout(ensureCloseOnRight,150);
-      setTimeout(ensureCloseOnRight,500);
+      setTimeout(ensureCleanClose,20);
+      setTimeout(ensureCleanClose,150);
+      setTimeout(ensureCleanClose,500);
       return result;
     };
-    window.__mbV93OpenWrapped=true;
+    window.__mbV94OpenWrapped=true;
   }
 
   if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',ensureCloseOnRight);
+    document.addEventListener('DOMContentLoaded',ensureCleanClose);
   }else{
-    ensureCloseOnRight();
+    ensureCleanClose();
   }
 })();
 </script>
