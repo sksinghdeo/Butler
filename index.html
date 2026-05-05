@@ -11312,5 +11312,191 @@ body.mb-add-popup-active{overflow:hidden!important;}
 })();
 </script>
 
+
+
+<!-- MB V81: repair Add workspace layout after date SVG bar -->
+<style id="mb-v81-add-workspace-repair">
+/* Make the Add workspace a proper bottom sheet again */
+#screenAdd.mb-add-popup-open{
+  top:var(--mb-add-final-top, 500px)!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  width:min(560px, calc(100vw - 24px))!important;
+  max-width:min(560px, calc(100vw - 24px))!important;
+  right:auto!important;
+  bottom:0!important;
+  padding:0 12px calc(env(safe-area-inset-bottom,0px) + 28px)!important;
+  box-sizing:border-box!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  background:linear-gradient(180deg,#07152c 0%,#031024 50%,#020617 100%)!important;
+}
+
+/* Top folder row should not clip page content */
+#screenAdd.mb-add-popup-open #mbAddFolderBar{
+  width:100%!important;
+  max-width:100%!important;
+  margin:0 0 14px!important;
+  padding:8px!important;
+  box-sizing:border-box!important;
+  border-radius:22px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+}
+
+/* Prevent right-edge clipping in Add pages */
+#screenAdd.mb-add-popup-open .card{
+  width:100%!important;
+  max-width:100%!important;
+  margin:0 0 18px!important;
+  padding:18px!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+  border-radius:24px!important;
+}
+
+#screenAdd.mb-add-popup-open .card .card-title-row,
+#screenAdd.mb-add-popup-open .card h2{
+  max-width:100%!important;
+  overflow-wrap:break-word!important;
+}
+
+/* Search rows and plus button stay inside the card */
+#screenAdd.mb-add-popup-open .db-search-plus-row,
+#screenAdd.mb-add-popup-open .recipe-search-row,
+#screenAdd.mb-add-popup-open .meal-search-row,
+#screenAdd.mb-add-popup-open .search-plus-row{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 58px!important;
+  gap:10px!important;
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+
+#screenAdd.mb-add-popup-open input,
+#screenAdd.mb-add-popup-open select,
+#screenAdd.mb-add-popup-open textarea{
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+
+#screenAdd.mb-add-popup-open .add-custom-plus-btn,
+#screenAdd.mb-add-popup-open .recipe-search-row button,
+#screenAdd.mb-add-popup-open .meal-search-row button,
+#screenAdd.mb-add-popup-open .search-plus-row button{
+  width:58px!important;
+  min-width:58px!important;
+  max-width:58px!important;
+  height:58px!important;
+  padding:0!important;
+}
+
+/* Pills scroll inside, never push page wider */
+#screenAdd.mb-add-popup-open .pill-row{
+  width:100%!important;
+  max-width:100%!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  scrollbar-width:none!important;
+  box-sizing:border-box!important;
+}
+#screenAdd.mb-add-popup-open .pill-row::-webkit-scrollbar{display:none!important;}
+
+/* Keep footer below real content; do not let it appear immediately after a clipped card */
+#screenAdd.mb-add-popup-open .creator-footer{
+  margin:22px 0 16px!important;
+  width:100%!important;
+  text-align:center!important;
+}
+
+/* The close button remains visible in the folder bar */
+#screenAdd.mb-add-popup-open #mbAddFolderCloseBtn{
+  flex:0 0 38px!important;
+  width:38px!important;
+  min-width:38px!important;
+  max-width:38px!important;
+  height:38px!important;
+  margin-left:auto!important;
+}
+</style>
+
+<script id="mb-v81-add-workspace-repair-js">
+(function(){
+  function setAddTop(){
+    var card=document.querySelector('#screenToday .hero-stats');
+    var rings=document.querySelector('#screenToday .ring-grid, #screenToday .dashboard-rings, #screenToday .summary-rings, #screenToday .progress-grid');
+    var top=0;
+
+    if(card){
+      var r=card.getBoundingClientRect();
+      top=Math.ceil(r.bottom + 8);
+    }
+
+    // If a known rings container exists, start just before it.
+    if(rings){
+      var rr=rings.getBoundingClientRect();
+      if(rr.top > 0) top=Math.min(top || rr.top, Math.ceil(rr.top - 4));
+    }
+
+    if(!top || top < 260){
+      var homeCard=document.querySelector('#screenToday .card-blue');
+      if(homeCard){
+        var hr=homeCard.getBoundingClientRect();
+        top=Math.ceil(hr.top + 300);
+      }
+    }
+
+    if(!top || top < 260) top=500;
+
+    document.documentElement.style.setProperty('--mb-add-final-top', top+'px');
+  }
+
+  function repairAdd(){
+    setAddTop();
+
+    var add=document.getElementById('screenAdd');
+    if(!add || !add.classList.contains('mb-add-popup-open')) return;
+
+    add.style.maxWidth='min(560px, calc(100vw - 24px))';
+    add.style.width='min(560px, calc(100vw - 24px))';
+    add.style.left='50%';
+    add.style.right='auto';
+    add.style.transform='translateX(-50%)';
+    add.style.overflowX='hidden';
+
+    var footer=add.querySelector('.creator-footer');
+    if(footer) add.appendChild(footer);
+  }
+
+  var oldOpen=window.openAddWorkspacePopup;
+  if(typeof oldOpen==='function' && !window.__mbV81OpenWrapped){
+    window.openAddWorkspacePopup=function(){
+      setAddTop();
+      var result=oldOpen.apply(this,arguments);
+      setTimeout(repairAdd,20);
+      setTimeout(repairAdd,120);
+      setTimeout(repairAdd,500);
+      return result;
+    };
+    window.__mbV81OpenWrapped=true;
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){
+      setAddTop();
+      setTimeout(repairAdd,400);
+    });
+  }else{
+    setAddTop();
+    setTimeout(repairAdd,400);
+  }
+
+  window.addEventListener('resize',function(){setTimeout(repairAdd,80)});
+  window.addEventListener('orientationchange',function(){setTimeout(repairAdd,300)});
+})();
+</script>
+
 </body>
 </html>
