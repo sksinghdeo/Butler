@@ -1519,14 +1519,11 @@ body.light-mode .ocr-details summary{color:#0f172a;background:linear-gradient(13
 
 <section id="screenToday" class="screen active">
   <div class="card card-blue">
-    <h2 id="todayDateHeading" class="today-date-heading-v74">
+    <h2 id="todayDateHeading" class="today-date-heading-native">
       <span class="bc-icon">HM</span>
-      <button id="dateDisplay" class="today-date-button-v74" type="button">Today</button>
-      <span class="today-title-arrow">⌄</span>
-      <input id="date" type="date" value="">
-    </h2>
-    <div id="mbCalendarV74" class="mb-calendar-v74" aria-label="Calendar selector"></div>
-    <div class="hero-stats" style="margin-top:16px">
+      <span id="dateDisplay" class="today-date-label-native">Today</span>
+      <input id="date" class="today-date-input-native" type="date" aria-label="Select date">
+    </h2><div class="hero-stats" style="margin-top:16px">
       <div class="big-cal"><b id="leftCalBig">0</b><span>Calories left today</span></div>
       <div class="small-stat"><b id="score">0%</b><span>Daily progress</span></div>
     </div>
@@ -1838,8 +1835,18 @@ const favKey="favorite_foods_v3",recentKey="recent_foods_v3",profileKey="macro_p
 
 function showScreen(name){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));const t=$("screen"+name),btn=document.querySelector(`.tab-btn[data-screen="${name}"]`);if(t)t.classList.add("active");if(btn)btn.classList.add("active");window.scrollTo({top:0,behavior:"smooth"});if(name==="Progress"){renderProgress();calculateWeightGoal(false)}if(name==="Log"){render();loadDailyNotes()}}
 function formatDatePretty(v){const d=new Date(v+"T00:00:00");return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}
-function updateDateDisplay(){$('dateDisplay').textContent=formatDatePretty($('date').value)}
-function openDatePicker(){const i=$('date');if(i.showPicker)i.showPicker();else{i.focus();i.click()}}
+function updateDateDisplay(){
+  const input = $('date');
+  const display = $('dateDisplay');
+  if(!input || !display) return;
+  const today = new Date().toISOString().slice(0,10);
+  display.textContent = input.value === today ? "Today" : formatDatePretty(input.value);
+}
+function openDatePicker(){
+  const i = $('date');
+  if(!i) return;
+  i.focus();
+}
 function dateChanged(){updateDateDisplay();loadTargets();loadDailyNotes();render();renderProgress()}
 function getLog(){return JSON.parse(localStorage.getItem(logKey())||"[]")}
 function saveLog(log){localStorage.setItem(logKey(),JSON.stringify(log));render();renderProgress()}
@@ -10991,9 +10998,13 @@ body.mb-add-popup-active{overflow:hidden!important;}
 
 
 
-<!-- MB V74: clean calendar with old date handlers disabled -->
-<style id="mb-v74-calendar-final">
-/* top nav text consistency */
+
+
+
+
+<!-- MB V76: clean native iPhone date input integration -->
+<style id="mb-v76-clean-native-date">
+/* Restore equal top nav labels and Home text */
 .tab-bar{
   display:grid!important;
   grid-template-columns:repeat(4,minmax(0,1fr))!important;
@@ -11008,7 +11019,9 @@ body.mb-add-popup-active{overflow:hidden!important;}
   text-align:center!important;
   padding:11px 6px!important;
 }
-.tab-bar .tab-btn[data-screen="Today"]{font-size:0!important}
+.tab-bar .tab-btn[data-screen="Today"]{
+  font-size:0!important;
+}
 .tab-bar .tab-btn[data-screen="Today"]::after{
   content:"Home";
   display:block;
@@ -11018,330 +11031,147 @@ body.mb-add-popup-active{overflow:hidden!important;}
   color:inherit;
 }
 
-/* clickable date heading */
-#todayDateHeading.today-date-heading-v74{
-  display:inline-flex!important;
+/* Native date row inside the Home card */
+#todayDateHeading.today-date-heading-native{
+  display:flex!important;
   align-items:center!important;
   gap:10px!important;
-  width:auto!important;
+  flex-wrap:wrap!important;
+  width:100%!important;
   max-width:100%!important;
+  margin:0 0 16px!important;
+}
+
+#todayDateHeading .today-date-label-native{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:8px!important;
   padding:8px 14px!important;
   border-radius:18px!important;
-  cursor:pointer!important;
-  user-select:none!important;
   background:linear-gradient(145deg,rgba(2,6,23,.46),rgba(15,23,42,.36))!important;
   border:1px solid rgba(125,211,252,.34)!important;
   box-shadow:0 0 18px rgba(56,189,248,.18), inset 0 1px 0 rgba(255,255,255,.06)!important;
-  margin-bottom:16px!important;
-}
-#todayDateHeading .today-date-button-v74{
-  width:auto!important;
-  height:auto!important;
-  min-height:0!important;
-  padding:0!important;
-  margin:0!important;
-  border:0!important;
-  background:transparent!important;
-  box-shadow:none!important;
   color:inherit!important;
   font:inherit!important;
   font-weight:950!important;
   line-height:1!important;
-  text-align:left!important;
-  cursor:pointer!important;
-  pointer-events:auto!important;
-}
-#todayDateHeading .today-title-arrow{
-  color:#7dd3fc!important;
-  font-size:24px!important;
-  font-weight:900!important;
-  line-height:1!important;
-  text-shadow:0 0 12px rgba(56,189,248,.75)!important;
-  pointer-events:none!important;
-}
-#todayDateHeading #date{
-  display:none!important;
 }
 
-/* calendar in normal flow */
-#mbCalendarV74{
-  display:none;
-  width:100%;
-  box-sizing:border-box;
-  margin:0 0 18px 0;
-  padding:14px;
-  border-radius:22px;
-  background:linear-gradient(145deg,rgba(6,13,28,.99),rgba(9,18,35,.99));
-  border:1px solid rgba(56,189,248,.42);
-  box-shadow:0 18px 42px rgba(0,0,0,.50),0 0 24px rgba(37,99,235,.24);
-  color:#f8fafc;
-}
-#mbCalendarV74.active{
-  display:block!important;
-}
-.mb-cal-head-v74{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:12px;
-}
-.mb-cal-title-v74{
-  font-weight:950;
-  font-size:20px;
-}
-.mb-cal-nav-v74,
-.mb-cal-day-v74,
-.mb-cal-action-v74{
-  pointer-events:auto!important;
-  touch-action:manipulation!important;
-  cursor:pointer!important;
-}
-.mb-cal-nav-v74{
-  width:42px!important;
-  height:38px!important;
-  border-radius:14px!important;
-  border:1px solid rgba(125,211,252,.28)!important;
-  background:rgba(2,6,23,.62)!important;
-  color:#7dd3fc!important;
-  font-size:24px!important;
-  font-weight:950!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  padding:0!important;
-  margin:0!important;
-}
-.mb-cal-grid-v74{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:6px;
-}
-.mb-cal-dow-v74{
-  text-align:center;
-  font-size:12px;
+#todayDateHeading .today-date-label-native::after{
+  content:"selected date";
+  display:inline-block;
+  margin-left:4px;
+  color:#7dd3fc;
+  font-size:11px;
   font-weight:850;
-  color:#94a3b8;
-  padding:4px 0;
+  letter-spacing:.2px;
 }
-.mb-cal-day-v74{
-  height:38px!important;
-  border-radius:13px!important;
-  border:1px solid rgba(59,130,246,.20)!important;
-  background:rgba(2,6,23,.56)!important;
-  color:#e5e7eb!important;
-  font-size:15px!important;
+
+/* This is intentionally visible; iPhone native picker needs a real tappable input */
+#todayDateHeading .today-date-input-native{
+  display:block!important;
+  position:relative!important;
+  z-index:20!important;
+  width:165px!important;
+  max-width:52vw!important;
+  height:46px!important;
+  padding:0 10px!important;
+  border-radius:16px!important;
+  border:1.5px solid rgba(125,211,252,.42)!important;
+  background:rgba(2,6,23,.70)!important;
+  color:#e5f6ff!important;
+  font-size:16px!important;
   font-weight:850!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  padding:0!important;
-  margin:0!important;
-  -webkit-tap-highlight-color:rgba(125,211,252,.22)!important;
+  box-shadow:0 0 14px rgba(56,189,248,.22), inset 0 1px 0 rgba(255,255,255,.06)!important;
+  appearance:auto!important;
+  -webkit-appearance:auto!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+  cursor:pointer!important;
+  touch-action:auto!important;
 }
-.mb-cal-day-v74.blank{
-  opacity:0!important;
-  pointer-events:none!important;
-}
-.mb-cal-day-v74.today{
-  border-color:rgba(34,211,238,.85)!important;
-  box-shadow:0 0 14px rgba(34,211,238,.30)!important;
-}
-.mb-cal-day-v74.selected{
-  background:linear-gradient(135deg,#2563eb,#7c3aed)!important;
-  border-color:rgba(255,255,255,.18)!important;
-  color:white!important;
-  box-shadow:0 0 18px rgba(37,99,235,.44)!important;
-}
-.mb-cal-actions-v74{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-  margin-top:12px;
-}
-.mb-cal-action-v74{
-  height:42px!important;
-  margin:0!important;
-  border-radius:14px!important;
+
+#todayDateHeading .today-date-input-native::-webkit-calendar-picker-indicator{
+  opacity:1!important;
+  cursor:pointer!important;
+  filter:invert(1);
 }
 </style>
 
-<script id="mb-v74-calendar-final-js">
+<script id="mb-v76-clean-native-date-js">
 (function(){
-  function $(id){ return document.getElementById(id); }
+  function byId(id){ return document.getElementById(id); }
 
   function todayKey(){
-    var d = new Date();
+    const d = new Date();
     return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   }
 
-  function toKey(d){
-    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-  }
-
-  function parseKey(v){
-    var p = (v || todayKey()).split('-').map(Number);
-    return new Date(p[0], p[1]-1, p[2]);
-  }
-
-  function labelFor(v){
+  function safeDateLabel(v){
     if(!v || v === todayKey()) return 'Today';
-    return parseKey(v).toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
-  }
-
-  var monthShown = null;
-
-  function setDateText(){
-    var input = $('date');
-    var display = $('dateDisplay');
-    if(input && display) display.textContent = labelFor(input.value);
-  }
-
-  function renderCal(){
-    var cal = $('mbCalendarV74');
-    var input = $('date');
-    if(!cal || !input) return;
-
-    if(!input.value) input.value = todayKey();
-    if(!monthShown) monthShown = parseKey(input.value);
-
-    var selected = input.value;
-    var today = todayKey();
-    var y = monthShown.getFullYear();
-    var m = monthShown.getMonth();
-
-    var html = '';
-    html += '<div class="mb-cal-head-v74">';
-    html += '<button type="button" class="mb-cal-nav-v74" data-cal-act="prev">‹</button>';
-    html += '<div class="mb-cal-title-v74">' + monthShown.toLocaleDateString('en-US',{month:'long',year:'numeric'}) + '</div>';
-    html += '<button type="button" class="mb-cal-nav-v74" data-cal-act="next">›</button>';
-    html += '</div>';
-    html += '<div class="mb-cal-grid-v74">';
-    ['S','M','T','W','T','F','S'].forEach(function(x){
-      html += '<div class="mb-cal-dow-v74">' + x + '</div>';
-    });
-
-    var first = new Date(y,m,1);
-    var days = new Date(y,m+1,0).getDate();
-
-    for(var i=0;i<first.getDay();i++){
-      html += '<button type="button" class="mb-cal-day-v74 blank"></button>';
-    }
-
-    for(var d=1; d<=days; d++){
-      var key = toKey(new Date(y,m,d));
-      var cls = 'mb-cal-day-v74' + (key === today ? ' today' : '') + (key === selected ? ' selected' : '');
-      html += '<button type="button" class="' + cls + '" data-cal-date="' + key + '">' + d + '</button>';
-    }
-
-    html += '</div>';
-    html += '<div class="mb-cal-actions-v74">';
-    html += '<button type="button" class="light mb-cal-action-v74" data-cal-act="close">Close</button>';
-    html += '<button type="button" class="good mb-cal-action-v74" data-cal-act="today">Today</button>';
-    html += '</div>';
-
-    cal.innerHTML = html;
-  }
-
-  function openCal(){
-    var cal = $('mbCalendarV74');
-    var input = $('date');
-    if(!cal || !input) return false;
-    if(!input.value) input.value = todayKey();
-    monthShown = parseKey(input.value);
-    renderCal();
-    cal.classList.toggle('active');
-    return false;
-  }
-
-  function closeCal(){
-    var cal = $('mbCalendarV74');
-    if(cal) cal.classList.remove('active');
-    return false;
-  }
-
-  function chooseDate(key){
-    var input = $('date');
-    if(!input) return false;
-    input.value = key || todayKey();
-    setDateText();
-
     try{
-      if(typeof window.dateChanged === 'function') window.dateChanged();
-    }catch(e){}
-
-    setDateText();
-    closeCal();
-    return false;
-  }
-
-  function handleCalTap(e){
-    var t = e.target;
-    if(!t) return;
-
-    var dateBtn = t.closest && t.closest('[data-cal-date]');
-    if(dateBtn){
-      e.preventDefault();
-      e.stopPropagation();
-      chooseDate(dateBtn.getAttribute('data-cal-date'));
-      return false;
-    }
-
-    var actBtn = t.closest && t.closest('[data-cal-act]');
-    if(actBtn){
-      e.preventDefault();
-      e.stopPropagation();
-      var act = actBtn.getAttribute('data-cal-act');
-      if(act === 'prev'){
-        monthShown.setMonth(monthShown.getMonth()-1);
-        renderCal();
-      }else if(act === 'next'){
-        monthShown.setMonth(monthShown.getMonth()+1);
-        renderCal();
-      }else if(act === 'today'){
-        chooseDate(todayKey());
-      }else if(act === 'close'){
-        closeCal();
-      }
-      return false;
+      return new Date(v + 'T00:00:00').toLocaleDateString('en-US', {
+        month:'long',
+        day:'numeric',
+        year:'numeric'
+      });
+    }catch(e){
+      return v || 'Today';
     }
   }
 
-  function install(){
-    var heading = $('todayDateHeading');
-    var display = $('dateDisplay');
-    var input = $('date');
-    var cal = $('mbCalendarV74');
+  function updateHomeDateLabel(){
+    const input = byId('date');
+    const display = byId('dateDisplay');
+    if(input && display){
+      display.textContent = safeDateLabel(input.value);
+    }
+  }
 
-    if(!heading || !display || !input || !cal) return;
+  function installNativeDate(){
+    const input = byId('date');
+    const display = byId('dateDisplay');
+
+    if(!input || !display) return;
 
     if(!input.value) input.value = todayKey();
 
-    input.style.display = 'none';
+    input.style.display = 'block';
+    input.style.opacity = '1';
+    input.style.pointerEvents = 'auto';
 
-    /* hard override old date handlers */
-    window.openDatePicker = openCal;
-    window.updateDateDisplay = setDateText;
+    // Remove old handlers from earlier versions.
+    window.repairCalendar = function(){};
+    window.openDatePicker = function(){ input.focus(); };
+    window.updateDateDisplay = updateHomeDateLabel;
 
-    heading.onclick = openCal;
-    display.onclick = openCal;
+    if(!input.__mbV76Bound){
+      input.addEventListener('input', updateHomeDateLabel);
+      input.addEventListener('change', function(){
+        updateHomeDateLabel();
 
-    if(!heading.__mbV74Bound){
-      heading.addEventListener('click', function(e){ e.preventDefault(); openCal(); }, false);
-      heading.addEventListener('touchend', function(e){ e.preventDefault(); openCal(); }, {passive:false});
-      cal.addEventListener('click', handleCalTap, false);
-      cal.addEventListener('touchend', handleCalTap, {passive:false});
-      heading.__mbV74Bound = true;
+        try{
+          if(typeof window.dateChanged === 'function'){
+            window.dateChanged();
+          }
+        }catch(e){}
+
+        updateHomeDateLabel();
+      });
+      input.__mbV76Bound = true;
     }
 
-    setDateText();
+    updateHomeDateLabel();
   }
 
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install);
-  else install();
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', installNativeDate);
+  }else{
+    installNativeDate();
+  }
 
-  setTimeout(install, 200);
-  setTimeout(install, 1000);
+  setTimeout(installNativeDate, 200);
+  setTimeout(installNativeDate, 1000);
 })();
 </script>
 
