@@ -11006,8 +11006,8 @@ body.mb-add-popup-active{overflow:hidden!important;}
 
 
 
-<!-- MB V80: formatted date bar with Home SVG left and Calendar SVG right -->
-<style id="mb-v80-date-svg-bar">
+<!-- MB V83: stable Add page restored + formatted date bar SVGs -->
+<style id="mb-v83-date-svg-stable">
 /* Top nav label consistency */
 .tab-bar{
   display:grid!important;
@@ -11033,8 +11033,8 @@ body.mb-add-popup-active{overflow:hidden!important;}
   color:inherit;
 }
 
-/* Clean date bar */
-#todayDateHeading.today-date-heading-v80{
+/* One clean date row */
+#todayDateHeading.today-date-heading-v83{
   display:grid!important;
   grid-template-columns:52px minmax(0,1fr) 58px!important;
   align-items:center!important;
@@ -11045,20 +11045,20 @@ body.mb-add-popup-active{overflow:hidden!important;}
   padding:0!important;
 }
 
-/* Left Home SVG button */
-#todayDateHeading .date-left-icon-v80{
+/* Left home SVG */
+#todayDateHeading .date-left-icon-v83{
   width:52px!important;
   height:54px!important;
   border-radius:19px!important;
   display:flex!important;
   align-items:center!important;
   justify-content:center!important;
-  background:linear-gradient(145deg,rgba(2,6,23,.46),rgba(15,23,42,.36))!important;
+  background:linear-gradient(145deg,rgba(2,6,23,.54),rgba(15,23,42,.40))!important;
   border:1px solid rgba(125,211,252,.34)!important;
-  box-shadow:0 0 16px rgba(56,189,248,.18), inset 0 1px 0 rgba(255,255,255,.06)!important;
+  box-shadow:0 0 16px rgba(56,189,248,.20), inset 0 1px 0 rgba(255,255,255,.06)!important;
   color:#7dd3fc!important;
 }
-#todayDateHeading .date-left-icon-v80 svg{
+#todayDateHeading .date-left-icon-v83 svg{
   width:25px!important;
   height:25px!important;
   stroke:currentColor!important;
@@ -11066,7 +11066,7 @@ body.mb-add-popup-active{overflow:hidden!important;}
 }
 
 /* Main date text */
-#todayDateHeading .today-date-label-v80{
+#todayDateHeading .today-date-label-v83{
   display:flex!important;
   align-items:center!important;
   justify-content:flex-start!important;
@@ -11087,8 +11087,8 @@ body.mb-add-popup-active{overflow:hidden!important;}
   text-overflow:ellipsis!important;
 }
 
-/* Right calendar button wrapper */
-#todayDateHeading .date-calendar-wrap-v80{
+/* Right calendar SVG button */
+#todayDateHeading .date-calendar-wrap-v83{
   position:relative!important;
   width:58px!important;
   height:54px!important;
@@ -11097,10 +11097,12 @@ body.mb-add-popup-active{overflow:hidden!important;}
   border:1.5px solid rgba(125,211,252,.42)!important;
   box-shadow:0 0 18px rgba(56,189,248,.32), inset 0 1px 0 rgba(255,255,255,.10)!important;
   overflow:hidden!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
 }
 
-/* Visible calendar SVG */
-#todayDateHeading .calendar-svg-v80{
+#todayDateHeading .calendar-svg-v83{
   position:absolute!important;
   inset:0!important;
   display:flex!important;
@@ -11109,15 +11111,15 @@ body.mb-add-popup-active{overflow:hidden!important;}
   color:#fff!important;
   pointer-events:none!important;
 }
-#todayDateHeading .calendar-svg-v80 svg{
+#todayDateHeading .calendar-svg-v83 svg{
   width:28px!important;
   height:28px!important;
   stroke:currentColor!important;
   filter:drop-shadow(0 0 8px rgba(255,255,255,.45));
 }
 
-/* Real iPhone date input covers the calendar SVG but is transparent */
-#todayDateHeading .today-date-input-v80{
+/* Native iPhone date input remains the actual tappable element */
+#todayDateHeading .today-date-input-v83{
   position:absolute!important;
   inset:0!important;
   display:block!important;
@@ -11133,12 +11135,12 @@ body.mb-add-popup-active{overflow:hidden!important;}
   font-size:1px!important;
   appearance:auto!important;
   -webkit-appearance:auto!important;
-  opacity:.02!important;
+  opacity:.03!important;
   pointer-events:auto!important;
   cursor:pointer!important;
   touch-action:auto!important;
 }
-#todayDateHeading .today-date-input-v80::-webkit-calendar-picker-indicator{
+#todayDateHeading .today-date-input-v83::-webkit-calendar-picker-indicator{
   opacity:0!important;
   cursor:pointer!important;
   width:100%!important;
@@ -11148,9 +11150,9 @@ body.mb-add-popup-active{overflow:hidden!important;}
 }
 </style>
 
-<script id="mb-v80-date-svg-bar-js">
+<script id="mb-v83-date-svg-stable-js">
 (function(){
-  const STORE_KEY = 'mb_selected_date_v80';
+  const STORE_KEY = 'mb_selected_date_v83';
 
   function byId(id){ return document.getElementById(id); }
 
@@ -11178,13 +11180,13 @@ body.mb-add-popup-active{overflow:hidden!important;}
     try{
       return localStorage.getItem(STORE_KEY) || todayKey();
     }catch(e){
-      return window.__mbSelectedDateV80 || todayKey();
+      return window.__mbSelectedDateV83 || todayKey();
     }
   }
 
   function saveDate(v){
     const value = v || todayKey();
-    window.__mbSelectedDateV80 = value;
+    window.__mbSelectedDateV83 = value;
     try{ localStorage.setItem(STORE_KEY, value); }catch(e){}
     return value;
   }
@@ -11200,6 +11202,7 @@ body.mb-add-popup-active{overflow:hidden!important;}
   function syncDateFromInput(){
     const input = byId('date');
     if(!input) return;
+
     saveDate(input.value || todayKey());
     updateLabel();
 
@@ -11211,21 +11214,21 @@ body.mb-add-popup-active{overflow:hidden!important;}
 
     setTimeout(function(){
       const rebuilt = byId('date');
-      if(rebuilt) rebuilt.value = window.__mbSelectedDateV80 || getSavedDate();
+      if(rebuilt) rebuilt.value = window.__mbSelectedDateV83 || getSavedDate();
       renderDateHeading();
       updateLabel();
     }, 0);
 
     setTimeout(function(){
       const rebuilt = byId('date');
-      if(rebuilt) rebuilt.value = window.__mbSelectedDateV80 || getSavedDate();
+      if(rebuilt) rebuilt.value = window.__mbSelectedDateV83 || getSavedDate();
       renderDateHeading();
       updateLabel();
     }, 120);
   }
 
   function bindInput(input){
-    if(!input || input.__mbV80Bound) return;
+    if(!input || input.__mbV83Bound) return;
 
     input.addEventListener('input', function(){
       saveDate(input.value || todayKey());
@@ -11233,8 +11236,7 @@ body.mb-add-popup-active{overflow:hidden!important;}
     });
 
     input.addEventListener('change', syncDateFromInput);
-
-    input.__mbV80Bound = true;
+    input.__mbV83Bound = true;
   }
 
   function renderDateHeading(){
@@ -11243,19 +11245,19 @@ body.mb-add-popup-active{overflow:hidden!important;}
 
     const chosen = saveDate(getSavedDate());
 
-    if(!byId('date') || !byId('dateDisplay') || !h.querySelector('.today-date-input-v80')){
-      h.className = 'today-date-heading-v80';
+    if(!byId('date') || !byId('dateDisplay') || !h.querySelector('.today-date-input-v83')){
+      h.className = 'today-date-heading-v83';
       h.innerHTML =
-        '<span class="date-left-icon-v80" aria-hidden="true">' +
+        '<span class="date-left-icon-v83" aria-hidden="true">' +
           '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' +
             '<path d="M3 11.5 12 4l9 7.5"></path>' +
             '<path d="M5.5 10.5V20h13v-9.5"></path>' +
             '<path d="M9.5 20v-6h5v6"></path>' +
           '</svg>' +
         '</span>' +
-        '<span id="dateDisplay" class="today-date-label-v80">Today</span>' +
-        '<span class="date-calendar-wrap-v80">' +
-          '<span class="calendar-svg-v80" aria-hidden="true">' +
+        '<span id="dateDisplay" class="today-date-label-v83">Today</span>' +
+        '<span class="date-calendar-wrap-v83" aria-label="Open calendar">' +
+          '<span class="calendar-svg-v83" aria-hidden="true">' +
             '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' +
               '<rect x="3.5" y="5" width="17" height="15.5" rx="3"></rect>' +
               '<path d="M7.5 3.5v3"></path>' +
@@ -11264,17 +11266,17 @@ body.mb-add-popup-active{overflow:hidden!important;}
               '<path d="M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01M16 17h.01"></path>' +
             '</svg>' +
           '</span>' +
-          '<input id="date" class="today-date-input-v80" type="date" aria-label="Select date">' +
+          '<input id="date" class="today-date-input-v83" type="date" aria-label="Select date">' +
         '</span>';
     }else{
-      h.className = 'today-date-heading-v80';
+      h.className = 'today-date-heading-v83';
     }
 
     const input = byId('date');
     if(input){
       input.value = chosen;
       input.style.display = 'block';
-      input.style.opacity = '.02';
+      input.style.opacity = '.03';
       input.style.pointerEvents = 'auto';
       bindInput(input);
     }
@@ -11290,12 +11292,12 @@ body.mb-add-popup-active{overflow:hidden!important;}
     renderDateHeading();
 
     const h = byId('todayDateHeading');
-    if(h && !h.__mbV80Observed){
+    if(h && !h.__mbV83Observed){
       const obs = new MutationObserver(function(){
         setTimeout(renderDateHeading, 0);
       });
       obs.observe(h, {childList:true, subtree:true});
-      h.__mbV80Observed = true;
+      h.__mbV83Observed = true;
     }
   }
 
@@ -11309,427 +11311,6 @@ body.mb-add-popup-active{overflow:hidden!important;}
   setTimeout(install, 500);
   setTimeout(install, 1200);
   setInterval(renderDateHeading, 1500);
-})();
-</script>
-
-
-
-<!-- MB V81: repair Add workspace layout after date SVG bar -->
-<style id="mb-v81-add-workspace-repair">
-/* Make the Add workspace a proper bottom sheet again */
-#screenAdd.mb-add-popup-open{
-  top:var(--mb-add-final-top, 500px)!important;
-  left:50%!important;
-  transform:translateX(-50%)!important;
-  width:min(560px, calc(100vw - 24px))!important;
-  max-width:min(560px, calc(100vw - 24px))!important;
-  right:auto!important;
-  bottom:0!important;
-  padding:0 12px calc(env(safe-area-inset-bottom,0px) + 28px)!important;
-  box-sizing:border-box!important;
-  overflow-y:auto!important;
-  overflow-x:hidden!important;
-  background:linear-gradient(180deg,#07152c 0%,#031024 50%,#020617 100%)!important;
-}
-
-/* Top folder row should not clip page content */
-#screenAdd.mb-add-popup-open #mbAddFolderBar{
-  width:100%!important;
-  max-width:100%!important;
-  margin:0 0 14px!important;
-  padding:8px!important;
-  box-sizing:border-box!important;
-  border-radius:22px!important;
-  overflow-x:auto!important;
-  overflow-y:hidden!important;
-}
-
-/* Prevent right-edge clipping in Add pages */
-#screenAdd.mb-add-popup-open .card{
-  width:100%!important;
-  max-width:100%!important;
-  margin:0 0 18px!important;
-  padding:18px!important;
-  box-sizing:border-box!important;
-  overflow:hidden!important;
-  border-radius:24px!important;
-}
-
-#screenAdd.mb-add-popup-open .card .card-title-row,
-#screenAdd.mb-add-popup-open .card h2{
-  max-width:100%!important;
-  overflow-wrap:break-word!important;
-}
-
-/* Search rows and plus button stay inside the card */
-#screenAdd.mb-add-popup-open .db-search-plus-row,
-#screenAdd.mb-add-popup-open .recipe-search-row,
-#screenAdd.mb-add-popup-open .meal-search-row,
-#screenAdd.mb-add-popup-open .search-plus-row{
-  display:grid!important;
-  grid-template-columns:minmax(0,1fr) 58px!important;
-  gap:10px!important;
-  width:100%!important;
-  max-width:100%!important;
-  box-sizing:border-box!important;
-}
-
-#screenAdd.mb-add-popup-open input,
-#screenAdd.mb-add-popup-open select,
-#screenAdd.mb-add-popup-open textarea{
-  min-width:0!important;
-  max-width:100%!important;
-  box-sizing:border-box!important;
-}
-
-#screenAdd.mb-add-popup-open .add-custom-plus-btn,
-#screenAdd.mb-add-popup-open .recipe-search-row button,
-#screenAdd.mb-add-popup-open .meal-search-row button,
-#screenAdd.mb-add-popup-open .search-plus-row button{
-  width:58px!important;
-  min-width:58px!important;
-  max-width:58px!important;
-  height:58px!important;
-  padding:0!important;
-}
-
-/* Pills scroll inside, never push page wider */
-#screenAdd.mb-add-popup-open .pill-row{
-  width:100%!important;
-  max-width:100%!important;
-  overflow-x:auto!important;
-  overflow-y:hidden!important;
-  scrollbar-width:none!important;
-  box-sizing:border-box!important;
-}
-#screenAdd.mb-add-popup-open .pill-row::-webkit-scrollbar{display:none!important;}
-
-/* Keep footer below real content; do not let it appear immediately after a clipped card */
-#screenAdd.mb-add-popup-open .creator-footer{
-  margin:22px 0 16px!important;
-  width:100%!important;
-  text-align:center!important;
-}
-
-/* The close button remains visible in the folder bar */
-#screenAdd.mb-add-popup-open #mbAddFolderCloseBtn{
-  flex:0 0 38px!important;
-  width:38px!important;
-  min-width:38px!important;
-  max-width:38px!important;
-  height:38px!important;
-  margin-left:auto!important;
-}
-</style>
-
-<script id="mb-v81-add-workspace-repair-js">
-(function(){
-  function setAddTop(){
-    var card=document.querySelector('#screenToday .hero-stats');
-    var rings=document.querySelector('#screenToday .ring-grid, #screenToday .dashboard-rings, #screenToday .summary-rings, #screenToday .progress-grid');
-    var top=0;
-
-    if(card){
-      var r=card.getBoundingClientRect();
-      top=Math.ceil(r.bottom + 8);
-    }
-
-    // If a known rings container exists, start just before it.
-    if(rings){
-      var rr=rings.getBoundingClientRect();
-      if(rr.top > 0) top=Math.min(top || rr.top, Math.ceil(rr.top - 4));
-    }
-
-    if(!top || top < 260){
-      var homeCard=document.querySelector('#screenToday .card-blue');
-      if(homeCard){
-        var hr=homeCard.getBoundingClientRect();
-        top=Math.ceil(hr.top + 300);
-      }
-    }
-
-    if(!top || top < 260) top=500;
-
-    document.documentElement.style.setProperty('--mb-add-final-top', top+'px');
-  }
-
-  function repairAdd(){
-    setAddTop();
-
-    var add=document.getElementById('screenAdd');
-    if(!add || !add.classList.contains('mb-add-popup-open')) return;
-
-    add.style.maxWidth='min(560px, calc(100vw - 24px))';
-    add.style.width='min(560px, calc(100vw - 24px))';
-    add.style.left='50%';
-    add.style.right='auto';
-    add.style.transform='translateX(-50%)';
-    add.style.overflowX='hidden';
-
-    var footer=add.querySelector('.creator-footer');
-    if(footer) add.appendChild(footer);
-  }
-
-  var oldOpen=window.openAddWorkspacePopup;
-  if(typeof oldOpen==='function' && !window.__mbV81OpenWrapped){
-    window.openAddWorkspacePopup=function(){
-      setAddTop();
-      var result=oldOpen.apply(this,arguments);
-      setTimeout(repairAdd,20);
-      setTimeout(repairAdd,120);
-      setTimeout(repairAdd,500);
-      return result;
-    };
-    window.__mbV81OpenWrapped=true;
-  }
-
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',function(){
-      setAddTop();
-      setTimeout(repairAdd,400);
-    });
-  }else{
-    setAddTop();
-    setTimeout(repairAdd,400);
-  }
-
-  window.addEventListener('resize',function(){setTimeout(repairAdd,80)});
-  window.addEventListener('orientationchange',function(){setTimeout(repairAdd,300)});
-})();
-</script>
-
-
-
-<!-- MB V82: fix Add popup breaking caused by fixed-sheet + footer + top calculation conflicts -->
-<style id="mb-v82-add-break-fix">
-/* The Add workspace should be a real sheet, not a clipped/empty page */
-#screenAdd.mb-add-popup-open{
-  position:fixed!important;
-  left:50%!important;
-  right:auto!important;
-  transform:translateX(-50%)!important;
-  width:min(560px, calc(100vw - 24px))!important;
-  max-width:min(560px, calc(100vw - 24px))!important;
-  top:var(--mb-add-sheet-top, 500px)!important;
-  bottom:0!important;
-  height:auto!important;
-  min-height:0!important;
-  z-index:99980!important;
-  display:block!important;
-  margin:0!important;
-  padding:0 10px calc(env(safe-area-inset-bottom,0px) + 26px)!important;
-  box-sizing:border-box!important;
-  overflow-y:auto!important;
-  overflow-x:hidden!important;
-  -webkit-overflow-scrolling:touch!important;
-  background:linear-gradient(180deg,#07152c 0%,#031024 48%,#020617 100%)!important;
-  border:1px solid rgba(56,189,248,.35)!important;
-  border-bottom:0!important;
-  border-radius:22px 22px 0 0!important;
-  box-shadow:0 -16px 38px rgba(0,0,0,.52)!important;
-}
-
-/* Do not show the creator footer inside the Add sheet. It was making the page look empty/broken */
-#screenAdd.mb-add-popup-open .creator-footer{
-  display:none!important;
-}
-
-/* Folder bar remains solid, contained, and scrollable */
-#screenAdd.mb-add-popup-open #mbAddFolderBar{
-  position:sticky!important;
-  top:0!important;
-  z-index:99991!important;
-  width:100%!important;
-  max-width:100%!important;
-  margin:0 0 12px!important;
-  padding:8px!important;
-  box-sizing:border-box!important;
-  display:flex!important;
-  align-items:center!important;
-  gap:8px!important;
-  overflow-x:auto!important;
-  overflow-y:hidden!important;
-  border-radius:22px!important;
-  background:linear-gradient(145deg,#06142b,#081631)!important;
-  border:1px solid rgba(59,130,246,.42)!important;
-  box-shadow:0 12px 26px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.07)!important;
-}
-#screenAdd.mb-add-popup-open #mbAddFolderBar::-webkit-scrollbar{display:none!important;}
-
-#screenAdd.mb-add-popup-open #mbAddFolderBar .mb-folder-tab,
-#screenAdd.mb-add-popup-open #mbAddFolderBar .mb-folder-scan{
-  flex:0 0 auto!important;
-  height:40px!important;
-  min-height:40px!important;
-  padding:0 12px!important;
-  border-radius:15px!important;
-  font-size:14px!important;
-  box-sizing:border-box!important;
-}
-
-/* Keep X in the row but prevent it from covering page content */
-#screenAdd.mb-add-popup-open #mbAddFolderCloseBtn{
-  position:sticky!important;
-  right:0!important;
-  flex:0 0 40px!important;
-  width:40px!important;
-  min-width:40px!important;
-  max-width:40px!important;
-  height:40px!important;
-  margin-left:auto!important;
-  padding:0!important;
-  border-radius:15px!important;
-  z-index:99992!important;
-}
-
-/* Cards fully fit the sheet */
-#screenAdd.mb-add-popup-open > .card,
-#screenAdd.mb-add-popup-open #mbAddHistoryCard{
-  width:100%!important;
-  max-width:100%!important;
-  margin:0 0 16px!important;
-  padding:18px!important;
-  box-sizing:border-box!important;
-  overflow:hidden!important;
-  border-radius:24px!important;
-}
-
-/* Fix the right edge overflow from the search-plus rows */
-#screenAdd.mb-add-popup-open .db-search-plus-row,
-#screenAdd.mb-add-popup-open .recipe-search-row,
-#screenAdd.mb-add-popup-open .meal-search-row,
-#screenAdd.mb-add-popup-open .meal-builder-search-row,
-#screenAdd.mb-add-popup-open .search-plus-row{
-  display:grid!important;
-  grid-template-columns:minmax(0,1fr) 58px!important;
-  gap:10px!important;
-  width:100%!important;
-  max-width:100%!important;
-  box-sizing:border-box!important;
-  align-items:center!important;
-}
-
-#screenAdd.mb-add-popup-open input,
-#screenAdd.mb-add-popup-open select,
-#screenAdd.mb-add-popup-open textarea{
-  min-width:0!important;
-  max-width:100%!important;
-  box-sizing:border-box!important;
-}
-
-#screenAdd.mb-add-popup-open .add-custom-plus-btn,
-#screenAdd.mb-add-popup-open .recipe-search-row button,
-#screenAdd.mb-add-popup-open .meal-search-row button,
-#screenAdd.mb-add-popup-open .meal-builder-search-row button,
-#screenAdd.mb-add-popup-open .search-plus-row button,
-#screenAdd.mb-add-popup-open #openCustomFoodBtn{
-  width:58px!important;
-  min-width:58px!important;
-  max-width:58px!important;
-  height:58px!important;
-  padding:0!important;
-  margin:0!important;
-}
-
-/* Search results should remain visible in Add Food */
-#screenAdd.mb-add-popup-open #foodDatabaseList{
-  display:block!important;
-  width:100%!important;
-  max-width:100%!important;
-  box-sizing:border-box!important;
-  overflow-x:hidden!important;
-}
-
-/* Pills stay inside card */
-#screenAdd.mb-add-popup-open .pill-row{
-  width:100%!important;
-  max-width:100%!important;
-  overflow-x:auto!important;
-  overflow-y:hidden!important;
-  box-sizing:border-box!important;
-  scrollbar-width:none!important;
-}
-#screenAdd.mb-add-popup-open .pill-row::-webkit-scrollbar{display:none!important;}
-</style>
-
-<script id="mb-v82-add-break-fix-js">
-(function(){
-  function q(sel){return document.querySelector(sel)}
-  function byId(id){return document.getElementById(id)}
-
-  function computeAddTop(){
-    var stats=q('#screenToday .hero-stats');
-    var rings=q('#screenToday .progress-grid');
-    var top=0;
-
-    // Start just before the 6 rings, per your requested layout.
-    if(rings){
-      var rr=rings.getBoundingClientRect();
-      if(rr.top > 0) top=Math.ceil(rr.top - 2);
-    }
-
-    // Fallback: under daily progress card.
-    if(!top && stats){
-      var sr=stats.getBoundingClientRect();
-      top=Math.ceil(sr.bottom + 6);
-    }
-
-    if(!top || top < 320) top=500;
-
-    document.documentElement.style.setProperty('--mb-add-sheet-top', top+'px');
-    document.documentElement.style.setProperty('--mb-add-final-top', top+'px');
-  }
-
-  function fixAddSheet(){
-    computeAddTop();
-
-    var add=byId('screenAdd');
-    if(!add || !add.classList.contains('mb-add-popup-open')) return;
-
-    // Keep folder page active; never let the footer appear as the main content.
-    var footer=add.querySelector('.creator-footer');
-    if(footer) footer.style.display='none';
-
-    // Ensure the folder system is rebuilt if another patch removed it.
-    if(typeof window.mbShowAddFolder === 'function' && !window._mbAddFolder){
-      window._mbAddFolder='add';
-      window.mbShowAddFolder('add');
-    }
-
-    try{
-      if(typeof window.renderFoodDatabase==='function') window.renderFoodDatabase();
-    }catch(e){}
-
-    add.scrollLeft=0;
-  }
-
-  // Re-wrap openAddWorkspacePopup after all earlier wrappers.
-  var oldOpen=window.openAddWorkspacePopup;
-  if(typeof oldOpen==='function' && !window.__mbV82OpenWrapped){
-    window.openAddWorkspacePopup=function(){
-      computeAddTop();
-      var result=oldOpen.apply(this,arguments);
-      setTimeout(fixAddSheet,20);
-      setTimeout(fixAddSheet,120);
-      setTimeout(fixAddSheet,450);
-      setTimeout(fixAddSheet,900);
-      return result;
-    };
-    window.__mbV82OpenWrapped=true;
-  }
-
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',function(){
-      computeAddTop();
-      setTimeout(fixAddSheet,500);
-    });
-  }else{
-    computeAddTop();
-    setTimeout(fixAddSheet,500);
-  }
-
-  window.addEventListener('resize',function(){setTimeout(fixAddSheet,100)});
-  window.addEventListener('orientationchange',function(){setTimeout(fixAddSheet,350)});
 })();
 </script>
 
