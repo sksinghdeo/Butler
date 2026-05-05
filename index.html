@@ -11002,8 +11002,10 @@ body.mb-add-popup-active{overflow:hidden!important;}
 
 
 
-<!-- MB V78: protected native date input with corrected formatting -->
-<style id="mb-v78-protected-native-date">
+
+
+<!-- MB V79: formatted date bar + persistent selected date label -->
+<style id="mb-v79-date-bar-final">
 /* Top nav label consistency */
 .tab-bar{
   display:grid!important;
@@ -11029,10 +11031,10 @@ body.mb-add-popup-active{overflow:hidden!important;}
   color:inherit;
 }
 
-/* Clean one-line date header */
-#todayDateHeading.today-date-heading-v78{
+/* One clean date bar */
+#todayDateHeading.today-date-heading-v79{
   display:grid!important;
-  grid-template-columns:42px minmax(0,1fr) auto!important;
+  grid-template-columns:42px minmax(0,1fr) 58px!important;
   align-items:center!important;
   column-gap:10px!important;
   width:100%!important;
@@ -11047,21 +11049,21 @@ body.mb-add-popup-active{overflow:hidden!important;}
   min-width:42px!important;
 }
 
-/* Main label stays as Today / selected date */
-#todayDateHeading .today-date-label-v78{
+/* Main date text */
+#todayDateHeading .today-date-label-v79{
   display:flex!important;
   align-items:center!important;
   justify-content:flex-start!important;
   min-width:0!important;
   width:100%!important;
-  height:50px!important;
-  padding:0 16px!important;
-  border-radius:18px!important;
-  background:linear-gradient(145deg,rgba(2,6,23,.46),rgba(15,23,42,.36))!important;
+  height:54px!important;
+  padding:0 18px!important;
+  border-radius:19px!important;
+  background:linear-gradient(145deg,rgba(2,6,23,.54),rgba(15,23,42,.40))!important;
   border:1px solid rgba(125,211,252,.34)!important;
   box-shadow:0 0 18px rgba(56,189,248,.18), inset 0 1px 0 rgba(255,255,255,.06)!important;
   color:#f8fafc!important;
-  font-size:38px!important;
+  font-size:36px!important;
   font-weight:950!important;
   line-height:1!important;
   white-space:nowrap!important;
@@ -11069,22 +11071,24 @@ body.mb-add-popup-active{overflow:hidden!important;}
   text-overflow:ellipsis!important;
 }
 
-/* Native iPhone date input is visible but compact and theme-matched */
-#todayDateHeading .today-date-input-v78{
+/* Native iPhone date input styled as calendar button */
+#todayDateHeading .today-date-input-v79{
   display:block!important;
   position:relative!important;
   z-index:20!important;
-  width:52px!important;
-  height:50px!important;
+  width:58px!important;
+  height:54px!important;
   padding:0!important;
-  border-radius:18px!important;
+  margin:0!important;
+  border-radius:19px!important;
   border:1.5px solid rgba(125,211,252,.42)!important;
-  background:linear-gradient(135deg,rgba(37,99,235,.85),rgba(124,58,237,.86))!important;
+  background:
+    linear-gradient(135deg,rgba(37,99,235,.96),rgba(124,58,237,.95))!important;
   color:transparent!important;
   -webkit-text-fill-color:transparent!important;
   font-size:1px!important;
   font-weight:850!important;
-  box-shadow:0 0 18px rgba(56,189,248,.26), inset 0 1px 0 rgba(255,255,255,.08)!important;
+  box-shadow:0 0 18px rgba(56,189,248,.32), inset 0 1px 0 rgba(255,255,255,.10)!important;
   appearance:auto!important;
   -webkit-appearance:auto!important;
   opacity:1!important;
@@ -11093,10 +11097,11 @@ body.mb-add-popup-active{overflow:hidden!important;}
   touch-action:auto!important;
 }
 
-#todayDateHeading .today-date-input-v78::-webkit-calendar-picker-indicator{
+/* Keep the real calendar picker area tappable */
+#todayDateHeading .today-date-input-v79::-webkit-calendar-picker-indicator{
   opacity:1!important;
   cursor:pointer!important;
-  filter:invert(1);
+  filter:invert(1) drop-shadow(0 0 6px rgba(255,255,255,.35));
   width:100%!important;
   height:100%!important;
   margin:0!important;
@@ -11104,8 +11109,10 @@ body.mb-add-popup-active{overflow:hidden!important;}
 }
 </style>
 
-<script id="mb-v78-protected-native-date-js">
+<script id="mb-v79-date-bar-final-js">
 (function(){
+  const STORE_KEY = 'mb_selected_date_v79';
+
   function byId(id){ return document.getElementById(id); }
 
   function todayKey(){
@@ -11126,53 +11133,97 @@ body.mb-add-popup-active{overflow:hidden!important;}
     }
   }
 
-  function currentDateValue(){
-    const existing = byId('date');
-    return existing && existing.value ? existing.value : todayKey();
+  function getSavedDate(){
+    const input = byId('date');
+    if(input && input.value) return input.value;
+    try{
+      return localStorage.getItem(STORE_KEY) || todayKey();
+    }catch(e){
+      return window.__mbSelectedDateV79 || todayKey();
+    }
+  }
+
+  function saveDate(v){
+    const value = v || todayKey();
+    window.__mbSelectedDateV79 = value;
+    try{ localStorage.setItem(STORE_KEY, value); }catch(e){}
+    return value;
   }
 
   function updateLabel(){
     const input = byId('date');
     const label = byId('dateDisplay');
-    if(input && label){
-      label.textContent = labelFor(input.value);
-    }
+    const value = input && input.value ? input.value : getSavedDate();
+
+    if(label) label.textContent = labelFor(value);
+    if(input && input.value !== value) input.value = value;
+  }
+
+  function syncDateFromInput(){
+    const input = byId('date');
+    if(!input) return;
+
+    saveDate(input.value || todayKey());
+    updateLabel();
+
+    try{
+      if(typeof window.dateChanged === 'function'){
+        window.dateChanged();
+      }
+    }catch(e){}
+
+    // dateChanged/render can rebuild the heading, so restore our chosen value after it runs.
+    setTimeout(function(){
+      const rebuilt = byId('date');
+      if(rebuilt){
+        rebuilt.value = window.__mbSelectedDateV79 || getSavedDate();
+      }
+      renderDateHeading();
+      updateLabel();
+    }, 0);
+
+    setTimeout(function(){
+      const rebuilt = byId('date');
+      if(rebuilt){
+        rebuilt.value = window.__mbSelectedDateV79 || getSavedDate();
+      }
+      renderDateHeading();
+      updateLabel();
+    }, 120);
   }
 
   function bindInput(input){
-    if(!input || input.__mbV78Bound) return;
-    input.addEventListener('input', updateLabel);
-    input.addEventListener('change', function(){
-      updateLabel();
-      try{
-        if(typeof window.dateChanged === 'function'){
-          window.dateChanged();
-        }
-      }catch(e){}
+    if(!input || input.__mbV79Bound) return;
+
+    input.addEventListener('input', function(){
+      saveDate(input.value || todayKey());
       updateLabel();
     });
-    input.__mbV78Bound = true;
+
+    input.addEventListener('change', syncDateFromInput);
+
+    input.__mbV79Bound = true;
   }
 
   function renderDateHeading(){
     const h = byId('todayDateHeading');
     if(!h) return;
 
-    const wantedValue = currentDateValue();
+    const chosen = saveDate(getSavedDate());
 
-    if(!byId('date') || !byId('dateDisplay') || !h.querySelector('.today-date-input-v78')){
-      h.className = 'today-date-heading-v78';
+    if(!byId('date') || !byId('dateDisplay') || !h.querySelector('.today-date-input-v79')){
+      h.className = 'today-date-heading-v79';
       h.innerHTML =
         '<span class="bc-icon">HM</span>' +
-        '<span id="dateDisplay" class="today-date-label-v78">Today</span>' +
-        '<input id="date" class="today-date-input-v78" type="date" aria-label="Select date">';
+        '<span id="dateDisplay" class="today-date-label-v79">Today</span>' +
+        '<input id="date" class="today-date-input-v79" type="date" aria-label="Select date">';
     }else{
-      h.className = 'today-date-heading-v78';
+      h.className = 'today-date-heading-v79';
     }
 
     const input = byId('date');
     if(input){
-      if(!input.value) input.value = wantedValue || todayKey();
+      input.value = chosen;
       input.style.display = 'block';
       input.style.opacity = '1';
       input.style.pointerEvents = 'auto';
@@ -11183,6 +11234,7 @@ body.mb-add-popup-active{overflow:hidden!important;}
   }
 
   function install(){
+    // Disable old conflicting calendar functions from the base file.
     window.repairCalendar = function(){};
     window.openDatePicker = function(){};
     window.updateDateDisplay = updateLabel;
@@ -11190,12 +11242,12 @@ body.mb-add-popup-active{overflow:hidden!important;}
     renderDateHeading();
 
     const h = byId('todayDateHeading');
-    if(h && !h.__mbV78Observed){
+    if(h && !h.__mbV79Observed){
       const obs = new MutationObserver(function(){
         setTimeout(renderDateHeading, 0);
       });
       obs.observe(h, {childList:true, subtree:true});
-      h.__mbV78Observed = true;
+      h.__mbV79Observed = true;
     }
   }
 
