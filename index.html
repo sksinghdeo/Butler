@@ -11976,5 +11976,383 @@ body.mb-add-popup-lock #screenAdd > .card,
 })();
 </script>
 
+
+
+<!-- MB V91: Search Food Database functional repair -->
+<style id="mb-v91-food-search-fix-css">
+#foodDatabaseList.mb-v91-search-fixed{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin-top:10px!important;
+  overflow:visible!important;
+  background:transparent!important;
+  border:0!important;
+  padding:0!important;
+}
+#foodDatabaseList.mb-v91-search-fixed.expanded{
+  max-height:420px!important;
+  overflow-y:auto!important;
+  padding-right:4px!important;
+}
+.mb-v91-food-row{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:12px!important;
+  align-items:center!important;
+  padding:14px 0!important;
+  border-bottom:1px solid rgba(96,165,250,.18)!important;
+}
+.mb-v91-food-row:last-child{border-bottom:0!important;}
+.mb-v91-food-row b{
+  display:block!important;
+  color:#f8fafc!important;
+  font-size:18px!important;
+  line-height:1.15!important;
+  overflow-wrap:anywhere!important;
+}
+.mb-v91-actions{
+  display:flex!important;
+  gap:8px!important;
+  align-items:center!important;
+}
+.mb-v91-actions .star-btn{
+  width:54px!important;
+  min-width:54px!important;
+  height:54px!important;
+  padding:0!important;
+  margin:0!important;
+}
+.mb-v91-actions .small-btn.good{
+  width:92px!important;
+  min-width:92px!important;
+  height:54px!important;
+  padding:0 12px!important;
+  margin:0!important;
+}
+#dbStatus{
+  display:block!important;
+  margin:12px 0 6px!important;
+}
+#showMoreBtn{
+  margin-top:10px!important;
+}
+
+/* Food use modal */
+#mbFoodUseModal{
+  position:fixed!important;
+  inset:0!important;
+  z-index:2147483600!important;
+  display:none;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:20px!important;
+  background:rgba(2,6,23,.58)!important;
+}
+#mbFoodUseModal.active{display:flex!important;}
+#mbFoodUseModal .mb-food-use-card{
+  width:100%!important;
+  max-width:520px!important;
+  border-radius:28px!important;
+  padding:20px!important;
+  background:linear-gradient(145deg,#07152c,#020617)!important;
+  border:1px solid rgba(56,189,248,.35)!important;
+  box-shadow:0 28px 70px rgba(0,0,0,.62),0 0 34px rgba(37,99,235,.22)!important;
+}
+#mbFoodUseModal h2{
+  margin:0 0 8px!important;
+  color:#fff!important;
+  font-size:30px!important;
+  line-height:1.08!important;
+}
+#mbFoodUseModal .row{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:10px!important;
+}
+#mbFoodUseModal .mb-modal-actions{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:10px!important;
+  margin-top:14px!important;
+}
+#mbFoodUseModal .mb-modal-actions button{
+  width:100%!important;
+  margin:0!important;
+}
+@media(max-width:430px){
+  .mb-v91-food-row{grid-template-columns:1fr!important;}
+  .mb-v91-actions{justify-content:flex-start!important;}
+}
+</style>
+
+<script id="mb-v91-food-search-fix-js">
+(function(){
+  function q(id){return document.getElementById(id)}
+  function N(v){var x=parseFloat(v); return Number.isFinite(x)?x:0}
+  function R(v){return Math.round(N(v)*10)/10}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function norm(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}
+  function read(k){try{var v=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}}
+  function keyOf(x){return norm((x&&x.name)||'')+'|'+norm((x&&x.serving)||'1 serving')+'|'+Math.round(N(x&&x.cal))+'|'+R(x&&x.c)+'|'+R(x&&x.p)+'|'+R(x&&x.f)}
+
+  function asFood(x, fallbackCat){
+    if(!x || !x.name) return null;
+    return {
+      id:x.id || ('mb_'+keyOf(x)),
+      name:x.name,
+      serving:x.serving || x.amount || (fallbackCat==='Custom Meal'?'1 meal':fallbackCat==='Custom Recipe'?'1 recipe':'1 serving'),
+      cat:x.cat || x.category || fallbackCat || 'Food',
+      cal:Math.round(N(x.cal)),
+      c:R(x.c),
+      p:R(x.p),
+      f:R(x.f),
+      source:x.source || fallbackCat || 'database',
+      aliases:x.aliases || []
+    };
+  }
+
+  function customItems(){
+    var out=[];
+    ['macro_custom_foods_v3','customFoods'].forEach(function(k){
+      read(k).forEach(function(x){var y=asFood(x, x && /ingredient/i.test(x.cat||'')?'Custom Ingredient':'Custom Food'); if(y)out.push(y)});
+    });
+    ['macro_custom_recipes_v1','macro_custom_recipes_v3','customRecipes'].forEach(function(k){
+      read(k).forEach(function(x){var y=asFood(x,'Custom Recipe'); if(y){y.serving=y.serving||'1 recipe'; out.push(y)}});
+    });
+    ['macro_custom_meals_v1','customMeals'].forEach(function(k){
+      read(k).forEach(function(x){var y=asFood(x,'Custom Meal'); if(y){y.serving=y.serving||'1 meal'; out.push(y)}});
+    });
+    return out;
+  }
+
+  function baseDb(){
+    var arr=[];
+    try{ if(Array.isArray(foodDatabase)) arr=arr.concat(foodDatabase); }catch(e){}
+    try{ if(Array.isArray(window.foodDatabase)) arr=arr.concat(window.foodDatabase); }catch(e){}
+    return arr.map(function(x){return asFood(x)}).filter(Boolean);
+  }
+
+  function dedupe(list){
+    var seen=new Set(), out=[];
+    (list||[]).forEach(function(x){
+      var y=asFood(x);
+      if(!y) return;
+      var k=keyOf(y);
+      if(seen.has(k)) return;
+      seen.add(k); out.push(y);
+    });
+    return out;
+  }
+
+  function allFoods(){
+    return dedupe(customItems().concat(baseDb()));
+  }
+
+  function sourceLabelSafe(item){
+    try{ if(typeof window.sourceLabel==='function') return window.sourceLabel(item); }catch(e){}
+    return item.source || item.cat || 'Approx';
+  }
+
+  function score(item, query){
+    var qn=norm(query);
+    if(!qn) return 1;
+    var text=norm([item.name,item.cat,item.serving,item.source,(item.aliases||[]).join(' ')].join(' '));
+    if(text.includes(qn)) return 1000;
+    var words=qn.split(' ').filter(Boolean);
+    var s=0;
+    words.forEach(function(w){
+      if(text.includes(w)) s+=100;
+      else{
+        var found=false;
+        text.split(' ').forEach(function(t){
+          if(found) return;
+          if(t.includes(w) || w.includes(t)){found=true;s+=55;}
+          else if(w.length>3 && t.length>3 && Math.abs(w.length-t.length)<=2 && t[0]===w[0]){found=true;s+=20;}
+        });
+        if(!found) s-=20;
+      }
+    });
+    return s;
+  }
+
+  function categoryOk(item){
+    var cat='';
+    try{ cat=currentCategory||''; }catch(e){ cat=window.currentCategory||''; }
+    if(!cat) return true;
+    return norm([item.cat,item.name,item.source].join(' ')).includes(norm(cat));
+  }
+
+  window.__mbFoodSearchRows=[];
+
+  window.mbSearchToggleFav=function(i){
+    var item=window.__mbFoodSearchRows[i]; if(!item) return;
+    try{ if(typeof window.toggleFavorite==='function') window.toggleFavorite(item); }catch(e){}
+    setTimeout(function(){window.renderFoodDatabase&&window.renderFoodDatabase()},20);
+  };
+
+  window.mbOpenFoodUse=function(i){
+    var item=window.__mbFoodSearchRows[i]; if(!item) return;
+    window.__mbUseFoodItem=item;
+    var modal=q('mbFoodUseModal');
+    if(!modal){
+      modal=document.createElement('div');
+      modal.id='mbFoodUseModal';
+      modal.innerHTML='<div class="mb-food-use-card"><h2 id="mbFoodUseTitle">Add Food</h2><p class="note" id="mbFoodUseBase"></p><div class="row"><div><label>Meal</label><select id="mbFoodUseMeal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select></div><div><label>Portion</label><input id="mbFoodUsePortion" type="number" step="0.1" value="1"></div></div><div id="mbFoodUsePreview" class="macro-heading"></div><div class="mb-modal-actions"><button class="good" type="button" onclick="mbConfirmFoodUse()">Add Item</button><button class="light" type="button" onclick="mbCloseFoodUse()">Cancel</button></div></div>';
+      document.body.appendChild(modal);
+      var p=q('mbFoodUsePortion'); if(p) p.addEventListener('input',window.mbUpdateFoodUsePreview);
+    }
+    q('mbFoodUseTitle').textContent='Add '+item.name;
+    q('mbFoodUseBase').textContent='Base: '+(item.serving||'1 serving')+' • '+Math.round(N(item.cal))+' cal • C '+R(item.c)+'g • P '+R(item.p)+'g • F '+R(item.f)+'g';
+    q('mbFoodUsePortion').value='1';
+    window.mbUpdateFoodUsePreview();
+    modal.classList.add('active');
+  };
+
+  window.mbUpdateFoodUsePreview=function(){
+    var item=window.__mbUseFoodItem; if(!item) return;
+    var m=N(q('mbFoodUsePortion')&&q('mbFoodUsePortion').value)||1;
+    var el=q('mbFoodUsePreview');
+    if(el) el.textContent='Will add: '+Math.round(N(item.cal)*m)+' cal • C '+R(N(item.c)*m)+'g • P '+R(N(item.p)*m)+'g • F '+R(N(item.f)*m)+'g';
+  };
+
+  window.mbCloseFoodUse=function(){
+    var modal=q('mbFoodUseModal'); if(modal) modal.classList.remove('active');
+  };
+
+  window.mbConfirmFoodUse=function(){
+    var item=window.__mbUseFoodItem; if(!item) return;
+    var m=N(q('mbFoodUsePortion')&&q('mbFoodUsePortion').value)||1;
+    var meal=(q('mbFoodUseMeal')&&q('mbFoodUseMeal').value)||'Breakfast';
+    var entry={
+      name:item.name + (item.serving ? ' ('+item.serving+')' : ''),
+      meal:meal,
+      cal:Math.round(N(item.cal)*m),
+      c:R(N(item.c)*m),
+      p:R(N(item.p)*m),
+      f:R(N(item.f)*m),
+      serving:(m===1?'1x':m+'x')+' '+(item.serving||'serving'),
+      source:item.source||'database'
+    };
+    try{
+      if(typeof window.getLog==='function' && typeof window.saveLog==='function'){
+        var log=window.getLog(); log.push(entry); window.saveLog(log);
+      }else{
+        var key=(typeof logKey==='function')?logKey():'macro_log_'+(new Date().toISOString().slice(0,10));
+        var arr=read(key); arr.push(entry); localStorage.setItem(key,JSON.stringify(arr));
+      }
+    }catch(e){}
+    try{ if(typeof window.addRecent==='function') window.addRecent(item); }catch(e){}
+    try{ if(typeof window.render==='function') window.render(); }catch(e){}
+    window.mbCloseFoodUse();
+  };
+
+  window.foodCardHTML=function(item,star){
+    var idx=window.__mbFoodSearchRows.push(item)-1;
+    var active='';
+    try{ active=(typeof window.isFavorite==='function'&&window.isFavorite(item))?'active':''; }catch(e){}
+    return '<div class="saved-food mb-v91-food-row">'+
+      '<div class="mb-v91-food-info" onclick="mbOpenFoodUse('+idx+')">'+
+        '<b>'+esc(item.name)+'</b>'+
+        '<div class="meta">'+esc(item.cat||'Food')+' • '+esc(item.serving||'1 serving')+'</div>'+
+        '<div class="meta">'+Math.round(N(item.cal))+' cal • C '+R(item.c)+'g • P '+R(item.p)+'g • F '+R(item.f)+'g</div>'+
+        '<span class="source-chip">'+esc(sourceLabelSafe(item))+'</span>'+
+      '</div>'+
+      '<div class="mb-v91-actions">'+
+        '<button class="star-btn '+active+'" type="button" onclick="mbSearchToggleFav('+idx+')">★</button>'+
+        '<button class="small-btn good" type="button" onclick="mbOpenFoodUse('+idx+')">Use</button>'+
+      '</div>'+
+    '</div>';
+  };
+
+  window.renderFoodDatabase=function(){
+    var list=q('foodDatabaseList'), status=q('dbStatus'), btn=q('showMoreBtn');
+    if(!list) return;
+
+    var query=(q('dbSearch')&&q('dbSearch').value||'').trim();
+    var foods=allFoods();
+
+    if(!foods.length){
+      if(status) status.textContent='Food database is loading. Make sure core_foods.json, brand_foods.json, and restaurant_foods.json are uploaded with this HTML file.';
+      list.innerHTML='';
+      if(btn) btn.style.display='none';
+      return;
+    }
+
+    var filtered=foods
+      .filter(categoryOk)
+      .map(function(item){return {item:item,score:score(item,query)}})
+      .filter(function(x){return !query || x.score>0})
+      .sort(function(a,b){return b.score-a.score})
+      .map(function(x){return x.item});
+
+    window.__mbFoodSearchRows=[];
+    var expanded=!!window.showAllResults || (typeof showAllResults!=='undefined' && showAllResults);
+    var limit=expanded?60:4;
+    var results=filtered.slice(0,limit);
+
+    if(status){
+      status.textContent=results.length
+        ? 'Showing '+results.length+' of '+filtered.length+' clean result(s). Tap Use to choose portion and meal.'
+        : 'No food found. Try banana, milk, chicken, rice, cheezit, chipotle, or protein bar.';
+    }
+
+    list.classList.add('mb-v91-search-fixed');
+    list.classList.toggle('expanded',expanded);
+    list.classList.toggle('collapsed',!expanded);
+    list.innerHTML=results.map(function(i){return window.foodCardHTML(i,true)}).join('');
+
+    if(btn){
+      btn.style.display=filtered.length>4?'block':'none';
+      btn.textContent=expanded?'Show fewer results ↑':'Show more results ↓';
+    }
+  };
+
+  window.toggleShowMore=function(){
+    try{ showAllResults=!showAllResults; window.showAllResults=showAllResults; }catch(e){ window.showAllResults=!window.showAllResults; }
+    window.renderFoodDatabase();
+  };
+
+  window.setCategory=function(cat,btn){
+    try{ currentCategory=cat; }catch(e){ window.currentCategory=cat; }
+    try{ showAllResults=false; window.showAllResults=false; }catch(e){ window.showAllResults=false; }
+    document.querySelectorAll('.pill').forEach(function(x){x.classList.remove('active')});
+    if(btn) btn.classList.add('active');
+    window.renderFoodDatabase();
+  };
+
+  async function reloadJsonDb(){
+    var files=['core_foods.json','brand_foods.json','restaurant_foods.json','ingredients_foods.json'];
+    try{
+      var groups=await Promise.all(files.map(function(f){
+        return fetch(f,{cache:'no-store'}).then(function(r){return r.ok?r.json():[]}).catch(function(){return[]});
+      }));
+      var merged=dedupe(groups.flat().map(function(x){return asFood(x)}).filter(Boolean).concat(customItems()));
+      if(merged.length){
+        try{ foodDatabase=merged; }catch(e){}
+        window.foodDatabase=merged;
+        window.renderFoodDatabase();
+      }
+    }catch(e){}
+  }
+
+  function boot(){
+    var input=q('dbSearch');
+    if(input && !input.__mbV91Bound){
+      input.addEventListener('input',function(){window.renderFoodDatabase()});
+      input.addEventListener('search',function(){window.renderFoodDatabase()});
+      input.__mbV91Bound=true;
+    }
+    window.renderFoodDatabase();
+    reloadJsonDb();
+    setTimeout(window.renderFoodDatabase,250);
+    setTimeout(window.renderFoodDatabase,1200);
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+  else boot();
+})();
+</script>
+
 </body>
 </html>
